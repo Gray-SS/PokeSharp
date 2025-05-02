@@ -30,13 +30,13 @@ public sealed class Player
     private PlayerDirection _nextDir;
 
     private readonly InputManager _inputManager;
-    private readonly AssetsManager _assetsManager;
+    private readonly AnimationPack _runAnimation;
+    private readonly AnimationPack _idleAnimation;
     private readonly AnimationPlayer _animPlayer;
 
     public Player(InputManager inputManager, AssetsManager assetsManager)
     {
         _inputManager = inputManager;
-        _assetsManager = assetsManager;
 
         Position = Vector2.Zero;
         Size = new Vector2(50, 75);
@@ -45,8 +45,11 @@ public sealed class Player
         _nextTargetPos = Position;
         _dir = PlayerDirection.Down;
 
+        _runAnimation = assetsManager.Anim_Character_Boy_Run;
+        _idleAnimation = assetsManager.Anim_Character_Boy_Idle;
+
         _animPlayer = new AnimationPlayer();
-        _animPlayer.Play(assetsManager.Anim_BoyIdle["Down"]);
+        _animPlayer.Play(_idleAnimation["Down"]);
     }
 
     public void Update(float dt)
@@ -152,11 +155,11 @@ public sealed class Player
         {
             if (_isMoving)
             {
-                _animPlayer.Play(_assetsManager.Anim_BoyRun[directionString]);
+                _animPlayer.Play(_runAnimation[directionString]);
             }
             else
             {
-                _animPlayer.Play(_assetsManager.Anim_BoyIdle[directionString]);
+                _animPlayer.Play(_idleAnimation[directionString]);
             }
         }
     }

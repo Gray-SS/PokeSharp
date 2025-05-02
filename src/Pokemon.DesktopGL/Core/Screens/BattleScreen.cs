@@ -1,13 +1,10 @@
 using Microsoft.Xna.Framework;
-using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Renderers;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
 public sealed class BattleScreen : Screen
 {
-    public override ScreenType ScreenType => ScreenType.Battle;
-
     private UIRenderer _uiRenderer;
 
     public BattleScreen(PokemonGame game) : base(game)
@@ -39,13 +36,13 @@ public sealed class BattleScreen : Screen
 
     private void DrawBackground()
     {
-        _uiRenderer.Draw(Game.AssetsManager.Sprite_Battle_Grass_Bg, Game.WindowManager.Bounds, Color.White);
+        _uiRenderer.Draw(Game.AssetsManager.Sprite_Battle_Forest_Bg, Game.WindowManager.Bounds, Color.White);
     }
 
     private void DrawBaseSelf()
     {
         WindowManager winMan = Game.WindowManager;
-        var sprite = Game.AssetsManager.Sprite_Battle_Grass_Base0;
+        Sprite sprite = Game.AssetsManager.Sprite_Battle_Grass_Base0;
 
         int width = (int)(winMan.WindowWidth * 0.7f);
         int height = (int)(width * 0.125f);
@@ -57,7 +54,7 @@ public sealed class BattleScreen : Screen
     private void DrawBaseOther()
     {
         WindowManager winMan = Game.WindowManager;
-        var sprite = Game.AssetsManager.Sprite_Battle_Grass_Base1;
+        Sprite sprite = Game.AssetsManager.Sprite_Battle_Grass_Base1;
 
         int width = (int)(winMan.WindowWidth * 0.45f);
         int height = (int)(width * 0.5f);
@@ -69,7 +66,7 @@ public sealed class BattleScreen : Screen
     private void DrawDataboxSelf()
     {
         WindowManager winMan = Game.WindowManager;
-        var sprite = Game.AssetsManager.Sprite_Battle_Databox_Normal;
+        Sprite sprite = Game.AssetsManager.Sprite_Battle_Databox;
 
         int width = (int)(winMan.WindowWidth * 0.352f);
         int height = (int)(width * 0.32f);
@@ -81,7 +78,7 @@ public sealed class BattleScreen : Screen
     private void DrawDataboxOther()
     {
         WindowManager winMan = Game.WindowManager;
-        var sprite = Game.AssetsManager.Sprite_Battle_Databox_Normal_Foe;
+        var sprite = Game.AssetsManager.Sprite_Battle_Databox_Foe;
 
         int width = (int)(winMan.WindowWidth * 0.352f);
         int height = (int)(width * 0.22f);

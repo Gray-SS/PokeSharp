@@ -1,15 +1,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Pokemon.DesktopGL.Core.Managers;
 
 namespace Pokemon.DesktopGL.Core;
 
 public abstract class Screen
 {
     public PokemonGame Game { get; }
-    public abstract ScreenType ScreenType { get; }
-
     public GameWindow Window => Game.Window;
     public ContentManager Content => Game.Content;
     public GraphicsDeviceManager Graphics => Game.Graphics;

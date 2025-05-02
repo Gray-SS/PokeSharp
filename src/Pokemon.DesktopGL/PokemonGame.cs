@@ -54,9 +54,7 @@ public class PokemonGame : Game
         Player = new Player(InputManager, AssetsManager);
         Player.Offset = new Vector2(0, GameConstants.TileSize * -0.35f);
 
-        ScreenManager.AddScreen(new GameplayScreen(this));
-        ScreenManager.AddScreen(new BattleScreen(this));
-        ScreenManager.ChangeScreen(ScreenType.Battle);
+        ScreenManager.Push(new BattleScreen(this));
     }
 
     protected override void Update(GameTime gameTime)

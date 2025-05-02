@@ -19,8 +19,8 @@ public class Animation
         FramesCount = Sprites.Count;
     }
 
-    public static Animation FromSpriteSheet(SpriteSheet sheet, int data)
-        => FromSpriteSheet(sheet, data, data, 0.0f, false);
+    public static Animation FromSpriteSheet(SpriteSheet sheet, int index)
+        => FromSpriteSheet(sheet, index, index, 0.0f, false);
 
     public static Animation FromSpriteSheet(SpriteSheet sheet, int from, int to, float frequency = 12.0f, bool isLooping = true)
     {

@@ -1,14 +1,11 @@
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core.Entities;
-using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Renderers;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
 public sealed class GameplayScreen : Screen
 {
-    public override ScreenType ScreenType => ScreenType.Gameplay;
-
     private int _lastCol, _lastRow;
     private Camera _camera;
     private Tilemap _tilemap;
