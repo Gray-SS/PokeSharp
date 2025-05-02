@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Renderers;
 
 namespace Pokemon.DesktopGL.Core.Screens;
