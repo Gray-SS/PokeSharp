@@ -16,12 +16,16 @@ public sealed class ScreenManager
 
     public void Push(Screen screen)
     {
+        screen.Load();
         _screens.Push(screen);
     }
 
     public Screen Pop()
     {
-        return _screens.Pop();
+        var screen = _screens.Pop();
+        screen.Unload();
+
+        return screen;
     }
 
     public void Update(GameTime gameTime)
