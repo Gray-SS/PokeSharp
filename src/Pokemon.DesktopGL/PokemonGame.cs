@@ -1,8 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Pokemon.DesktopGL.Core;
-using Pokemon.DesktopGL.Core.Entities;
+using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Screens;
 
@@ -10,6 +9,9 @@ namespace Pokemon.DesktopGL;
 
 public class PokemonGame : Game
 {
+    //Singleton instance
+    public static PokemonGame Instance { get; private set; }
+
     // Services / Managers
     public InputManager InputManager { get; private set; }
     public ScreenManager ScreenManager { get; private set; }
@@ -17,11 +19,10 @@ public class PokemonGame : Game
     public WindowManager WindowManager { get; private set; }
 
     // Game Properties
-    public Player Player { get; private set; }
+    public CharacterRegistry CharacterRegistry { get; private set; }
 
     // MonoGame Properties
     public GraphicsDeviceManager Graphics { get; }
-    public static PokemonGame Instance { get; private set; }
 
     public PokemonGame()
     {
@@ -38,8 +39,10 @@ public class PokemonGame : Game
     {
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();
-        AssetsManager = new AssetsManager(Content);
+        AssetsManager = new AssetsManager(GraphicsDevice, Content);
         WindowManager = new WindowManager(Window, Graphics);
+
+        CharacterRegistry = new CharacterRegistry(AssetsManager);
 
         WindowManager.SetWindowTitle("Pokemon");
         WindowManager.SetResolution("1280x720");
@@ -50,11 +53,9 @@ public class PokemonGame : Game
     protected override void LoadContent()
     {
         AssetsManager.LoadGlobalAssets();
+        CharacterRegistry.Load();
 
-        Player = new Player(InputManager, AssetsManager);
-        Player.Offset = new Vector2(0, GameConstants.TileSize * -0.35f);
-
-        ScreenManager.Push(new BattleScreen(this));
+        ScreenManager.Push(new OverworldScreen(this));
     }
 
     protected override void Update(GameTime gameTime)

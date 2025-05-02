@@ -1,3 +1,4 @@
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -20,6 +21,11 @@ public sealed class UIRenderer
     public void Draw(Sprite sprite, Rectangle bounds, Color color, float opacity = 1.0f)
     {
         _spriteBatch.Draw(sprite.Texture, bounds, sprite.SourceRect, color * opacity, 0.0f, Vector2.Zero, 0, 0.0f);
+    }
+
+    public void DrawString(SpriteFontBase font, string text, Vector2 position, Color color)
+    {
+        _spriteBatch.DrawString(font, text, position, color);
     }
 
     public void End()

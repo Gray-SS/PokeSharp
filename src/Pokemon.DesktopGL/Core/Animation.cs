@@ -22,7 +22,7 @@ public class Animation
     public static Animation FromSpriteSheet(SpriteSheet sheet, int index)
         => FromSpriteSheet(sheet, index, index, 0.0f, false);
 
-    public static Animation FromSpriteSheet(SpriteSheet sheet, int from, int to, float frequency = 12.0f, bool isLooping = true)
+    public static Animation FromSpriteSheet(SpriteSheet sheet, int from, int to, float frequency = 10.0f, bool isLooping = true)
     {
         var sprites = new List<Sprite>();
         for (int i = from; i <= to; i++)

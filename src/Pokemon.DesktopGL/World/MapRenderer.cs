@@ -1,20 +1,21 @@
 using Microsoft.Xna.Framework;
+using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Renderers;
 
-namespace Pokemon.DesktopGL.Core.Entities;
+namespace Pokemon.DesktopGL.World;
 
-public sealed class TilemapEntity
+public sealed class MapRenderer
 {
     public Vector2 Position { get; set; }
 
-    private readonly Tilemap _tilemap;
+    private readonly MapData _map;
     private readonly int _tileSize;
 
-    public TilemapEntity(Tilemap tilemap, int tileSize)
+    public MapRenderer(MapData map, int tileSize)
     {
         Position = Vector2.Zero;
 
-        _tilemap = tilemap;
+        _map = map;
         _tileSize = tileSize;
     }
 
@@ -27,23 +28,23 @@ public sealed class TilemapEntity
     }
 
     public int GetData(int col, int row)
-        => _tilemap.GetData(col, row);
+        => _map.GetData(col, row);
 
     public int GetDataAtPosition(Vector2 position)
     {
         var col = (int)((position.X + Position.X) / _tileSize);
         var row = (int)((position.Y + Position.Y) / _tileSize);
 
-        return _tilemap.GetData(col, row);
+        return _map.GetData(col, row);
     }
 
     public void Draw(GameRenderer renderer)
     {
-        for (int y = 0; y < _tilemap.MapHeight; y++)
+        for (int y = 0; y < _map.MapHeight; y++)
         {
-            for (int x = 0; x < _tilemap.MapWidth; x++)
+            for (int x = 0; x < _map.MapWidth; x++)
             {
-                Sprite tile = _tilemap.GetTile(x, y);
+                Sprite tile = _map.GetTile(x, y);
 
                 var position = new Vector2(x * _tileSize, y * _tileSize);
                 var size = new Vector2(_tileSize);

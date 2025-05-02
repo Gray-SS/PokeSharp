@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
+using Pokemon.DesktopGL.Core;
 
-namespace Pokemon.DesktopGL.Core;
+namespace Pokemon.DesktopGL.World;
 
-public sealed class Tilemap
+public sealed class MapData
 {
     public int MapWidth { get; }
     public int MapHeight { get; }
@@ -11,7 +11,7 @@ public sealed class Tilemap
     public int[] Data { get; }
     public Sprite[] Tiles { get; }
 
-    public Tilemap(int mapWidth, int mapHeight, IEnumerable<Sprite> tiles, int[] data)
+    public MapData(int mapWidth, int mapHeight, IEnumerable<Sprite> tiles, int[] data)
     {
         MapWidth = mapWidth;
         MapHeight = mapHeight;

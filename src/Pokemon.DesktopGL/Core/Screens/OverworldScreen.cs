@@ -1,18 +1,26 @@
 using Microsoft.Xna.Framework;
-using Pokemon.DesktopGL.Core.Entities;
+using Pokemon.DesktopGL.World;
+using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Renderers;
+using Pokemon.DesktopGL.NPCs;
+using Pokemon.DesktopGL.Players;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
-public sealed class GameplayScreen : Screen
+public sealed class OverworldScreen : Screen
 {
     private int _lastCol, _lastRow;
     private Camera _camera;
-    private Tilemap _tilemap;
+    private MapData _map;
     private GameRenderer _gameRenderer;
-    private TilemapEntity _tilemapEntity;
+    private MapRenderer _mapRenderer;
 
-    public GameplayScreen(PokemonGame game) : base(game)
+    private CharacterSpawner _characterSpawner;
+
+    private NPC _npc;
+    private Player _player;
+
+    public OverworldScreen(PokemonGame game) : base(game)
     {
     }
 
@@ -20,6 +28,10 @@ public sealed class GameplayScreen : Screen
     {
         _camera = new Camera(Game.WindowManager);
         _gameRenderer = new GameRenderer(GraphicsDevice);
+
+        _characterSpawner = new CharacterSpawner(Game.CharacterRegistry);
+        _npc = _characterSpawner.SpawnNPC("npc_12", Vector2.Zero);
+        _player = _characterSpawner.SpawnPlayer("player_girl", Vector2.Zero);
 
         var data = new int[30*30];
         for (int i = 0; i < 30*30; i++)
@@ -32,8 +44,8 @@ public sealed class GameplayScreen : Screen
 
         SpawnBush(data, 10, 10, 6, 4);
 
-        _tilemap = new Tilemap(30, 30, Game.AssetsManager.Sheet_Tileset_Outside.Sprites, data);
-        _tilemapEntity = new TilemapEntity(_tilemap, GameConstants.TileSize);
+        _map = new MapData(30, 30, Game.AssetsManager.Sheet_Tileset_Outside.Sprites, data);
+        _mapRenderer = new MapRenderer(_map, GameConstants.TileSize);
     }
 
     private void SpawnBush(int[] data, int x, int y, int width, int height)
@@ -52,14 +64,16 @@ public sealed class GameplayScreen : Screen
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        Game.Player.Update(dt);
-        _camera.Position = Vector2.Lerp(_camera.Position, Game.Player.Position, 0.05f);
+        // _npc.Update(dt);
+        _player.Update(dt);
 
-        (int col, int row) = _tilemapEntity.GetCoord(Game.Player.Position);
+        _camera.Position = Vector2.Lerp(_camera.Position, _player.Character.Position, 0.05f);
+
+        (int col, int row) = _mapRenderer.GetCoord(_player.Character.Position);
 
         if (_lastCol != col || _lastRow != row)
         {
-            int data = _tilemapEntity.GetData(col, row);
+            int data = _mapRenderer.GetData(col, row);
             if (data == 6)
             {
 
@@ -76,8 +90,9 @@ public sealed class GameplayScreen : Screen
 
         _gameRenderer.Begin(_camera);
 
-        _tilemapEntity.Draw(_gameRenderer);
-        Game.Player.Draw(_gameRenderer);
+        _mapRenderer.Draw(_gameRenderer);
+        // _npc.Draw(_gameRenderer);
+        _player.Draw(_gameRenderer);
 
         _gameRenderer.End();
     }

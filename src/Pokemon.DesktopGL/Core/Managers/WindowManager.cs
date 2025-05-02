@@ -6,7 +6,7 @@ namespace Pokemon.DesktopGL.Core.Managers;
 
 public class WindowManager
 {
-    public Rectangle Bounds => new(0, 0, WindowWidth, WindowHeight);
+    public Rectangle Rect => new(0, 0, WindowWidth, WindowHeight);
     public int WindowWidth => _graphics.PreferredBackBufferWidth;
     public int WindowHeight => _graphics.PreferredBackBufferHeight;
     public Vector2 WindowSize => new(WindowWidth, WindowHeight);
