@@ -32,7 +32,7 @@ public sealed class GameplayScreen : Screen
 
         SpawnBush(data, 10, 10, 6, 4);
 
-        _tilemap = new Tilemap(30, 30, Game.AssetsManager.SpriteSheet_TS_Outside.Sprites, data);
+        _tilemap = new Tilemap(30, 30, Game.AssetsManager.Sheet_Tileset_Outside.Sprites, data);
         _tilemapEntity = new TilemapEntity(_tilemap, GameConstants.TileSize);
     }
 
