@@ -29,15 +29,15 @@ public class AssetsManager
         Sprite_Battle_Grass_Base0 = LoadSprite("Textures/Battlepacks/grass_base0");
         Sprite_Battle_Grass_Base1 = LoadSprite("Textures/Battlepacks/grass_base1");
 
-        Sprite_Battle_Databox = LoadSprite("Textures/Battlepacks/databox_normal");
-        Sprite_Battle_Databox_Foe = LoadSprite("Textures/Battlepacks/databox_normal_foe");
+        Sprite_Battle_Databox = LoadSprite("Textures/UI/Battle/databox_normal");
+        Sprite_Battle_Databox_Foe = LoadSprite("Textures/UI/Battle/databox_normal_foe");
 
         Sheet_Tileset_Outside = SpriteSheet.FromDimension(LoadSprite("Tilesets/Outside"), 64, 64);
 
         var sheet_boy_run = new SpriteSheet(LoadSprite("Textures/boy_run"), 4, 4);
         Anim_Character_Boy_Idle = new AnimationPack(new Dictionary<string, Animation>()
         {
-            { "Bottom", Animation.FromSpriteSheet(sheet_boy_run, 0) },
+            { "Down", Animation.FromSpriteSheet(sheet_boy_run, 0) },
             { "Left", Animation.FromSpriteSheet(sheet_boy_run, 4) },
             { "Right", Animation.FromSpriteSheet(sheet_boy_run, 8) },
             { "Up", Animation.FromSpriteSheet(sheet_boy_run, 12) },
@@ -45,7 +45,7 @@ public class AssetsManager
 
         Anim_Character_Boy_Run = new AnimationPack(new Dictionary<string, Animation>()
         {
-            { "Bottom", Animation.FromSpriteSheet(sheet_boy_run, 0, 3) },
+            { "Down", Animation.FromSpriteSheet(sheet_boy_run, 0, 3) },
             { "Left", Animation.FromSpriteSheet(sheet_boy_run, 4, 7) },
             { "Right", Animation.FromSpriteSheet(sheet_boy_run, 8, 11) },
             { "Up", Animation.FromSpriteSheet(sheet_boy_run, 12, 15) },
