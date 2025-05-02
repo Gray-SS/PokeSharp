@@ -1,0 +1,29 @@
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Pokemon.DesktopGL.Core.Renderers;
+
+public sealed class UIRenderer
+{
+    private readonly SpriteBatch _spriteBatch;
+
+    public UIRenderer(GraphicsDevice device)
+    {
+        _spriteBatch = new SpriteBatch(device);
+    }
+
+    public void Begin()
+    {
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+    }
+
+    public void Draw(Sprite sprite, Rectangle bounds, Color color, float opacity = 1.0f)
+    {
+        _spriteBatch.Draw(sprite.Texture, bounds, sprite.SourceRect, color * opacity, 0.0f, Vector2.Zero, 0, 0.0f);
+    }
+
+    public void End()
+    {
+        _spriteBatch.End();
+    }
+}
