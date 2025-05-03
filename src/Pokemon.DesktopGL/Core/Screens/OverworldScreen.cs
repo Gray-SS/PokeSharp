@@ -2,21 +2,31 @@ using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core.Renderers;
 using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.World;
+using Pokemon.DesktopGL.Dialogues;
+using System.Data;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
 public sealed class OverworldScreen : Screen
 {
     private Camera _camera;
+    private UIRenderer _uiRenderer;
     private GameRenderer _gameRenderer;
+
+    private DialogueBoxRenderer _dialogueRenderer;
 
     private GameMap _map;
     private Overworld _world;
 
+    private int _lastCol;
+    private int _lastRow;
+
     public override void Load()
     {
         _camera = new Camera(Game.WindowManager);
+        _uiRenderer = new UIRenderer(GraphicsDevice);
         _gameRenderer = new GameRenderer(GraphicsDevice);
+        _dialogueRenderer = new DialogueBoxRenderer(Game.DialogueManager);
 
         _map = GameMap.Load("Content/Data/Maps/test_map.tmx");
 
@@ -36,6 +46,16 @@ public sealed class OverworldScreen : Screen
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
         _world.Update(dt);
+        _dialogueRenderer.Update(dt);
+
+        (int Col, int Row) = _map.GetCoord(_world.Player.Character.Position);
+        if (_lastCol != Col || _lastRow != Row)
+        {
+            if (_world.IsInLeaf(_world.Player.Character))
+            {
+                System.Console.WriteLine("Ok");
+            }
+        }
 
         var target = _world.Player.Character.Position;
 
@@ -50,8 +70,10 @@ public sealed class OverworldScreen : Screen
 
         Vector2 clampedTarget = new(clampedX, clampedY);
         _camera.Position = Vector2.Lerp(_camera.Position, clampedTarget, 0.05f);
-    }
 
+        _lastCol = Col;
+        _lastRow = Row;
+    }
 
     public override void Draw(GameTime gameTime)
     {
@@ -59,7 +81,10 @@ public sealed class OverworldScreen : Screen
 
         _gameRenderer.Begin(_camera);
         _world.Draw(_gameRenderer);
-
         _gameRenderer.End();
+
+        _uiRenderer.Begin();
+        _dialogueRenderer.Draw(_uiRenderer);
+        _uiRenderer.End();
     }
 }

@@ -30,6 +30,38 @@ public sealed class Overworld
         _mapRenderer = new TiledMapRenderer(_map);
     }
 
+    public bool TryGetEntityAt(Vector2 position, out WorldEntity entity)
+    {
+        entity = null;
+        (int Col, int Row) = _map.GetCoord(position);
+
+        foreach (var otherEntity in _entities)
+        {
+            Character otherCharacter = otherEntity.Character;
+            (int OtherCol, int OtherRow) = _map.GetCoord(otherCharacter.Position);
+            if (Col == OtherCol && Row == OtherRow)
+            {
+                entity = otherEntity;
+                return true;
+            }
+
+            (OtherCol, OtherRow) = _map.GetCoord(otherCharacter.TargetPosition);
+            if (Col == OtherCol && Row == OtherRow)
+            {
+                entity = otherEntity;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsInLeaf(Character character)
+    {
+        (int Col, int Row) = _map.GetCoord(character.Position);
+        return _map.GetData("Grass", Col, Row) == 6;
+    }
+
     public bool CanMove(Character character, Vector2 targetPosition)
     {
         (int Col, int Row) = _map.GetCoord(targetPosition);

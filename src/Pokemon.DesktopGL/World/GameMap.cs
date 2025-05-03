@@ -1,3 +1,4 @@
+using System.Linq;
 using DotTiled;
 using DotTiled.Serialization;
 using Microsoft.Xna.Framework;
@@ -24,6 +25,20 @@ public sealed class GameMap
         var row = (int)(position.Y / GameConstants.TileSize);
 
         return (col, row);
+    }
+
+    public int GetData(string layerName, int col, int row)
+    {
+        var layer = TiledMap.Layers.FirstOrDefault(x => x.Name == layerName);
+        if (layer == null || layer is not TileLayer tileLayer) return -1;
+
+        int index = row * (int)TiledMap.Width + col;
+        uint gid = tileLayer.Data.Value.GlobalTileIDs.Value[index];
+
+        var tileset = GetTilesetForGid(gid);
+        if (tileset == null) return -1;
+
+        return (int)(gid - tileset.FirstGID.Value);
     }
 
     public bool CollideAt(int col, int row)

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Screens;
+using Pokemon.DesktopGL.Dialogues;
 using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL;
@@ -18,6 +19,7 @@ public class PokemonGame : Game
     public ScreenManager ScreenManager { get; private set; }
     public AssetsManager AssetsManager { get; private set; }
     public WindowManager WindowManager { get; private set; }
+    public DialogueManager DialogueManager { get; private set; }
 
     // Game Properties
     public Overworld ActiveWorld { get; set; }
@@ -41,6 +43,7 @@ public class PokemonGame : Game
     {
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();
+        DialogueManager = new DialogueManager();
         AssetsManager = new AssetsManager(GraphicsDevice, Content);
         WindowManager = new WindowManager(Window, Graphics);
 
@@ -62,7 +65,10 @@ public class PokemonGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
         InputManager.Update();
+        DialogueManager.Update(dt);
 
         if (InputManager.IsKeyPressed(Keys.Escape))
             Exit();
