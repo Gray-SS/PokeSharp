@@ -67,6 +67,22 @@ public sealed class GameRenderer
         );
     }
 
+    public void Draw(Texture2D texture, Rectangle destRect, Rectangle sourceRect, Color color)
+    {
+        var origin = sourceRect.Size.ToVector2() * 0.5f;
+
+        _spriteBatch.Draw(
+            texture,
+            destRect,
+            sourceRect,
+            color,
+            0.0f,
+            origin,
+            0,
+            0.0f
+        );
+    }
+
     public void End()
     {
         _spriteBatch.End();
