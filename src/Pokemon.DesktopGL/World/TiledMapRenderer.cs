@@ -29,25 +29,23 @@ public sealed class TiledMapRenderer
         var content = PokemonGame.Instance.Content;
         var textures = new Dictionary<string, Texture2D>();
 
-        var mapSource = Path.GetFullPath(Map.Path);
-        var mapSourceDir = Path.GetDirectoryName(mapSource);
+        var mapDir = Path.GetDirectoryName(Path.GetFullPath(Map.Path))!;
 
         foreach (var tileset in TiledMap.Tilesets)
         {
-            var tilesetSource = Path.Combine(mapSourceDir, tileset.Source.Value);
-            var tilesetSourceDir = Path.GetDirectoryName(tilesetSource);
+            var imagePath = Path.GetFullPath(Path.Combine(
+                mapDir,
+                Path.GetDirectoryName(tileset.Source.Value) ?? "",
+                tileset.Image.Value.Source.Value
+            ));
 
-            var tilesetImageSource = tileset.Image.Value.Source.Value;
-            var imageSource = Path.Combine(tilesetSourceDir, tilesetImageSource);
-
-            var relativePath = Path.GetRelativePath(content.RootDirectory, imageSource);
-
-            var relativePathWithoutExtension = Path.Combine(
-                Path.GetDirectoryName(relativePath) ?? string.Empty,
+            var relativePath = Path.GetRelativePath(content.RootDirectory, imagePath);
+            var pathWithoutExtension = Path.Combine(
+                Path.GetDirectoryName(relativePath) ?? "",
                 Path.GetFileNameWithoutExtension(relativePath)
             ).Replace('\\', '/');
 
-            textures[tilesetImageSource] = content.Load<Texture2D>(relativePathWithoutExtension);
+            textures[tileset.Image.Value.Source.Value] = content.Load<Texture2D>(pathWithoutExtension);
         }
 
         return textures;
@@ -73,7 +71,7 @@ public sealed class TiledMapRenderer
 
                     if (gid == 0) continue;
 
-                    var tileset = GetTilesetForGid(gid);
+                    var tileset = Map.GetTilesetForGid(gid);
                     if (tileset == null) continue;
 
                     int localId = (int)(gid - tileset.FirstGID);
@@ -90,16 +88,5 @@ public sealed class TiledMapRenderer
                 }
             }
         }
-    }
-
-    private Tileset GetTilesetForGid(uint gid)
-    {
-        foreach (Tileset tileset in TiledMap.Tilesets)
-        {
-            if (gid >= tileset.FirstGID)
-                return tileset;
-        }
-
-        return null;
     }
 }

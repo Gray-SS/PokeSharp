@@ -48,6 +48,12 @@ public class Character
     {
         if (State != CharacterState.Idle) return;
 
+        if (!CanMove(Position, direction))
+        {
+            Rotate(direction);
+            return;
+        }
+
         Direction = direction;
         State = CharacterState.Moving;
 
@@ -61,9 +67,23 @@ public class Character
         };
     }
 
+    public bool CanMove(Vector2 pos, Direction direction)
+    {
+        var targetPos = direction switch
+        {
+            Direction.Left => pos - new Vector2(GameConstants.TileSize, 0),
+            Direction.Right => pos + new Vector2(GameConstants.TileSize, 0),
+            Direction.Up => pos - new Vector2(0, GameConstants.TileSize),
+            Direction.Down => pos + new Vector2(0, GameConstants.TileSize),
+            _ => pos
+        };
+
+        return PokemonGame.Instance.ActiveWorld.CanMove(this, targetPos);
+    }
+
     public void Rotate(Direction direction)
     {
-        if (State != CharacterState.Idle) return;
+        if (State != CharacterState.Idle || Direction == direction) return;
 
         Direction = direction;
         State = CharacterState.Rotating;
@@ -75,6 +95,12 @@ public class Character
     public void Premove(Direction direction)
     {
         if (State != CharacterState.Moving) return;
+
+        if (!CanMove(TargetPosition, direction))
+        {
+            Rotate(direction);
+            return;
+        }
 
         _premoved = true;
         _nextDirection = direction;
@@ -129,7 +155,7 @@ public class Character
     private void HandleRotatingState(float dt)
     {
         _rotatingTimer += dt;
-        if (_rotatingTimer >= 0.2f)
+        if (_rotatingTimer >= 0.3f)
         {
             State = CharacterState.Idle;
             _rotatingTimer = 0.0f;

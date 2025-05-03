@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.Core.Managers;
 
 namespace Pokemon.DesktopGL.Core;
@@ -13,6 +14,8 @@ public class Camera
         get => _zoom;
         set => _zoom = Math.Max(value, 0.1f);
     }
+
+    public Viewport Viewport => new Viewport(0, 0, _windowManager.WindowWidth, _windowManager.WindowHeight);
 
     private float _zoom = 1.0f;
     private readonly WindowManager _windowManager;

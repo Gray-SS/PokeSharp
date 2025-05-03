@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Screens;
+using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL;
 
@@ -19,6 +20,7 @@ public class PokemonGame : Game
     public WindowManager WindowManager { get; private set; }
 
     // Game Properties
+    public Overworld ActiveWorld { get; set; }
     public CharacterRegistry CharacterRegistry { get; private set; }
 
     // MonoGame Properties
