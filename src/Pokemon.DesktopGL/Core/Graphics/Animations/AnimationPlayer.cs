@@ -1,6 +1,4 @@
-using System;
-
-namespace Pokemon.DesktopGL.Core;
+namespace Pokemon.DesktopGL.Core.Graphics;
 
 public sealed class AnimationPlayer
 {

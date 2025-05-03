@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Pokemon.DesktopGL.Core;
+namespace Pokemon.DesktopGL.Core.Graphics;
 
 public class Sprite
 {

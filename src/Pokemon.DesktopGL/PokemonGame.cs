@@ -55,7 +55,7 @@ public class PokemonGame : Game
         AssetsManager.LoadGlobalAssets();
         CharacterRegistry.Load();
 
-        ScreenManager.Push(new OverworldScreen(this));
+        ScreenManager.Push(new OverworldScreen());
     }
 
     protected override void Update(GameTime gameTime)

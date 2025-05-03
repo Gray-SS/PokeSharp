@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
-namespace Pokemon.DesktopGL.Core;
+namespace Pokemon.DesktopGL.Core.Graphics;
 
 public sealed class SpriteSheet
 {
@@ -19,24 +21,28 @@ public sealed class SpriteSheet
 
     private readonly Dictionary<int, Sprite> _sprites;
 
-    public SpriteSheet(Sprite baseSprite, int cols, int rows)
+    public SpriteSheet(Sprite baseSprite, int? cols, int? rows, int? spriteWidth, int? spriteHeight)
     {
         BaseSprite = baseSprite;
+        if (rows.HasValue && cols.HasValue)
+        {
+            Rows = rows.Value;
+            Columns = cols.Value;
+            SpriteWidth = baseSprite.Width / Columns;
+            SpriteHeight = baseSprite.Height / Rows;
+        }
+        else if (spriteWidth.HasValue && spriteHeight.HasValue)
+        {
+            SpriteWidth = spriteWidth.Value;
+            SpriteHeight = spriteHeight.Value;
+            Columns = baseSprite.Width / SpriteHeight;
+            Rows = baseSprite.Height / SpriteHeight;
+        }
+        else throw new InvalidOperationException("Couldn't instantiate a sprite sheet without the pair of colums and rows or the pair of sprite width and sprite height");
 
-        Rows = rows;
-        Columns = cols;
-        SpriteWidth = baseSprite.Width / cols;
-        SpriteHeight = baseSprite.Height / rows;
-        TotalCount = cols * rows;
+        TotalCount = Columns * Rows;
 
         _sprites = BakeSprites();
-    }
-
-    public static SpriteSheet FromDimension(Sprite baseSprite, int spriteWidth, int spriteHeight)
-    {
-        int cols = baseSprite.Width / spriteWidth;
-        int rows = baseSprite.Height / spriteHeight;
-        return new SpriteSheet(baseSprite, cols, rows);
     }
 
     public Sprite GetSprite(int data)

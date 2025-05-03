@@ -1,7 +1,15 @@
+using System;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core;
 
 namespace Pokemon.DesktopGL.Characters;
+
+public enum CharacterState
+{
+    Idle,
+    Moving,
+    Rotating,
+}
 
 public class Character
 {
@@ -12,14 +20,21 @@ public class Character
     public Vector2 Size { get; set; } = new Vector2(50, 75);
     public Vector2 TargetPosition { get; private set; }
     public Direction Direction { get; private set; }
-    public bool IsMoving { get; private set; }
+    public CharacterState State { get; private set; }
+    public bool IsMoving => State == CharacterState.Moving;
+    public bool IsRotating => State == CharacterState.Rotating;
+    public bool IsIdle => State == CharacterState.Idle;
     public bool IsNearTargetPos => Vector2.Distance(Position, TargetPosition) <= GameConstants.TileSize * 0.4f;
 
     public Rectangle Bounds => new((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
 
+    public event EventHandler Rotated;
+
     private bool _premoved;
     private Vector2 _nextTargetPosition;
     private Direction _nextDirection;
+
+    private float _rotatingTimer;
 
     public Character(CharacterData data, Vector2 startPosition)
     {
@@ -31,10 +46,10 @@ public class Character
 
     public void Move(Direction direction)
     {
-        if (IsMoving) return;
+        if (State != CharacterState.Idle) return;
 
         Direction = direction;
-        IsMoving = true;
+        State = CharacterState.Moving;
 
         TargetPosition = direction switch
         {
@@ -46,8 +61,21 @@ public class Character
         };
     }
 
+    public void Rotate(Direction direction)
+    {
+        if (State != CharacterState.Idle) return;
+
+        Direction = direction;
+        State = CharacterState.Rotating;
+        Rotated?.Invoke(this, EventArgs.Empty);
+
+        _rotatingTimer = 0.0f;
+    }
+
     public void Premove(Direction direction)
     {
+        if (State != CharacterState.Moving) return;
+
         _premoved = true;
         _nextDirection = direction;
 
@@ -63,8 +91,20 @@ public class Character
 
     public void Update(float dt)
     {
-        if (!IsMoving) return;
+        switch (State)
+        {
+            case CharacterState.Idle: return;
+            case CharacterState.Moving:
+                HandleMovingState(dt);
+                return;
+            case CharacterState.Rotating:
+                HandleRotatingState(dt);
+                return;
+        }
+    }
 
+    private void HandleMovingState(float dt)
+    {
         float distSq = Vector2.DistanceSquared(Position, TargetPosition);
         if (distSq >= 2f)
         {
@@ -82,7 +122,17 @@ public class Character
                 TargetPosition = _nextTargetPosition;
                 _premoved = false;
             }
-            else IsMoving = false;
+            else State = CharacterState.Idle;
+        }
+    }
+
+    private void HandleRotatingState(float dt)
+    {
+        _rotatingTimer += dt;
+        if (_rotatingTimer >= 0.2f)
+        {
+            State = CharacterState.Idle;
+            _rotatingTimer = 0.0f;
         }
     }
 }

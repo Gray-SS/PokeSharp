@@ -12,9 +12,9 @@ public abstract class Screen
     public GraphicsDeviceManager Graphics => Game.Graphics;
     public GraphicsDevice GraphicsDevice => Game.GraphicsDevice;
 
-    public Screen(PokemonGame game)
+    public Screen()
     {
-        Game = game;
+        Game = PokemonGame.Instance;
     }
 
     public virtual void Load()

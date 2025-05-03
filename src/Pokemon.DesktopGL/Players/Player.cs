@@ -1,8 +1,9 @@
 using Pokemon.DesktopGL.Characters;
+using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL.Players;
 
-public sealed class Player : CharacterEntity
+public sealed class Player : WorldEntity
 {
     private readonly PlayerController _controller;
 
@@ -15,5 +16,9 @@ public sealed class Player : CharacterEntity
     {
         _controller.Update(dt);
         base.Update(dt);
+    }
+
+    public override void Interact()
+    {
     }
 }

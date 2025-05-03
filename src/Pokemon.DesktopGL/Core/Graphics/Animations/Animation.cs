@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Pokemon.DesktopGL.Core;
+namespace Pokemon.DesktopGL.Core.Graphics;
 
 public class Animation
 {

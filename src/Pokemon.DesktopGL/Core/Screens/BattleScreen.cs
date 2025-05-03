@@ -1,6 +1,7 @@
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Renderers;
 
 namespace Pokemon.DesktopGL.Core.Screens;
@@ -11,10 +12,6 @@ public sealed class BattleScreen : Screen
 
     private int _selectedIndex;
     private SpriteFontBase _font;
-
-    public BattleScreen(PokemonGame game) : base(game)
-    {
-    }
 
     public override void Load()
     {

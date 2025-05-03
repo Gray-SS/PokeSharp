@@ -13,12 +13,12 @@ public sealed class CharacterSpawner
         _registry = registry;
     }
 
-    public NPC SpawnNPC(string characterId, Vector2 position)
+    public NPC SpawnNPC(string characterId, Vector2 position, NPCData data)
     {
-        CharacterData data = _registry.Get(characterId);
-        Character character = new(data, position);
+        CharacterData charData = _registry.Get(characterId);
+        Character character = new(charData, position);
 
-        return new NPC(character);
+        return new NPC(data, character);
     }
 
     public Player SpawnPlayer(string characterId, Vector2 position)

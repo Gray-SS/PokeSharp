@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Pokemon.DesktopGL.Core;
+using Pokemon.DesktopGL.Core.Graphics;
 
 namespace Pokemon.DesktopGL.Characters;
 
@@ -11,7 +12,7 @@ public class CharacterData
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    [JsonPropertyName("spritesheet_path")]
+    [JsonPropertyName("spritesheetPath")]
     public required string SpritesheetPath { get; init; }
 
     [JsonIgnore]

@@ -15,12 +15,21 @@ public sealed class NPCController : CharacterController
     public override void Update(float dt)
     {
         _timer += dt;
-        if (_timer >= 1.0f)
+        if (_timer >= 2.0f)
         {
             _timer = 0.0f;
 
-            var dir = (Direction)Random.Shared.Next(0, 4);
-            Character.Move(dir);
+            var actionId = Random.Shared.Next(0, 2);
+            if (actionId == 0)
+            {
+                var dir = (Direction)Random.Shared.Next(0, 4);
+                Character.Move(dir);
+            }
+            else if (actionId == 1)
+            {
+                var dir = (Direction)Random.Shared.Next(0, 4);
+                Character.Rotate(dir);
+            }
         }
     }
 }

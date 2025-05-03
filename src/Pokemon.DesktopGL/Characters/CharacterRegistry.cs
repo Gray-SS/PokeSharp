@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Pokemon.DesktopGL.Core;
+using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Managers;
 
 namespace Pokemon.DesktopGL.Characters;
@@ -19,9 +20,9 @@ public sealed class CharacterRegistry
 
     public void Load()
     {
-        LoadCharactersData("Content/Datas/Characters/npcs.json");
-        LoadCharactersData("Content/Datas/Characters/trainers.json");
-        LoadCharactersData("Content/Datas/Characters/players.json");
+        LoadCharactersData("Content/Data/Characters/npcs.json");
+        LoadCharactersData("Content/Data/Characters/trainers.json");
+        LoadCharactersData("Content/Data/Characters/players.json");
     }
 
     public CharacterData Get(string id)
@@ -35,7 +36,7 @@ public sealed class CharacterRegistry
         foreach (CharacterData data in datas)
         {
             Sprite sprite = _assetsManager.LoadSprite(data.SpritesheetPath);
-            SpriteSheet sheet = new SpriteSheet(sprite, 4, 4);
+            SpriteSheet sheet = new SpriteSheet(sprite, 4, 4, null, null);
 
             data.IdleAnimations = new AnimationPack(new Dictionary<string, Animation>()
             {

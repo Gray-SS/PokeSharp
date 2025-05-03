@@ -1,13 +1,18 @@
+using System.Linq;
 using Pokemon.DesktopGL.Characters;
+using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL.NPCs;
 
-public sealed class NPC : CharacterEntity
+public sealed class NPC : WorldEntity
 {
+    public NPCData Data { get; }
+
     private readonly NPCController _controller;
 
-    public NPC(Character character) : base(character)
+    public NPC(NPCData data, Character character) : base(character)
     {
+        Data = data;
         _controller = new NPCController(character);
     }
 
@@ -15,5 +20,11 @@ public sealed class NPC : CharacterEntity
     {
         _controller.Update(dt);
         base.Update(dt);
+    }
+
+    public override void Interact()
+    {
+        string dialogue = Data.Dialogues.FirstOrDefault() ?? "No dialogue found";
+        System.Console.WriteLine($"{Data.Name} said '{dialogue}'.");
     }
 }

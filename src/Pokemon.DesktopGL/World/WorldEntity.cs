@@ -1,13 +1,14 @@
+using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Renderers;
 
-namespace Pokemon.DesktopGL.Characters;
+namespace Pokemon.DesktopGL.World;
 
-public abstract class CharacterEntity
+public abstract class WorldEntity
 {
     public Character Character { get; }
     public CharacterRenderer Renderer { get; }
 
-    public CharacterEntity(Character character)
+    public WorldEntity(Character character)
     {
         Character = character;
         Renderer = new CharacterRenderer(Character);
@@ -23,4 +24,6 @@ public abstract class CharacterEntity
     {
         Renderer.Draw(renderer);
     }
+
+    public abstract void Interact();
 }
