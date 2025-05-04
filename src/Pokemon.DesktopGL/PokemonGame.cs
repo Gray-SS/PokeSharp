@@ -5,6 +5,7 @@ using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Screens;
 using Pokemon.DesktopGL.Dialogues;
+using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL;
@@ -20,9 +21,11 @@ public class PokemonGame : Game
     public AssetsManager AssetsManager { get; private set; }
     public WindowManager WindowManager { get; private set; }
     public DialogueManager DialogueManager { get; private set; }
+    public CoroutineManager CoroutineManager { get; private set; }
 
     // Game Properties
     public Overworld ActiveWorld { get; set; }
+    public CreatureRegistry CreatureRegistry { get; private set; }
     public CharacterRegistry CharacterRegistry { get; private set; }
 
     // MonoGame Properties
@@ -44,9 +47,11 @@ public class PokemonGame : Game
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();
         DialogueManager = new DialogueManager();
+        CoroutineManager = new CoroutineManager();
         AssetsManager = new AssetsManager(GraphicsDevice, Content);
         WindowManager = new WindowManager(Window, Graphics);
 
+        CreatureRegistry = new CreatureRegistry(AssetsManager);
         CharacterRegistry = new CharacterRegistry(AssetsManager);
 
         WindowManager.SetWindowTitle("Pokemon");
@@ -58,6 +63,7 @@ public class PokemonGame : Game
     protected override void LoadContent()
     {
         AssetsManager.LoadGlobalAssets();
+        CreatureRegistry.Load();
         CharacterRegistry.Load();
 
         ScreenManager.Push(new OverworldScreen());
@@ -66,6 +72,8 @@ public class PokemonGame : Game
     protected override void Update(GameTime gameTime)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        CoroutineManager.Update(dt);
 
         InputManager.Update();
         DialogueManager.Update(dt);

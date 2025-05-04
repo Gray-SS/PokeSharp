@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DotTiled;
 using DotTiled.Serialization;
@@ -21,8 +22,10 @@ public sealed class GameMap
 
     public (int Col, int Row) GetCoord(Vector2 position)
     {
-        var col = (int)(position.X / GameConstants.TileSize);
-        var row = (int)(position.Y / GameConstants.TileSize);
+        const float epsilon = 0.001f;
+
+        int col = (int)MathF.Floor((position.X + epsilon) / GameConstants.TileSize);
+        int row = (int)MathF.Floor((position.Y + epsilon) / GameConstants.TileSize);
 
         return (col, row);
     }

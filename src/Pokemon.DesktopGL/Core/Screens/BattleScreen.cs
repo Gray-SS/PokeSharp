@@ -1,8 +1,10 @@
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Pokemon.DesktopGL.Battles;
 using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Renderers;
+using Pokemon.DesktopGL.Creatures;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
@@ -13,14 +15,40 @@ public sealed class BattleScreen : Screen
     private int _selectedIndex;
     private SpriteFontBase _font;
 
+    private BattleCreatureRenderer _playerRenderer;
+    private BattleCreatureRenderer _opponentRenderer;
+
+    private Battle _battle;
+    private BattleController _battleController;
+
+    private Combatant _player;
+    private Combatant _opponent;
+
     public override void Load()
     {
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _font = Game.AssetsManager.Font_PowerGreen.GetFont(30);
+
+        CreatureData gulpinData = Game.CreatureRegistry.Get("pikachu");
+        CreatureData pikachuData = Game.CreatureRegistry.Get("alakazam");
+
+        _player = new Combatant([ pikachuData.Create(1) ]);
+        _opponent = new Combatant([ gulpinData.Create(4) ]);
+
+        _playerRenderer = new BattleCreatureRenderer(_player);
+        _opponentRenderer = new BattleCreatureRenderer(_opponent);
+
+        _battle = new Battle(_player, _opponent);
+        _battleController = new BattleController(_battle);
     }
 
     public override void Update(GameTime gameTime)
     {
+        _battleController.Update();
+
+        if (_battle.State != BattleState.WaitingForPlayerAction)
+            return;
+
         var inputManager = Game.InputManager;
 
         if (inputManager.IsKeyPressed(Keys.D) || inputManager.IsKeyPressed(Keys.Right))
@@ -34,6 +62,12 @@ public sealed class BattleScreen : Screen
 
         if (inputManager.IsKeyPressed(Keys.S) || inputManager.IsKeyPressed(Keys.Down))
             _selectedIndex = (_selectedIndex + 2) % 4;
+
+        if (inputManager.IsKeyPressed(Keys.Enter))
+        {
+            var move = new AttackMove();
+            _battle.SelectMove(move);
+        }
     }
 
     public override void Draw(GameTime gameTime)
@@ -44,7 +78,7 @@ public sealed class BattleScreen : Screen
         DrawBackground(bounds);
 
         Rectangle gameBounds = bounds;
-        gameBounds.Height = (int)Game.WindowManager.AlignY(0.75f);
+        gameBounds.Height = (int)Game.WindowManager.AlignY(0.70f);
 
         DrawBaseSelf(gameBounds);
         DrawBaseOther(gameBounds);
@@ -53,8 +87,8 @@ public sealed class BattleScreen : Screen
         DrawDataboxOther(gameBounds);
 
         Rectangle actionBounds = bounds;
-        actionBounds.Height = (int)Game.WindowManager.AlignY(0.25f);
-        actionBounds.Y = (int)Game.WindowManager.AlignY(0.75f);
+        actionBounds.Height = (int)Game.WindowManager.AlignY(0.3f);
+        actionBounds.Y = (int)Game.WindowManager.AlignY(0.70f);
 
         DrawActionContainer(actionBounds);
 
@@ -74,7 +108,10 @@ public sealed class BattleScreen : Screen
         int height = (int)(width * 0.125f);
         int x = -100;
         int y = bounds.Height - height;
-        _uiRenderer.Draw(sprite, new Rectangle(x, y, width, height), Color.White);
+        bounds = new Rectangle(x, y, width, height);
+        _uiRenderer.Draw(sprite, bounds, Color.White);
+
+        _playerRenderer.Draw(_uiRenderer, bounds);
     }
 
     private void DrawBaseOther(Rectangle bounds)
@@ -85,7 +122,10 @@ public sealed class BattleScreen : Screen
         int height = (int)(width * 0.5f);
         int x = bounds.X + bounds.Width - width;
         int y = bounds.Y + (bounds.Height - height) / 2;
-        _uiRenderer.Draw(sprite, new Rectangle(x, y, width, height), Color.White);
+        bounds = new Rectangle(x, y, width, height);
+        _uiRenderer.Draw(sprite, bounds, Color.White);
+
+        _opponentRenderer.Draw(_uiRenderer, bounds);
     }
 
     private void DrawDataboxSelf(Rectangle bounds)
@@ -96,7 +136,24 @@ public sealed class BattleScreen : Screen
         int height = (int)(width * 0.32f);
         int x = bounds.Width - width;
         int y = (int)(bounds.Height * 0.9f - height);
-        _uiRenderer.Draw(sprite, new Rectangle(x, y, width, height), Color.White);
+        bounds = new Rectangle(x, y, width, height);
+        _uiRenderer.Draw(sprite, bounds, Color.White);
+
+        var font = Game.AssetsManager.Font_PowerGreen.GetFont(35);
+        var creature = _player.ActiveCreature;
+        _uiRenderer.DrawString(font, creature.Data.Name, new Vector2(x + 75, y + 10), Color.Black);
+
+        var hpScale = creature.HP / (float)creature.MaxHP;
+        var hpOverlayBounds = bounds;
+        hpOverlayBounds.X = bounds.Center.X + 10;
+        hpOverlayBounds.Width = (int)((bounds.Width / 2 - 55) * hpScale);
+        hpOverlayBounds.Y = bounds.Center.Y - 3;
+        hpOverlayBounds.Height = 10;
+        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(0), hpOverlayBounds, Color.White);
+
+        font = Game.AssetsManager.Font_PowerGreen.GetFont(25);
+        var hpPosition = new Vector2(bounds.Center.X + 35, bounds.Center.Y + 10);
+        _uiRenderer.DrawString(font, $"{creature.HP}/{creature.MaxHP}", hpPosition, Color.Black);
     }
 
     private void DrawDataboxOther(Rectangle bounds)
@@ -107,18 +164,34 @@ public sealed class BattleScreen : Screen
         int height = (int)(width * 0.22f);
         int x = 0;
         int y = (int)(bounds.Height * 0.15f);
+        bounds = new Rectangle(x, y, width, height);
         _uiRenderer.Draw(sprite, new Rectangle(x, y, width, height), Color.White);
+
+        var font = Game.AssetsManager.Font_PowerGreen.GetFont(35);
+        var creature = _opponent.ActiveCreature;
+        _uiRenderer.DrawString(font, creature.Data.Name, new Vector2(x + 10, y + 6), Color.Black);
+
+        var hpScale = creature.HP / (float)creature.MaxHP;
+        var hpOverlayBounds = bounds;
+        hpOverlayBounds.X = bounds.Center.X - 21;
+        hpOverlayBounds.Width = (int)((bounds.Width / 2 - 55) * hpScale);
+        hpOverlayBounds.Y = bounds.Center.Y + 15;
+        hpOverlayBounds.Height = 10;
+        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(0), hpOverlayBounds, Color.White);
     }
 
     private void DrawActionContainer(Rectangle bounds)
     {
         var assetsManager = Game.AssetsManager;
-        _uiRenderer.Draw(assetsManager.Sprite_Blank, bounds, Color.White);
+        _uiRenderer.Draw(assetsManager.Sprite_Blank, new Rectangle(bounds.Left, bounds.Top, bounds.Width, 10), Color.Black);
+
+        bounds.Y += 5;
+        bounds.Height -= 10;
 
         var leftContainerBounds = bounds;
         leftContainerBounds.Width /= 2;
 
-        DrawPlaceholderText(leftContainerBounds);
+        DrawOverlayMessage(leftContainerBounds);
 
         var rightContainerBounds = leftContainerBounds;
         rightContainerBounds.X += leftContainerBounds.Width + 50;
@@ -127,12 +200,17 @@ public sealed class BattleScreen : Screen
         DrawActions(rightContainerBounds);
     }
 
-    private void DrawPlaceholderText(Rectangle bounds)
+    private void DrawOverlayMessage(Rectangle bounds)
     {
-        var text = "Que souhaitez-vous faire ?";
+        var assetsManager = Game.AssetsManager;
+        bounds.X += 40;
+        bounds.Width -= 40;
+        _uiRenderer.Draw(assetsManager.Sprite_Dialogue_Overlay, bounds, Color.White);
+
+        var text = _battleController.TextTyper.CurrentText.ToString();
         var size = _font.MeasureString(text);
-        var position = new Vector2(bounds.X + 30, bounds.Y + bounds.Height * 0.5f - size.Y * 0.5f);
-        _uiRenderer.DrawString(_font, text, position, Color.Black);
+        var position = new Vector2(bounds.X + 50, bounds.Y + bounds.Height * 0.5f - size.Y * 0.5f);
+        _uiRenderer.DrawWrappedText(_font, text, position, Color.Black, bounds.Width - 100);
     }
 
     private void DrawActions(Rectangle bounds)

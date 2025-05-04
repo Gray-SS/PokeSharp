@@ -1,0 +1,70 @@
+namespace Pokemon.DesktopGL.Battles;
+
+public sealed class Battle
+{
+    public Combatant Player { get; }
+    public Combatant Opponent { get; }
+    public BattleState State { get; private set; }
+
+    public Combatant Winner { get; private set; }
+
+    private IBattleMove _playerMove;
+    private IBattleMove _opponentMove;
+
+    public bool IsFinished { get; private set; }
+
+    public Battle(Combatant player, Combatant opponent)
+    {
+        Player = player;
+        Opponent = opponent;
+        State = BattleState.Intro;
+
+        Player.BindBattle(this);
+        Opponent.BindBattle(this);
+    }
+
+    public void Start()
+    {
+        State = BattleState.WaitingForPlayerAction;
+    }
+
+    public BattleTurn GetTurn()
+    {
+        return new BattleTurn(
+            this,
+            Player,
+            Opponent,
+            _playerMove,
+            _opponentMove
+        );
+    }
+
+    public void StartNewTurn()
+    {
+        _playerMove = null;
+        _opponentMove = null;
+        State = BattleState.WaitingForPlayerAction;
+    }
+
+    public void EndBattle(Combatant winner)
+    {
+        Winner = winner;
+        State = BattleState.BattleOver;
+    }
+
+    public void SelectMove(IBattleMove move)
+    {
+        if (State != BattleState.WaitingForPlayerAction)
+            return;
+
+        _playerMove = move;
+        _opponentMove = DetermineOpponentMove();
+
+        State = BattleState.PerformingTurn;
+    }
+
+    private IBattleMove DetermineOpponentMove()
+    {
+        return new AttackMove();
+    }
+}

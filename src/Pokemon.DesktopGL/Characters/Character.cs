@@ -28,6 +28,7 @@ public class Character
 
     public Rectangle Bounds => new((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
 
+    public event EventHandler Moved;
     public event EventHandler Rotated;
 
     private bool _premoved;
@@ -131,16 +132,20 @@ public class Character
 
     private void HandleMovingState(float dt)
     {
-        float distSq = Vector2.DistanceSquared(Position, TargetPosition);
-        if (distSq >= 2f)
+        Vector2 dir = TargetPosition - Position;
+        float distance = dir.Length();
+
+        float moveStep = Speed * dt;
+
+        if (distance > moveStep)
         {
-            Vector2 dir = TargetPosition - Position;
             dir.Normalize();
             Position += dir * Speed * dt;
         }
         else
         {
             Position = TargetPosition;
+            Moved?.Invoke(this, EventArgs.Empty);
 
             if (_premoved)
             {

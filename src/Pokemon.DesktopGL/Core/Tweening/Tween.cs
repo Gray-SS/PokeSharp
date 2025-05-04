@@ -1,0 +1,76 @@
+using System;
+using System.Collections;
+using System.Linq.Expressions;
+using Pokemon.DesktopGL.Core.Coroutines;
+using Pokemon.DesktopGL.Core.Managers;
+
+namespace Pokemon.DesktopGL.Core.Tweening;
+
+public delegate float TweenEase(float t);
+public delegate T TweenInterpolator<T>(T from, T to, float t);
+
+public class Tween<T> : ICoroutine
+{
+    public object Target { get; }
+
+    public T From { get; }
+    public T To { get; }
+    public float Duration { get; }
+    public TweenEase Ease { get; set; }
+    public TweenInterpolator<T> Interpolator { get; }
+
+    public bool IsStarted { get; private set; }
+    public bool IsRunning { get; private set; }
+
+    private float _elapsed;
+    private readonly object _target;
+    private readonly Action<T> _setter;
+
+    public Tween(T to, float duration, Action<T> setter, Func<T> getter, TweenEase ease, TweenInterpolator<T> interpolator)
+    {
+        _setter = setter;
+
+        To = to;
+        From = getter.Invoke();
+        Duration = duration;
+        Ease = ease;
+        Interpolator = interpolator;
+    }
+
+    public void Start()
+    {
+        if (!IsRunning) return;
+
+        CoroutineManager.Start(StartRoutine());
+    }
+
+    public IEnumerator StartRoutine()
+    {
+        IsRunning = true;
+
+        yield return this;
+
+        IsRunning = false;
+    }
+
+    public bool IsFinished(float dt)
+    {
+        _elapsed += dt;
+
+        float t = Math.Clamp(_elapsed / Duration, 0f, 1f);
+        float eased = Ease(t);
+
+        T value = Interpolator.Invoke(From, To, eased);
+        _setter?.Invoke(value);
+
+        return _elapsed >= Duration;
+    }
+}
+
+public static class Tween
+{
+    public static Tween<float> To(Action<float> setter, Func<float> getter, float to, float duration, TweenEase ease = null)
+    {
+        return new Tween<float>(to, duration, setter, getter, ease, float.Lerp);
+    }
+}

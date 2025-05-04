@@ -1,4 +1,3 @@
-using System.Net.WebSockets;
 using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;

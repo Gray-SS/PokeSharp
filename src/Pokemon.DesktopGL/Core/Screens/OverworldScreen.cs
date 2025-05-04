@@ -3,7 +3,7 @@ using Pokemon.DesktopGL.Core.Renderers;
 using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Dialogues;
-using System.Data;
+using System;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
@@ -18,9 +18,6 @@ public sealed class OverworldScreen : Screen
     private GameMap _map;
     private Overworld _world;
 
-    private int _lastCol;
-    private int _lastRow;
-
     public override void Load()
     {
         _camera = new Camera(Game.WindowManager);
@@ -33,7 +30,21 @@ public sealed class OverworldScreen : Screen
         _world = new Overworld(_map);
         _world.LoadEntities();
 
+        _world.Player.Character.Moved += OnPlayerMove;
+
         Game.ActiveWorld = _world;
+    }
+
+    private void OnPlayerMove(object sender, EventArgs e)
+    {
+        if (_world.IsInLeaf(_world.Player.Character))
+        {
+            var prob = Random.Shared.NextSingle();
+            if (prob <= 0.2f)
+            {
+                Game.ScreenManager.Push(new BattleScreen());
+            }
+        }
     }
 
     public override void Unload()
@@ -48,15 +59,6 @@ public sealed class OverworldScreen : Screen
         _world.Update(dt);
         _dialogueRenderer.Update(dt);
 
-        (int Col, int Row) = _map.GetCoord(_world.Player.Character.Position);
-        if (_lastCol != Col || _lastRow != Row)
-        {
-            if (_world.IsInLeaf(_world.Player.Character))
-            {
-                System.Console.WriteLine("Ok");
-            }
-        }
-
         var target = _world.Player.Character.Position;
 
         var viewportSize = _camera.Viewport.Bounds.Size.ToVector2();
@@ -70,9 +72,6 @@ public sealed class OverworldScreen : Screen
 
         Vector2 clampedTarget = new(clampedX, clampedY);
         _camera.Position = Vector2.Lerp(_camera.Position, clampedTarget, 0.05f);
-
-        _lastCol = Col;
-        _lastRow = Row;
     }
 
     public override void Draw(GameTime gameTime)

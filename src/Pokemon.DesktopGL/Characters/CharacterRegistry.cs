@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Managers;
 

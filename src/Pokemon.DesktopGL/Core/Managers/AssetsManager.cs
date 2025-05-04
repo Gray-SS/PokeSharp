@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
@@ -18,8 +17,10 @@ public class AssetsManager
     public Sprite Sprite_Battle_Databox { get; private set; }
     public Sprite Sprite_Battle_Databox_Foe { get; private set; }
     public Sprite Sprite_Dialogue_Overlay { get; private set; }
+    public Sprite Sprite_Battle_Exp_Overlay { get; private set; }
 
     public SpriteSheet Sheet_Battle_Actions { get; private set; }
+    public SpriteSheet Sheet_Battle_Hp_Overlay { get; private set; }
 
     public FontSystem Font_PowerGreen { get; private set; }
 
@@ -45,8 +46,10 @@ public class AssetsManager
 
         Sprite_Battle_Databox = LoadSprite("Textures/UI/Battle/databox_normal");
         Sprite_Battle_Databox_Foe = LoadSprite("Textures/UI/Battle/databox_normal_foe");
+        Sprite_Battle_Exp_Overlay = LoadSprite("Textures/UI/Battle/overlay_exp");
 
         Sheet_Battle_Actions = new SpriteSheet(LoadSprite("Textures/UI/Battle/cursor_command"), 2, 10, null, null);
+        Sheet_Battle_Hp_Overlay = new SpriteSheet(LoadSprite("Textures/UI/Battle/overlay_hp"), 1, 3, null, null);
 
         Sprite_Dialogue_Overlay = LoadSprite("Textures/UI/Battle/overlay_message");
 
