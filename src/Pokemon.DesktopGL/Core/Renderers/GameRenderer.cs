@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.Core.Graphics;
-using Pokemon.DesktopGL.Core.Managers;
 
 namespace Pokemon.DesktopGL.Core.Renderers;
 

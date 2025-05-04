@@ -1,4 +1,4 @@
-namespace Pokemon.DesktopGL.Battles;
+namespace Pokemon.DesktopGL.Battles.Moves;
 
 public class AttackMove : IBattleMove
 {

@@ -32,14 +32,14 @@ public sealed class BattleScreen : Screen
         CreatureData gulpinData = Game.CreatureRegistry.Get("pikachu");
         CreatureData pikachuData = Game.CreatureRegistry.Get("alakazam");
 
-        _player = new Combatant([ pikachuData.Create(1) ]);
+        _player = new Combatant([ pikachuData.Create(4) ]);
         _opponent = new Combatant([ gulpinData.Create(4) ]);
 
         _playerRenderer = new BattleCreatureRenderer(_player);
         _opponentRenderer = new BattleCreatureRenderer(_opponent);
 
         _battle = new Battle(_player, _opponent);
-        _battleController = new BattleController(_battle);
+        _battleController = new BattleController(_battle, _playerRenderer, _opponentRenderer);
     }
 
     public override void Update(GameTime gameTime)
@@ -65,7 +65,18 @@ public sealed class BattleScreen : Screen
 
         if (inputManager.IsKeyPressed(Keys.Enter))
         {
-            var move = new AttackMove();
+            IBattleMove move = _selectedIndex switch
+            {
+                0 => new AttackMove(),
+                1 => new FleeMove(),
+                2 => null,
+                3 => null,
+                _ => null
+            };
+
+            if (move == null)
+                return;
+
             _battle.SelectMove(move);
         }
     }

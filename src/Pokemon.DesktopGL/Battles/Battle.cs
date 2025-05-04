@@ -28,6 +28,11 @@ public sealed class Battle
         State = BattleState.WaitingForPlayerAction;
     }
 
+    public void Flee()
+    {
+        State = BattleState.Fleed;
+    }
+
     public BattleTurn GetTurn()
     {
         return new BattleTurn(

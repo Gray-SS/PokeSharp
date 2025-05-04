@@ -42,6 +42,7 @@ public sealed class OverworldScreen : Screen
             var prob = Random.Shared.NextSingle();
             if (prob <= 0.2f)
             {
+                _world.Player.Character.Stop();
                 Game.ScreenManager.Push(new BattleScreen());
             }
         }

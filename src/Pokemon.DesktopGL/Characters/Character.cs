@@ -68,6 +68,13 @@ public class Character
         };
     }
 
+    public void Stop()
+    {
+        _nextDirection = Direction;
+        _nextTargetPosition = TargetPosition;
+        _premoved = false;
+    }
+
     public bool CanMove(Vector2 pos, Direction direction)
     {
         var targetPos = direction switch

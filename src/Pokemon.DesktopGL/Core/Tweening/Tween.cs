@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq.Expressions;
+using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core.Coroutines;
 using Pokemon.DesktopGL.Core.Managers;
 
@@ -69,8 +70,18 @@ public class Tween<T> : ICoroutine
 
 public static class Tween
 {
-    public static Tween<float> To(Action<float> setter, Func<float> getter, float to, float duration, TweenEase ease = null)
+    public static IEnumerator To(Action<float> setter, Func<float> getter, float to, float duration, TweenEase ease = null)
     {
-        return new Tween<float>(to, duration, setter, getter, ease, float.Lerp);
+        return new Tween<float>(to, duration, setter, getter, ease, float.Lerp).StartRoutine();
+    }
+
+    public static IEnumerator To(Action<Vector2> setter, Func<Vector2> getter, Vector2 to, float duration, TweenEase ease = null)
+    {
+        return new Tween<Vector2>(to, duration, setter, getter, ease, Vector2.Lerp).StartRoutine();
+    }
+
+    public static IEnumerator To(Action<Color> setter, Func<Color> getter, Color to, float duration, TweenEase ease = null)
+    {
+        return new Tween<Color>(to, duration, setter, getter, ease, Color.Lerp).StartRoutine();
     }
 }

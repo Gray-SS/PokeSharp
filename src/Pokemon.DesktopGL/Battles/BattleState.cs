@@ -5,5 +5,6 @@ public enum BattleState
     Intro,
     WaitingForPlayerAction,
     PerformingTurn,
-    BattleOver
+    BattleOver,
+    Fleed,
 }
