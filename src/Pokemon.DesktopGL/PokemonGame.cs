@@ -7,6 +7,7 @@ using Pokemon.DesktopGL.Core.Screens;
 using Pokemon.DesktopGL.Dialogues;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.World;
+using Pokemon.DesktopGL.Players;
 
 namespace Pokemon.DesktopGL;
 
@@ -25,6 +26,7 @@ public class PokemonGame : Game
 
     // Game Properties
     public Overworld ActiveWorld { get; set; }
+    public PlayerData PlayerData { get; set; }
     public CreatureRegistry CreatureRegistry { get; private set; }
     public CharacterRegistry CharacterRegistry { get; private set; }
 
@@ -54,6 +56,8 @@ public class PokemonGame : Game
         CreatureRegistry = new CreatureRegistry(AssetsManager);
         CharacterRegistry = new CharacterRegistry(AssetsManager);
 
+        PlayerData = new PlayerData();
+
         WindowManager.SetWindowTitle("Pokemon");
         WindowManager.SetResolution("1280x720");
 
@@ -65,6 +69,8 @@ public class PokemonGame : Game
         AssetsManager.LoadGlobalAssets();
         CreatureRegistry.Load();
         CharacterRegistry.Load();
+
+        PlayerData.AddCreature(CreatureRegistry.Get("chimchar").Create(4));
 
         ScreenManager.Push(new OverworldScreen());
     }

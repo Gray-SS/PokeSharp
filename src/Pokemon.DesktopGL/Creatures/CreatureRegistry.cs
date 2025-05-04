@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Pokemon.DesktopGL.Core.Managers;
 
@@ -24,6 +26,15 @@ public sealed class CreatureRegistry
     public CreatureData Get(string id)
         => _creatures[id];
 
+    public CreatureData GetRandom()
+    {
+        CreatureData data;
+
+        do data = _creatures.Values.ElementAt(Random.Shared.Next(_creatures.Count));
+        while (data.Id == "chimchar");
+
+        return data;
+    }
 
     private void LoadFromPath(string path)
     {

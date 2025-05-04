@@ -2,6 +2,7 @@ using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Battles;
+using Pokemon.DesktopGL.Battles.Moves;
 using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Creatures;
@@ -24,16 +25,20 @@ public sealed class BattleScreen : Screen
     private Combatant _player;
     private Combatant _opponent;
 
+    private CreatureData _opponentData;
+
+    public BattleScreen(CreatureData opponentData)
+    {
+        _opponentData = opponentData;
+    }
+
     public override void Load()
     {
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _font = Game.AssetsManager.Font_PowerGreen.GetFont(30);
 
-        CreatureData gulpinData = Game.CreatureRegistry.Get("pikachu");
-        CreatureData pikachuData = Game.CreatureRegistry.Get("alakazam");
-
-        _player = new Combatant([ pikachuData.Create(4) ]);
-        _opponent = new Combatant([ gulpinData.Create(4) ]);
+        _player = new Combatant(Game.PlayerData.Creatures);
+        _opponent = new Combatant([ _opponentData.Create(4) ]);
 
         _playerRenderer = new BattleCreatureRenderer(_player);
         _opponentRenderer = new BattleCreatureRenderer(_opponent);
@@ -68,9 +73,9 @@ public sealed class BattleScreen : Screen
             IBattleMove move = _selectedIndex switch
             {
                 0 => new AttackMove(),
-                1 => new FleeMove(),
+                1 => null,
                 2 => null,
-                3 => null,
+                3 => new FleeMove(),
                 _ => null
             };
 

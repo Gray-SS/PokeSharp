@@ -1,3 +1,5 @@
+using Pokemon.DesktopGL.Battles.Moves;
+
 namespace Pokemon.DesktopGL.Battles;
 
 public sealed class Battle

@@ -56,12 +56,13 @@ public sealed class BattleCreatureRenderer
             return;
 
         var sprite = Combatant.IsPlayer ? Combatant.ActiveCreature.Data.BackSprite : Combatant.ActiveCreature.Data.FrontSprite;
-        var scale = Combatant.IsPlayer ? 1.0f : 0.95f;
+        // var scale = Combatant.IsPlayer ? 1.0f : 0.95f;
+        var offsetY = !Combatant.IsPlayer ? 60 : 0;
 
-        int width = (int)(_size.X * scale);
+        int width = (int)_size.X;
         int height = width;
         int x = (int)(bounds.X + _offset.X + (bounds.Width - width) * 0.5f);
-        int y = (int)(bounds.Y + _offset.Y - 140 * scale + (bounds.Height - height) * 0.5f);
+        int y = (int)(bounds.Y + _offset.Y - 140 + offsetY + (bounds.Height - height) * 0.5f);
         renderer.Draw(sprite, new Rectangle(x, y, width, height), _color * _opacity);
     }
 }

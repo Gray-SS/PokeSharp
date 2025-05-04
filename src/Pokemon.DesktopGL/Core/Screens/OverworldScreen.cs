@@ -37,13 +37,15 @@ public sealed class OverworldScreen : Screen
 
     private void OnPlayerMove(object sender, EventArgs e)
     {
-        if (_world.IsInLeaf(_world.Player.Character))
+        if (_world.IsInLeaf(_world.Player.Character) && Game.PlayerData.CanFight)
         {
             var prob = Random.Shared.NextSingle();
-            if (prob <= 0.2f)
+            if (prob <= 0.1f)
             {
                 _world.Player.Character.Stop();
-                Game.ScreenManager.Push(new BattleScreen());
+
+                var creatureData = Game.CreatureRegistry.GetRandom();
+                Game.ScreenManager.Push(new BattleScreen(creatureData));
             }
         }
     }
