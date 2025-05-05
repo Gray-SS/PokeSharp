@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Pokemon.DesktopGL.Battles.Moves;
 using Pokemon.DesktopGL.Core.Coroutines;
 using Pokemon.DesktopGL.Core.Managers;
@@ -54,8 +56,10 @@ public sealed class BattleController
 
         yield return new WaitForSeconds(1.0f);
 
-
         var screenManager = PokemonGame.Instance.ScreenManager;
+        var screen = screenManager.ActiveScreen;
+
+        yield return screen.FadeIn();
         screenManager.Pop();
     }
 

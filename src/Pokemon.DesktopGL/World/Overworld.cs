@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Characters;
+using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Renderers;
+using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Players;
 
 namespace Pokemon.DesktopGL.World;
@@ -28,6 +30,35 @@ public sealed class Overworld
 
         _map = map;
         _mapRenderer = new TiledMapRenderer(_map);
+    }
+
+    public CreatureZone GetCurrentZone()
+    {
+        var objectLayers = _map.TiledMap.Layers.OfType<DotTiled.ObjectLayer>();
+        foreach (DotTiled.ObjectLayer layer in objectLayers)
+        {
+            foreach (DotTiled.RectangleObject rectObj in layer.Objects.OfType<DotTiled.RectangleObject>())
+            {
+                if (!rectObj.TryGetProperty<DotTiled.StringProperty>("zone_id", out var prop))
+                    continue;
+
+                int worldX = (int)(rectObj.X * GameConstants.TileSize / _map.TiledMap.TileWidth);
+                int worldY = (int)(rectObj.Y * GameConstants.TileSize / _map.TiledMap.TileWidth);
+                int worldWidth = (int)(rectObj.Width * GameConstants.TileSize / _map.TiledMap.TileWidth);
+                int worldHeight = (int)(rectObj.Height * GameConstants.TileSize / _map.TiledMap.TileWidth);
+                Rectangle bounds = new(worldX, worldY, worldWidth, worldHeight);
+
+                if (Player.Character.Bounds.Intersects(bounds))
+                {
+                    string zoneId = prop.Value;
+                    var zone = PokemonGame.Instance.CreatureRegistry.GetZone(zoneId);
+
+                    return zone;
+                }
+            }
+        }
+
+        return null;
     }
 
     public bool TryGetEntityAt(Vector2 position, out WorldEntity entity)
@@ -91,7 +122,7 @@ public sealed class Overworld
     {
         foreach (DotTiled.ObjectLayer objectLayer in _map.TiledMap.Layers.OfType<DotTiled.ObjectLayer>())
         {
-            foreach (DotTiled.Object obj in objectLayer.Objects)
+            foreach (DotTiled.PointObject obj in objectLayer.Objects.OfType<DotTiled.PointObject>())
             {
                 if (obj.Type == "entity")
                 {

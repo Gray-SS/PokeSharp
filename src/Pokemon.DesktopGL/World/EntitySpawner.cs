@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;

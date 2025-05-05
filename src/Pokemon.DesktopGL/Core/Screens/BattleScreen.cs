@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Battles;
 using Pokemon.DesktopGL.Battles.Moves;
 using Pokemon.DesktopGL.Core.Graphics;
+using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Creatures;
 
@@ -25,26 +26,33 @@ public sealed class BattleScreen : Screen
     private Combatant _player;
     private Combatant _opponent;
 
-    private CreatureData _opponentData;
+    private Creature _opponentCreature;
 
-    public BattleScreen(CreatureData opponentData)
+    public BattleScreen(Creature opponent)
     {
-        _opponentData = opponentData;
+        _opponentCreature = opponent;
     }
 
-    public override void Load()
+    public override void Initialize()
     {
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _font = Game.AssetsManager.Font_PowerGreen.GetFont(30);
 
         _player = new Combatant(Game.PlayerData.Creatures);
-        _opponent = new Combatant([ _opponentData.Create(4) ]);
+        _opponent = new Combatant([ _opponentCreature ]);
 
         _playerRenderer = new BattleCreatureRenderer(_player);
         _opponentRenderer = new BattleCreatureRenderer(_opponent);
 
         _battle = new Battle(_player, _opponent);
         _battleController = new BattleController(_battle, _playerRenderer, _opponentRenderer);
+
+        base.Initialize();
+    }
+
+    public override void Load()
+    {
+        CoroutineManager.Start(FadeOut());
     }
 
     public override void Update(GameTime gameTime)
@@ -109,6 +117,8 @@ public sealed class BattleScreen : Screen
         DrawActionContainer(actionBounds);
 
         _uiRenderer.End();
+
+        base.Draw(gameTime);
     }
 
     private void DrawBackground(Rectangle bounds)
@@ -160,16 +170,27 @@ public sealed class BattleScreen : Screen
         _uiRenderer.DrawString(font, creature.Data.Name, new Vector2(x + 75, y + 10), Color.Black);
 
         var hpScale = creature.HP / (float)creature.MaxHP;
+        var hpOverlayIndex = hpScale switch
+        {
+            >= 0.6f => 0,
+            >= 0.3f => 1,
+            _ => 2
+        };
+
         var hpOverlayBounds = bounds;
         hpOverlayBounds.X = bounds.Center.X + 10;
         hpOverlayBounds.Width = (int)((bounds.Width / 2 - 55) * hpScale);
         hpOverlayBounds.Y = bounds.Center.Y - 3;
         hpOverlayBounds.Height = 10;
-        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(0), hpOverlayBounds, Color.White);
+        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(hpOverlayIndex), hpOverlayBounds, Color.White);
 
-        font = Game.AssetsManager.Font_PowerGreen.GetFont(25);
+        var font25 = Game.AssetsManager.Font_PowerGreen.GetFont(25);
         var hpPosition = new Vector2(bounds.Center.X + 35, bounds.Center.Y + 10);
-        _uiRenderer.DrawString(font, $"{creature.HP}/{creature.MaxHP}", hpPosition, Color.Black);
+        _uiRenderer.DrawString(font25, $"{creature.HP}/{creature.MaxHP}", hpPosition, Color.Black);
+
+        var fontBold = Game.AssetsManager.Font_PowerClearBold.GetFont(22);
+        var lvlPosition = new Vector2(bounds.Right - 115, bounds.Top + 25);
+        _uiRenderer.DrawString(fontBold, $"Lv.{creature.Level}", lvlPosition, Color.Black);
     }
 
     private void DrawDataboxOther(Rectangle bounds)
@@ -189,11 +210,22 @@ public sealed class BattleScreen : Screen
 
         var hpScale = creature.HP / (float)creature.MaxHP;
         var hpOverlayBounds = bounds;
+        var hpOverlayIndex = hpScale switch
+        {
+            >= 0.6f => 0,
+            >= 0.3f => 1,
+            _ => 2
+        };
+
         hpOverlayBounds.X = bounds.Center.X - 21;
         hpOverlayBounds.Width = (int)((bounds.Width / 2 - 55) * hpScale);
         hpOverlayBounds.Y = bounds.Center.Y + 15;
         hpOverlayBounds.Height = 10;
-        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(0), hpOverlayBounds, Color.White);
+        _uiRenderer.Draw(Game.AssetsManager.Sheet_Battle_Hp_Overlay.GetSprite(hpOverlayIndex), hpOverlayBounds, Color.White);
+
+        var fontBold = Game.AssetsManager.Font_PowerClearBold.GetFont(22);
+        var lvlPosition = new Vector2(bounds.Right - 145, bounds.Top + 20);
+        _uiRenderer.DrawString(fontBold, $"Lv.{creature.Level}", lvlPosition, Color.Black);
     }
 
     private void DrawActionContainer(Rectangle bounds)

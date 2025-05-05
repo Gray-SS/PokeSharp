@@ -19,10 +19,13 @@ public class AssetsManager
     public Sprite Sprite_Dialogue_Overlay { get; private set; }
     public Sprite Sprite_Battle_Exp_Overlay { get; private set; }
 
+    public Sprite Sprite_Fade_Transition { get; private set; }
+
     public SpriteSheet Sheet_Battle_Actions { get; private set; }
     public SpriteSheet Sheet_Battle_Hp_Overlay { get; private set; }
 
     public FontSystem Font_PowerGreen { get; private set; }
+    public FontSystem Font_PowerClearBold { get; private set; }
 
     private readonly ContentManager _content;
     private readonly GraphicsDevice _graphicsDevice;
@@ -55,6 +58,9 @@ public class AssetsManager
 
         Font_PowerGreen = new FontSystem();
         Font_PowerGreen.AddFont(File.ReadAllBytes("Content/Fonts/power_green.ttf"));
+
+        Font_PowerClearBold = new FontSystem();
+        Font_PowerClearBold.AddFont(File.ReadAllBytes("Content/Fonts/power_clear_bold.ttf"));
     }
 
     public Sprite LoadSprite(string assetName)

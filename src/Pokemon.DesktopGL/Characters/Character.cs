@@ -25,6 +25,8 @@ public class Character
     public bool IsRotating => State == CharacterState.Rotating;
     public bool IsIdle => State == CharacterState.Idle;
     public bool IsNearTargetPos => Vector2.Distance(Position, TargetPosition) <= GameConstants.TileSize * 0.4f;
+    public bool MovementEnabled { get; set; } = true;
+    public bool RotationEnabled { get; set; } = true;
 
     public Rectangle Bounds => new((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
 
@@ -70,6 +72,8 @@ public class Character
 
     public void Stop()
     {
+        TargetPosition = Position;
+
         _nextDirection = Direction;
         _nextTargetPosition = TargetPosition;
         _premoved = false;
@@ -77,6 +81,8 @@ public class Character
 
     public bool CanMove(Vector2 pos, Direction direction)
     {
+        if (!MovementEnabled) return false;
+
         var targetPos = direction switch
         {
             Direction.Left => pos - new Vector2(GameConstants.TileSize, 0),
@@ -89,9 +95,9 @@ public class Character
         return PokemonGame.Instance.ActiveWorld.CanMove(this, targetPos);
     }
 
-    public void Rotate(Direction direction)
+    public void Rotate(Direction direction, bool force = false)
     {
-        if (State != CharacterState.Idle || Direction == direction) return;
+        if (!force && (!RotationEnabled || State != CharacterState.Idle || Direction == direction)) return;
 
         Direction = direction;
         State = CharacterState.Rotating;
@@ -139,6 +145,13 @@ public class Character
 
     private void HandleMovingState(float dt)
     {
+        if (!MovementEnabled)
+        {
+            Position = TargetPosition;
+            State = CharacterState.Idle;
+            return;
+        }
+
         Vector2 dir = TargetPosition - Position;
         float distance = dir.Length();
 

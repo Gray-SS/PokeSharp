@@ -16,7 +16,9 @@ public sealed class ScreenManager
 
     public void Push(Screen screen)
     {
+        screen.Initialize();
         screen.Load();
+
         _screens.Push(screen);
     }
 
@@ -24,6 +26,8 @@ public sealed class ScreenManager
     {
         var screen = _screens.Pop();
         screen.Unload();
+
+        _screens.Peek()?.Load();
 
         return screen;
     }

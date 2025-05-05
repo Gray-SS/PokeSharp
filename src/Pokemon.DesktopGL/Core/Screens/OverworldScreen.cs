@@ -4,6 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Dialogues;
 using System;
+using System.Collections;
+using Pokemon.DesktopGL.Core.Coroutines;
+using Pokemon.DesktopGL.Core.Managers;
+using Pokemon.DesktopGL.Core.Tweening;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
@@ -18,7 +22,7 @@ public sealed class OverworldScreen : Screen
     private GameMap _map;
     private Overworld _world;
 
-    public override void Load()
+    public override void Initialize()
     {
         _camera = new Camera(Game.WindowManager);
         _uiRenderer = new UIRenderer(GraphicsDevice);
@@ -33,6 +37,17 @@ public sealed class OverworldScreen : Screen
         _world.Player.Character.Moved += OnPlayerMove;
 
         Game.ActiveWorld = _world;
+
+        base.Initialize();
+    }
+
+    public override void Load()
+    {
+        _camera.Zoom = 1.0f;
+        _world.Player.Character.MovementEnabled = true;
+        _world.Player.Character.RotationEnabled = true;
+
+        CoroutineManager.Start(FadeOut());
     }
 
     private void OnPlayerMove(object sender, EventArgs e)
@@ -41,13 +56,23 @@ public sealed class OverworldScreen : Screen
         {
             var prob = Random.Shared.NextSingle();
             if (prob <= 0.1f)
-            {
-                _world.Player.Character.Stop();
-
-                var creatureData = Game.CreatureRegistry.GetRandom();
-                Game.ScreenManager.Push(new BattleScreen(creatureData));
-            }
+                CoroutineManager.Start(PlayBattleIntro());
         }
+    }
+
+    private IEnumerator PlayBattleIntro()
+    {
+        _world.Player.Character.MovementEnabled = false;
+        _world.Player.Character.RotationEnabled = false;
+        _world.Player.Character.Rotate(Direction.Down, force: true);
+
+        CoroutineManager.Start(Tween.To((v) => _camera.Zoom = v, () => _camera.Zoom, 3f, 1f, Easing.InOutQuad));
+        yield return FadeIn();
+
+        var zone = _world.GetCurrentZone();
+        var creature = zone.Spawn();
+
+        Game.ScreenManager.Push(new BattleScreen(creature));
     }
 
     public override void Unload()
@@ -88,5 +113,7 @@ public sealed class OverworldScreen : Screen
         _uiRenderer.Begin();
         _dialogueRenderer.Draw(_uiRenderer);
         _uiRenderer.End();
+
+        base.Draw(gameTime);
     }
 }

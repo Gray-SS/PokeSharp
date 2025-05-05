@@ -70,7 +70,7 @@ public class PokemonGame : Game
         CreatureRegistry.Load();
         CharacterRegistry.Load();
 
-        PlayerData.AddCreature(CreatureRegistry.Get("chimchar").Create(4));
+        PlayerData.AddCreature(CreatureRegistry.GetData("chimchar").Create(4));
 
         ScreenManager.Push(new OverworldScreen());
     }
