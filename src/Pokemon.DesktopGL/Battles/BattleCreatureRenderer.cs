@@ -44,8 +44,8 @@ public sealed class BattleCreatureRenderer
     {
         _opacity = 1.0f;
 
-        CoroutineManager.Start(Tween.To((v) => _offset = v, () => _offset, Vector2.UnitY * 30, 0.15f, Easing.InOutQuad));
-        CoroutineManager.Start(Tween.To((v) => _opacity = v, () => _opacity, 0.0f, 0.15f, Easing.InOutQuad));
+        CoroutineManager.Start(Tween.To((v) => _offset = v, () => _offset, Vector2.UnitY * 30, 0.3f, Easing.InOutQuad));
+        CoroutineManager.Start(Tween.To((v) => _opacity = v, () => _opacity, 0.0f, 0.3f, Easing.InOutQuad));
 
         yield return null;
     }

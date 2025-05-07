@@ -24,7 +24,7 @@ public class Character
     public bool IsMoving => State == CharacterState.Moving;
     public bool IsRotating => State == CharacterState.Rotating;
     public bool IsIdle => State == CharacterState.Idle;
-    public bool IsNearTargetPos => Vector2.Distance(Position, TargetPosition) <= GameConstants.TileSize * 0.4f;
+    public bool IsNearTargetPos => Vector2.Distance(Position, TargetPosition) <= GameConstants.TileSize * 0.5f;
     public bool MovementEnabled { get; set; } = true;
     public bool RotationEnabled { get; set; } = true;
 
@@ -180,7 +180,7 @@ public class Character
     private void HandleRotatingState(float dt)
     {
         _rotatingTimer += dt;
-        if (_rotatingTimer >= 0.3f)
+        if (_rotatingTimer >= 0.1f)
         {
             State = CharacterState.Idle;
             _rotatingTimer = 0.0f;

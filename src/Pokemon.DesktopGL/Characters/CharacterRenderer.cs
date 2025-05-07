@@ -20,7 +20,7 @@ public class CharacterRenderer
     private bool _wasMoving;
     private Direction _lastDirection;
 
-    private static readonly float JumpDuration = 0.25f;
+    private static readonly float JumpDuration = 0.2f;
     private static readonly float JumpHeight = GameConstants.TileSize * 0.2f;
     private static readonly Vector2 BaseOffset = new(0, GameConstants.TileSize * -0.35f);
 
