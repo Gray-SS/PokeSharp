@@ -124,7 +124,7 @@ public sealed class Overworld
         {
             foreach (DotTiled.PointObject obj in objectLayer.Objects.OfType<DotTiled.PointObject>())
             {
-                if (obj.Type == "entity")
+                if (obj.Visible && obj.Type == "entity")
                 {
                     var character_id = obj.GetProperty<DotTiled.StringProperty>("character_id").Value;
                     var dialogues = obj.GetProperty<DotTiled.StringProperty>("dialogues").Value;
