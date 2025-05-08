@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core;
 
@@ -18,13 +20,13 @@ public class Character
     public CharacterData Data { get; }
     public Vector2 Position { get; private set; }
     public Vector2 Size { get; set; } = new Vector2(50, 75);
-    public Vector2 TargetPosition { get; private set; }
+    public Vector2 TargetPosition => _queuedMoves.Count > 0 ? _queuedMoves.Peek().TargetPos : Position;
+    public Direction TargetDirection => _queuedMoves.Count > 0 ? _queuedMoves.Peek().TargetDir : Direction;
     public Direction Direction { get; private set; }
     public CharacterState State { get; private set; }
     public bool IsMoving => State == CharacterState.Moving;
     public bool IsRotating => State == CharacterState.Rotating;
     public bool IsIdle => State == CharacterState.Idle;
-    public bool IsNearTargetPos => Vector2.Distance(Position, TargetPosition) <= GameConstants.TileSize * 0.5f;
     public bool MovementEnabled { get; set; } = true;
     public bool RotationEnabled { get; set; } = true;
 
@@ -33,9 +35,9 @@ public class Character
     public event EventHandler Moved;
     public event EventHandler Rotated;
 
-    private bool _premoved;
-    private Vector2 _nextTargetPosition;
-    private Direction _nextDirection;
+    public IReadOnlyCollection<QueuedMove> QueuedMoves => _queuedMoves;
+
+    private readonly Queue<QueuedMove> _queuedMoves;
 
     private float _rotatingTimer;
 
@@ -43,61 +45,30 @@ public class Character
     {
         Data = data;
         Position = startPosition;
-        TargetPosition = startPosition;
-        Direction = Direction.Down;
+
+        _queuedMoves = new Queue<QueuedMove>();
     }
 
     public void Move(Direction direction)
     {
-        if (State != CharacterState.Idle) return;
-
-        if (!CanMove(Position, direction))
-        {
-            Rotate(direction);
-            return;
-        }
-
-        Direction = direction;
         State = CharacterState.Moving;
-
-        TargetPosition = direction switch
-        {
-            Direction.Left => Position - new Vector2(GameConstants.TileSize, 0),
-            Direction.Right => Position + new Vector2(GameConstants.TileSize, 0),
-            Direction.Up => Position - new Vector2(0, GameConstants.TileSize),
-            Direction.Down => Position + new Vector2(0, GameConstants.TileSize),
-            _ => Position
-        };
+        QueueMove(direction);
     }
 
     public void Stop()
     {
-        TargetPosition = Position;
-
-        _nextDirection = Direction;
-        _nextTargetPosition = TargetPosition;
-        _premoved = false;
+        _queuedMoves.Clear();
     }
 
-    public bool CanMove(Vector2 pos, Direction direction)
+    public bool CanMove(Vector2 targetPos)
     {
         if (!MovementEnabled) return false;
-
-        var targetPos = direction switch
-        {
-            Direction.Left => pos - new Vector2(GameConstants.TileSize, 0),
-            Direction.Right => pos + new Vector2(GameConstants.TileSize, 0),
-            Direction.Up => pos - new Vector2(0, GameConstants.TileSize),
-            Direction.Down => pos + new Vector2(0, GameConstants.TileSize),
-            _ => pos
-        };
-
         return PokemonGame.Instance.ActiveWorld.CanMove(this, targetPos);
     }
 
     public void Rotate(Direction direction, bool force = false)
     {
-        if (!force && (!RotationEnabled || State != CharacterState.Idle || Direction == direction)) return;
+        if (!force && (!RotationEnabled || !IsIdle || Direction == direction)) return;
 
         Direction = direction;
         State = CharacterState.Rotating;
@@ -106,52 +77,48 @@ public class Character
         _rotatingTimer = 0.0f;
     }
 
-    public void Premove(Direction direction)
+    public void QueueMove(Direction direction)
     {
-        if (State != CharacterState.Moving) return;
+        Vector2 basePosition = _queuedMoves.Count > 0 ? _queuedMoves.Last().TargetPos : Position;
+        Vector2 targetPosition = CalcTargetPosition(basePosition, direction);
 
-        if (!CanMove(TargetPosition, direction))
-        {
-            Rotate(direction);
+        if (!CanMove(targetPosition))
             return;
-        }
 
-        _premoved = true;
-        _nextDirection = direction;
-
-        _nextTargetPosition = direction switch
+        _queuedMoves.Enqueue(new QueuedMove
         {
-            Direction.Left => TargetPosition - new Vector2(GameConstants.TileSize, 0),
-            Direction.Right => TargetPosition + new Vector2(GameConstants.TileSize, 0),
-            Direction.Up => TargetPosition - new Vector2(0, GameConstants.TileSize),
-            Direction.Down => TargetPosition + new Vector2(0, GameConstants.TileSize),
-            _ => TargetPosition
-        };
+            TargetDir = direction,
+            TargetPos = targetPosition,
+        });
+
+        if (IsIdle)
+            State = CharacterState.Moving;
     }
 
     public void Update(float dt)
     {
         switch (State)
         {
-            case CharacterState.Idle: return;
             case CharacterState.Moving:
                 HandleMovingState(dt);
                 return;
             case CharacterState.Rotating:
                 HandleRotatingState(dt);
                 return;
+
+            default: return;
         }
     }
 
     private void HandleMovingState(float dt)
     {
-        if (!MovementEnabled)
+        if (!MovementEnabled || _queuedMoves.Count <= 0)
         {
-            Position = TargetPosition;
             State = CharacterState.Idle;
             return;
         }
 
+        Direction = TargetDirection;
         Vector2 dir = TargetPosition - Position;
         float distance = dir.Length();
 
@@ -164,15 +131,13 @@ public class Character
         }
         else
         {
-            Position = TargetPosition;
+            Position = new Vector2(
+                MathF.Round(TargetPosition.X),
+                MathF.Round(TargetPosition.Y));
+
             Moved?.Invoke(this, EventArgs.Empty);
 
-            if (_premoved)
-            {
-                Direction = _nextDirection;
-                TargetPosition = _nextTargetPosition;
-                _premoved = false;
-            }
+            if (_queuedMoves.Count > 0) _queuedMoves.Dequeue();
             else State = CharacterState.Idle;
         }
     }
@@ -180,10 +145,28 @@ public class Character
     private void HandleRotatingState(float dt)
     {
         _rotatingTimer += dt;
-        if (_rotatingTimer >= 0.1f)
+        if (_rotatingTimer >= 0.15f)
         {
             State = CharacterState.Idle;
             _rotatingTimer = 0.0f;
         }
+    }
+
+    private static Vector2 CalcTargetPosition(Vector2 basePosition, Direction targetDir)
+    {
+        return targetDir switch
+        {
+            Direction.Left => basePosition - new Vector2(GameConstants.TileSize, 0),
+            Direction.Right => basePosition + new Vector2(GameConstants.TileSize, 0),
+            Direction.Up => basePosition - new Vector2(0, GameConstants.TileSize),
+            Direction.Down => basePosition + new Vector2(0, GameConstants.TileSize),
+            _ => basePosition
+        };
+    }
+
+    public readonly struct QueuedMove
+    {
+        public required readonly Vector2 TargetPos { get; init; }
+        public required readonly Direction TargetDir { get; init; }
     }
 }

@@ -1,9 +1,10 @@
 using System;
 using Microsoft.Xna.Framework;
-using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Renderers;
+
+namespace Pokemon.DesktopGL.Characters;
 
 public class CharacterRenderer
 {
