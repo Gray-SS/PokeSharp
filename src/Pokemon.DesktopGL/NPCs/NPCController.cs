@@ -4,6 +4,7 @@ using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Miscellaneous;
 using Pokemon.DesktopGL.Patrol;
+using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL.NPCs;
 
@@ -13,7 +14,7 @@ public enum NPCState
     Moving,
 }
 
-public sealed class NPCController : CharacterController
+public sealed class NPCController : EntityController
 {
     private int _pointIndex;
     private PatrolPath _patrolPath;

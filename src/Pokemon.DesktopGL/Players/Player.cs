@@ -6,7 +6,7 @@ using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL.Players;
 
-public sealed class Player : WorldEntity
+public sealed class Player : Entity
 {
     private readonly PlayerController _controller;
 
@@ -39,7 +39,7 @@ public sealed class Player : WorldEntity
         var world = PokemonGame.Instance.ActiveWorld;
 
         var forwardPos = Character.Position + Character.Direction.ToVector2() * GameConstants.TileSize;
-        if (!world.TryGetEntityAt(forwardPos, out WorldEntity entity))
+        if (!world.TryGetEntityAt(forwardPos, out Entity entity))
             return;
 
         if (entity == this)

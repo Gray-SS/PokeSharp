@@ -16,18 +16,18 @@ public sealed class Overworld
     public Player Player { get; private set; }
 
     public GameMap Map => _map;
-    public IReadOnlyList<WorldEntity> Entities => _entities;
+    public IReadOnlyList<Entity> Entities => _entities;
 
     private readonly GameMap _map;
     private readonly TiledMapRenderer _mapRenderer;
 
     private readonly WorldLoader _loader;
-    private readonly List<WorldEntity> _entities;
+    private readonly List<Entity> _entities;
     private readonly Dictionary<string, CreatureZone> _zones;
 
     public Overworld(GameMap map)
     {
-        _entities = new List<WorldEntity>();
+        _entities = new List<Entity>();
         _loader = new WorldLoader(map.TiledMap);
         _zones = new Dictionary<string, CreatureZone>();
 
@@ -76,7 +76,7 @@ public sealed class Overworld
         return null;
     }
 
-    public bool TryGetEntityAt(Vector2 position, out WorldEntity entity)
+    public bool TryGetEntityAt(Vector2 position, out Entity entity)
     {
         entity = null;
         (int Col, int Row) = _map.GetCoord(position);

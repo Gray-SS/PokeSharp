@@ -57,10 +57,10 @@ public class WorldLoader
         return zones;
     }
 
-    public List<WorldEntity> LoadEntities()
+    public List<Entity> LoadEntities()
     {
         int cid = 0;
-        var entities = new List<WorldEntity>();
+        var entities = new List<Entity>();
 
         foreach (DotTiled.ObjectLayer objectLayer in _objectLayers)
         {

@@ -16,7 +16,7 @@ public sealed class EntitySpawner
         _registry = registry;
     }
 
-    public WorldEntity Spawn(EntityDefinition entityDef)
+    public Entity Spawn(EntityDefinition entityDef)
     {
         Vector2 position = Utils.ConvertTileCoordToWorldPos((entityDef.SpawnCol, entityDef.SpawnRow));
 

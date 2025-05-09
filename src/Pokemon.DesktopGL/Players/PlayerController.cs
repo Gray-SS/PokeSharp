@@ -1,129 +1,120 @@
 using System.Linq;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Managers;
+using Pokemon.DesktopGL.World;
 
-namespace Pokemon.DesktopGL.Players
+namespace Pokemon.DesktopGL.Players;
+
+public class PlayerController : EntityController
 {
-    public class PlayerController : CharacterController
+    private Direction? _lastPressedDirection = null;
+
+    private static readonly (Direction Direction, Keys[] Keys)[] _inputKeys =
+    [
+        (Direction.Left, [Keys.Left, Keys.A]),
+        (Direction.Right, [Keys.Right, Keys.D]),
+        (Direction.Up, [Keys.Up, Keys.W]),
+        (Direction.Down, [Keys.Down, Keys.S])
+    ];
+
+    public PlayerController(Player player) : base(player)
     {
-        private Direction? _lastPressedDirection = null;
+    }
 
-        private static readonly (Direction Direction, Keys[] Keys)[] _inputKeys =
-        [
-            (Direction.Left, [Keys.Left, Keys.A]),
-            (Direction.Right, [Keys.Right, Keys.D]),
-            (Direction.Up, [Keys.Up, Keys.W]),
-            (Direction.Down, [Keys.Down, Keys.S])
-        ];
+    public override void Update(float dt)
+    {
+        var inputManager = PokemonGame.Instance.InputManager;
 
-        public PlayerController(Player player) : base(player)
+        UpdateLastPressedDirection(inputManager);
+
+        if (Character.IsMoving && Character.GetMoveProgress() >= 0.7f)
         {
+            TryPremoveFromInput(inputManager);
         }
-
-        public override void Update(float dt)
+        else if (Character.IsIdle)
         {
-            var inputManager = PokemonGame.Instance.InputManager;
-
-            UpdateLastPressedDirection(inputManager);
-
-            if (Character.IsMoving && Character.GetMoveProgress() >= 0.7f)
-            {
-                TryPremoveFromInput(inputManager);
-            }
-            else if (Character.IsIdle)
-            {
-                HandleIdleMovement(inputManager);
-            }
+            HandleIdleMovement(inputManager);
         }
+    }
 
-        private void UpdateLastPressedDirection(InputManager inputManager)
+    private void UpdateLastPressedDirection(InputManager inputManager)
+    {
+        foreach (var (direction, keys) in _inputKeys)
         {
-            foreach (var (direction, keys) in _inputKeys)
+            foreach (var key in keys)
             {
-                foreach (var key in keys)
+                if (inputManager.IsKeyPressed(key))
                 {
-                    if (inputManager.IsKeyPressed(key))
-                    {
-                        _lastPressedDirection = direction;
-                        return;
-                    }
+                    _lastPressedDirection = direction;
+                    return;
                 }
             }
         }
+    }
 
-        private void TryPremoveFromInput(InputManager inputManager)
+    private void TryPremoveFromInput(InputManager inputManager)
+    {
+        if (_lastPressedDirection.HasValue && IsAnyKeyForDirectionPressed(inputManager, _lastPressedDirection.Value))
         {
-            if (_lastPressedDirection.HasValue && IsAnyKeyForDirectionPressed(inputManager, _lastPressedDirection.Value))
-            {
-                Character.SetPremove(_lastPressedDirection.Value);
-                return;
-            }
-
-            foreach (var (direction, keys) in _inputKeys)
-            {
-                if (keys.Any(inputManager.IsKeyDown))
-                {
-                    Character.SetPremove(direction);
-                    break;
-                }
-            }
+            Character.SetPremove(_lastPressedDirection.Value);
+            return;
         }
 
-        // private bool IsPremoveReady()
-        // {
-        //     if (!Character.IsMoving)
-        //         return false;
-
-        //     return Vector2.Distance(Character.Position, lastTargetPos) <= GameConstants.TileSize * 0.5f;
-        // }
-
-        private void HandleIdleMovement(InputManager inputManager)
+        foreach (var (direction, keys) in _inputKeys)
         {
-            Direction? targetDirection;
-
-            if (_lastPressedDirection.HasValue && IsAnyKeyForDirectionPressed(inputManager, _lastPressedDirection.Value))
+            if (keys.Any(inputManager.IsKeyDown))
             {
-                targetDirection = _lastPressedDirection.Value;
+                Character.SetPremove(direction);
+                break;
             }
-            else
-            {
-                targetDirection = GetDirectionFromInput(inputManager);
-            }
+        }
+    }
 
-            if (targetDirection == null)
-                return;
+    private void HandleIdleMovement(InputManager inputManager)
+    {
+        Direction? targetDirection;
 
-            if (targetDirection == Character.Direction)
-                Character.Move(targetDirection.Value);
-            else
-                Character.Rotate(targetDirection.Value);
+        if (_lastPressedDirection.HasValue && IsAnyKeyForDirectionPressed(inputManager, _lastPressedDirection.Value))
+        {
+            targetDirection = _lastPressedDirection.Value;
+        }
+        else
+        {
+            targetDirection = GetDirectionFromInput(inputManager);
         }
 
-        private static Direction? GetDirectionFromInput(InputManager inputManager)
-        {
-            foreach (var (dir, keys) in _inputKeys)
-            {
-                if (keys.Any(inputManager.IsKeyDown))
-                {
-                    return dir;
-                }
-            }
-            return null;
-        }
+        if (targetDirection == null)
+            return;
 
-        private static bool IsAnyKeyForDirectionPressed(InputManager inputManager, Direction direction)
+        if (targetDirection == Character.Direction)
+            Character.Move(targetDirection.Value);
+        else
+            Character.Rotate(targetDirection.Value);
+    }
+
+    private static Direction? GetDirectionFromInput(InputManager inputManager)
+    {
+        foreach (var (dir, keys) in _inputKeys)
         {
-            foreach (var (dir, keys) in _inputKeys)
+            if (keys.Any(inputManager.IsKeyDown))
             {
-                if (dir == direction && keys.Any(inputManager.IsKeyDown))
-                {
-                    return true;
-                }
+                return dir;
             }
-            return false;
         }
+        return null;
+    }
+
+    private static bool IsAnyKeyForDirectionPressed(InputManager inputManager, Direction direction)
+    {
+        foreach (var (dir, keys) in _inputKeys)
+        {
+            if (dir == direction && keys.Any(inputManager.IsKeyDown))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

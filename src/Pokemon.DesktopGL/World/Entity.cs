@@ -3,12 +3,12 @@ using Pokemon.DesktopGL.Core.Renderers;
 
 namespace Pokemon.DesktopGL.World;
 
-public abstract class WorldEntity
+public abstract class Entity
 {
     public Character Character { get; }
     public CharacterRenderer Renderer { get; }
 
-    public WorldEntity(Character character)
+    public Entity(Character character)
     {
         Character = character;
         Renderer = new CharacterRenderer(Character);

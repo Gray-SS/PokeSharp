@@ -4,7 +4,7 @@ using Pokemon.DesktopGL.World;
 
 namespace Pokemon.DesktopGL.NPCs;
 
-public sealed class NPC : WorldEntity
+public sealed class NPC : Entity
 {
     public string Name => Data.Name;
     public string[] Dialogues => Data.Dialogues;
