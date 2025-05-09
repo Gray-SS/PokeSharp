@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Pokemon.DesktopGL.Creatures;
 
 namespace Pokemon.DesktopGL.Players;

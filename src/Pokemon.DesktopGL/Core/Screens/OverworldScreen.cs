@@ -5,7 +5,6 @@ using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Dialogues;
 using System;
 using System.Collections;
-using Pokemon.DesktopGL.Core.Coroutines;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Tweening;
 

@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Pokemon.DesktopGL.Core.Managers;
+using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Creatures;
 
@@ -19,7 +20,7 @@ public sealed class CreatureRegistry
 
     public void Load()
     {
-        LoadCreatures("Content/Data/Pokemons/pokemons.json");
+        LoadCreatures("Content/Data/Creatures/creatures.json");
     }
 
     public CreatureData GetData(string id)
@@ -34,6 +35,20 @@ public sealed class CreatureRegistry
         {
             data.BackSprite = _assetsManager.LoadSprite(data.BackSpritePath);
             data.FrontSprite = _assetsManager.LoadSprite(data.FrontSpritePath);
+
+            MoveRegistry moveRegistry = PokemonGame.Instance.MoveRegistry;
+            data.LearnableMoves = new Dictionary<int, MoveData[]>();
+            foreach (var item in data.LearnableMoveIds)
+            {
+                var moves = new List<MoveData>();
+                foreach (string moveId in item.Value)
+                {
+                    MoveData moveData = moveRegistry.GetData(moveId);
+                    moves.Add(moveData);
+                }
+
+                data.LearnableMoves.Add(item.Key, [.. moves]);
+            }
 
             _creatures[data.Id] = data;
         }

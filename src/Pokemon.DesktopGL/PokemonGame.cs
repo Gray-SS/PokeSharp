@@ -8,6 +8,7 @@ using Pokemon.DesktopGL.Dialogues;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Players;
+using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL;
 
@@ -27,6 +28,7 @@ public class PokemonGame : Game
     // Game Properties
     public Overworld ActiveWorld { get; set; }
     public PlayerData PlayerData { get; set; }
+    public MoveRegistry MoveRegistry { get; private set; }
     public CreatureRegistry CreatureRegistry { get; private set; }
     public CharacterRegistry CharacterRegistry { get; private set; }
 
@@ -53,6 +55,7 @@ public class PokemonGame : Game
         AssetsManager = new AssetsManager(GraphicsDevice, Content);
         WindowManager = new WindowManager(Window, Graphics);
 
+        MoveRegistry = new MoveRegistry();
         CreatureRegistry = new CreatureRegistry(AssetsManager);
         CharacterRegistry = new CharacterRegistry(AssetsManager);
 
@@ -67,10 +70,11 @@ public class PokemonGame : Game
     protected override void LoadContent()
     {
         AssetsManager.LoadGlobalAssets();
+        MoveRegistry.Load();
         CreatureRegistry.Load();
         CharacterRegistry.Load();
 
-        PlayerData.AddCreature(CreatureRegistry.GetData("chimchar").Create(4));
+        PlayerData.AddCreature(CreatureRegistry.GetData("gulpin").Create(4));
 
         ScreenManager.Push(new OverworldScreen());
     }
