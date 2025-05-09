@@ -12,7 +12,7 @@ public sealed class Player : WorldEntity
 
     public Player(Character character) : base(character)
     {
-        _controller = new PlayerController(character);
+        _controller = new PlayerController(this);
     }
 
     public override void Update(float dt)
