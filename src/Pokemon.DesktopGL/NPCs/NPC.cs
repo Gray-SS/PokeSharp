@@ -6,18 +6,19 @@ namespace Pokemon.DesktopGL.NPCs;
 
 public sealed class NPC : Entity
 {
-    public string Name => Data.Name;
-    public string[] Dialogues => Data.Dialogues;
-    public PatrolPath PatrolPath => Data.PatrolPath;
-
-    public NPCData Data { get; }
+    public string Name { get; }
+    public string[] Dialogues { get; }
+    public PatrolPath PatrolPath { get; }
 
     private bool _isInteracting;
     private readonly NPCController _controller;
 
-    public NPC(NPCData data, Character character) : base(character)
+    public NPC(Character character, string name, string[] dialogues, PatrolPath patrolPath) : base(character)
     {
-        Data = data;
+        Name = name;
+        Dialogues = dialogues;
+        PatrolPath = patrolPath;
+
         PokemonGame.Instance.DialogueManager.DialogueEnded += () => {
             if (_isInteracting)
                 _isInteracting = false;
@@ -37,6 +38,6 @@ public sealed class NPC : Entity
     public override void Interact()
     {
         _isInteracting = true;
-        PokemonGame.Instance.DialogueManager.StartDialogue(Data.Dialogues);
+        PokemonGame.Instance.DialogueManager.StartDialogue(Dialogues);
     }
 }
