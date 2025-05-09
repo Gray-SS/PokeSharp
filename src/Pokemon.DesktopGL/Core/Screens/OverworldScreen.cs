@@ -32,11 +32,10 @@ public sealed class OverworldScreen : Screen
         _map = GameMap.Load("Content/Data/Maps/test_map.tmx");
 
         _world = new Overworld(_map);
-        _world.LoadEntities();
-
-        _world.Player.Character.Moved += OnPlayerMove;
-
         Game.ActiveWorld = _world;
+
+        _world.Load();
+        _world.Player.Character.Moved += OnPlayerMove;
 
         base.Initialize();
     }
@@ -77,6 +76,7 @@ public sealed class OverworldScreen : Screen
 
     public override void Unload()
     {
+        Game.ActiveWorld = null;
         _world = null;
     }
 
