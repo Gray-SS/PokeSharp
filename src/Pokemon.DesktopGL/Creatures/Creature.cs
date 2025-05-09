@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Creatures;
@@ -29,12 +30,14 @@ public sealed class Creature
         Data = data;
         Level = level;
         HP = MaxHP;
+        Experience = data.BaseEXP;
 
         _moves = new List<MoveData>(4);
     }
 
     public void AddMove(MoveData data)
     {
+        EnsureValidMove(data);
         if (_moves.Count >= 4)
             throw new InvalidOperationException("Couldn't add a move to this creature since it already reached the maximum move available (4)");
 
@@ -48,10 +51,16 @@ public sealed class Creature
 
     public void ReplaceMove(int index, MoveData data)
     {
+        EnsureValidMove(data);
         if (index < 0 || index >= _moves.Count)
             throw new InvalidOperationException($"Couldn't replace the move at index {index}. The index is out of range.");
 
         _moves[index] = data;
+    }
+
+    private void EnsureValidMove(MoveData data)
+    {
+        // TODO: Implement this function
     }
 
     public void TakeDamage(int damage)

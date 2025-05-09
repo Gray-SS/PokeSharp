@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core.Tweening;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Core.Managers;
+using System;
 
 namespace Pokemon.DesktopGL.Battles;
 
@@ -56,7 +57,6 @@ public sealed class BattleCreatureRenderer
             return;
 
         var sprite = Combatant.IsPlayer ? Combatant.ActiveCreature.Data.BackSprite : Combatant.ActiveCreature.Data.FrontSprite;
-        // var scale = Combatant.IsPlayer ? 1.0f : 0.95f;
         var offsetY = !Combatant.IsPlayer ? 60 : 0;
 
         int width = (int)_size.X;

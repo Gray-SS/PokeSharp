@@ -41,8 +41,15 @@ public class WorldLoader
                 var creatures = JsonSerializer.Deserialize<CreatureSpawnEntry[]>(creaturesJson);
                 var creatureRegistry = PokemonGame.Instance.CreatureRegistry;
 
-                foreach (CreatureSpawnEntry creature in creatures)
-                    creature.CreatureData = creatureRegistry.GetData(creature.CreatureId);
+                float totalProb = 0.0f;
+                foreach (CreatureSpawnEntry entry in creatures)
+                {
+                    totalProb += entry.SpawnRate;
+                    entry.CreatureData = creatureRegistry.GetData(entry.CreatureId);
+                }
+
+                if (totalProb != 1.0f)
+                    throw new InvalidOperationException($"The sum of all the probabilities isn't equals to 0 for zone '{name}'.");
 
                 var zone = new CreatureZone
                 {

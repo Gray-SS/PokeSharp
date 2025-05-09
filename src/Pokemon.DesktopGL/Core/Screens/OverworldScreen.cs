@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Tweening;
+using Pokemon.DesktopGL.Creatures;
 
 namespace Pokemon.DesktopGL.Core.Screens;
 
@@ -67,8 +68,8 @@ public sealed class OverworldScreen : Screen
         CoroutineManager.Start(Tween.To((v) => _camera.Zoom = v, () => _camera.Zoom, 3f, 1f, Easing.InOutQuad));
         yield return FadeIn();
 
-        var zone = _world.GetCurrentZone();
-        var creature = zone.Spawn();
+        CreatureZone zone = _world.GetCurrentZone();
+        Creature creature = zone.SpawnWildCreature();
 
         Game.ScreenManager.Push(new BattleScreen(creature));
     }
