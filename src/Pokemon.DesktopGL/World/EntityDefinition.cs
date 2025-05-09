@@ -1,24 +1,15 @@
-using System.Text.Json.Serialization;
+using Pokemon.DesktopGL.Patrol;
 
 namespace Pokemon.DesktopGL.World;
 
 public sealed class EntityDefinition
 {
-    [JsonPropertyName("type")]
+    public required string Id { get; init; }
     public required EntityType Type { get; init; }
-
-    [JsonPropertyName("spawnCol")]
     public required int SpawnCol { get; init; }
-
-    [JsonPropertyName("spawnRow")]
     public required int SpawnRow { get; init; }
-
-    [JsonPropertyName("characterId")]
-    public string CharacterId { get; init; }
-
-    [JsonPropertyName("name")]
+    public required string CharacterId { get; init; }
     public string Name { get; init; }
-
-    [JsonPropertyName("dialogues")]
     public string[] Dialogues { get; init; }
+    public PatrolPath PatrolPath { get; init; }
 }

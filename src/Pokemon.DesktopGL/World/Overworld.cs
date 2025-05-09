@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;
+using Pokemon.DesktopGL.Core.Extensions;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Players;
@@ -20,16 +21,32 @@ public sealed class Overworld
     private readonly GameMap _map;
     private readonly TiledMapRenderer _mapRenderer;
 
-    private readonly EntitySpawner _spawner;
+    private readonly WorldLoader _loader;
     private readonly List<WorldEntity> _entities;
+    private readonly Dictionary<string, CreatureZone> _zones;
 
     public Overworld(GameMap map)
     {
-        _spawner = new EntitySpawner(PokemonGame.Instance.CharacterRegistry);
         _entities = new List<WorldEntity>();
+        _loader = new WorldLoader(map.TiledMap);
+        _zones = new Dictionary<string, CreatureZone>();
 
         _map = map;
         _mapRenderer = new TiledMapRenderer(_map);
+    }
+
+    public void Load()
+    {
+        _entities.Clear();
+        _entities.AddRange(_loader.LoadEntities());
+
+        _zones.Clear();
+        var zones = _loader.LoadZones();
+        foreach (var zone in zones)
+            _zones.Add(zone.Key, zone.Value);
+
+        Player foundPlayer = _entities.FirstOrDefault(x => x is Player) as Player ?? throw new InvalidOperationException("No player was found in the map.");
+        Player = foundPlayer;
     }
 
     public CreatureZone GetCurrentZone()
@@ -39,7 +56,7 @@ public sealed class Overworld
         {
             foreach (DotTiled.RectangleObject rectObj in layer.Objects.OfType<DotTiled.RectangleObject>())
             {
-                if (!rectObj.TryGetProperty<DotTiled.StringProperty>("zone_id", out var prop))
+                if (rectObj.Type != "zone")
                     continue;
 
                 int worldX = (int)(rectObj.X * GameConstants.TileSize / _map.TiledMap.TileWidth);
@@ -50,10 +67,8 @@ public sealed class Overworld
 
                 if (Player.Character.Bounds.Intersects(bounds))
                 {
-                    string zoneId = prop.Value;
-                    var zone = PokemonGame.Instance.CreatureRegistry.GetZone(zoneId);
-
-                    return zone;
+                    var name = rectObj.GetStringRequired("name");
+                    return _zones[name];
                 }
             }
         }
@@ -116,42 +131,6 @@ public sealed class Overworld
         }
 
         return true;
-    }
-
-    public void LoadEntities()
-    {
-        foreach (DotTiled.ObjectLayer objectLayer in _map.TiledMap.Layers.OfType<DotTiled.ObjectLayer>())
-        {
-            foreach (DotTiled.PointObject obj in objectLayer.Objects.OfType<DotTiled.PointObject>())
-            {
-                if (obj.Visible && obj.Type == "entity")
-                {
-                    var character_id = obj.GetProperty<DotTiled.StringProperty>("character_id").Value;
-                    var dialogues = obj.GetProperty<DotTiled.StringProperty>("dialogues").Value;
-                    var name = obj.GetProperty<DotTiled.StringProperty>("name").Value;
-                    var type = obj.GetProperty<DotTiled.StringProperty>("type").Value;
-
-                    var col = (int)(obj.X / _map.TiledMap.TileWidth);
-                    var row = (int)(obj.Y / _map.TiledMap.TileHeight);
-
-                    var entityDef = new EntityDefinition
-                    {
-                        Name = name,
-                        Dialogues = [.. dialogues.Split(';')],
-                        SpawnCol = col,
-                        SpawnRow = row,
-                        Type = Enum.Parse<EntityType>(type, true),
-                        CharacterId = character_id
-                    };
-
-                    var entity = _spawner.Spawn(entityDef);
-                    if (entity is Player player)
-                        Player = player;
-
-                    _entities.Add(entity);
-                }
-            }
-        }
     }
 
     public void Update(float dt)

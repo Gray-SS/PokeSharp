@@ -28,7 +28,7 @@ public static class DotTiledExtensions
         if (obj.TryGetProperty<DotTiled.StringProperty>(name, out var property))
             return property.Value;
 
-        throw new InvalidOperationException($"The property '{name}' is required but was not found");
+        throw new InvalidOperationException($"The property '{name}' is required but was not found on object of type '{obj.Type ?? "Unknow"}'");
     }
 
     public static string GetStringOrDefault(this DotTiled.Object obj, string name, string defaultValue = null)

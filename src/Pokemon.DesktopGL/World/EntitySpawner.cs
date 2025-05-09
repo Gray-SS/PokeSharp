@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Core;
+using Pokemon.DesktopGL.Miscellaneous;
 using Pokemon.DesktopGL.NPCs;
 using Pokemon.DesktopGL.Players;
 
@@ -15,22 +16,23 @@ public sealed class EntitySpawner
         _registry = registry;
     }
 
-    public WorldEntity Spawn(EntityDefinition entity)
+    public WorldEntity Spawn(EntityDefinition entityDef)
     {
-        Vector2 position = new Vector2(entity.SpawnCol, entity.SpawnRow) * GameConstants.TileSize;
+        Vector2 position = Utils.ConvertTileCoordToWorldPos((entityDef.SpawnCol, entityDef.SpawnRow));
 
-        CharacterData charData = _registry.Get(entity.CharacterId);
+        CharacterData charData = _registry.Get(entityDef.CharacterId);
         Character character = new(charData, position);
 
-        switch (entity.Type)
+        switch (entityDef.Type)
         {
             case EntityType.Player:
                 return new Player(character);
             case EntityType.NPC:
                 var npcData = new NPCData
                 {
-                    Name = entity.Name,
-                    Dialogues = entity.Dialogues
+                    Name = entityDef.Name,
+                    Dialogues = entityDef.Dialogues,
+                    PatrolPath = entityDef.PatrolPath
                 };
 
                 return new NPC(npcData, character);

@@ -1,19 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace Pokemon.DesktopGL.Creatures;
 
 public sealed class CreatureZone
 {
-    [JsonPropertyName("id")]
-    public string Id { get; init; }
-
-    [JsonPropertyName("name")]
     public string Name { get; init; }
-
-    [JsonPropertyName("creatures")]
-    public List<CreatureSpawnEntry> Creatures { get; init; }
+    public CreatureSpawnEntry[] Creatures { get; init; }
 
     public Creature Spawn()
     {
