@@ -41,7 +41,7 @@ public class WorldLoader
                 var creatures = JsonSerializer.Deserialize<CreatureSpawnEntry[]>(creaturesJson);
                 var creatureRegistry = PokemonGame.Instance.CreatureRegistry;
 
-                foreach (var creature in creatures)
+                foreach (CreatureSpawnEntry creature in creatures)
                     creature.CreatureData = creatureRegistry.GetData(creature.CreatureId);
 
                 var zone = new CreatureZone
