@@ -29,7 +29,7 @@ namespace Pokemon.DesktopGL.Players
 
             UpdateLastPressedDirection(inputManager);
 
-            if (Character.IsMoving && Character.GetMoveProgress() >= 0.5f)
+            if (Character.IsMoving && Character.GetMoveProgress() >= 0.7f)
             {
                 TryPremoveFromInput(inputManager);
             }
