@@ -11,6 +11,19 @@ Some **original assets** from the Pokémon games are used **strictly for educati
 
 ---
 
+## 🖼️ Screenshots
+
+### Gameplay
+![Player walking in zone](assets/overworld.png)
+
+### Wild Battle
+![Wild battle system](assets/battle.png)
+
+### NPC Dialogue
+![NPC system with patrol and interaction](assets/npcs.png)
+
+---
+
 ## 🎮 Game Features
 
 - **Player Movement**: Classic top-down 2D grid-based movement.
