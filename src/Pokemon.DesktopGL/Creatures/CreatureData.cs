@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Moves;
@@ -47,7 +48,7 @@ public sealed class CreatureData
 
     [JsonPropertyName("type2")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public CreatureType Type2 { get; init; }
+    public CreatureType? Type2 { get; init; }
 
     [JsonPropertyName("learnableMoves")]
     public required Dictionary<int, string[]> LearnableMoveIds { get; init; }
@@ -65,8 +66,31 @@ public sealed class CreatureData
     public Sprite BackSprite { get; set; }
 
     [JsonIgnore]
+    public IEnumerable<CreatureType> Types
+    {
+        get
+        {
+            yield return Type1;
+
+            if (Type2.HasValue)
+                yield return Type2.Value;
+        }
+    }
+
+    [JsonIgnore]
     public Dictionary<int, MoveData[]> LearnableMoves { get; set; }
 
-    public Creature Create(int level)
-        => new(this, level);
+    public Creature CreateWild(int level)
+    {
+        Creature creature = new Creature(this, level);
+        foreach (MoveData move in creature.Data.LearnableMoves.Where(x => x.Key <= level).OrderBy(x => x.Key).SelectMany(x => x.Value))
+        {
+            if (creature.Moves.Count == 4)
+                break;
+
+            creature.AddMove(move);
+        }
+
+        return creature;
+    }
 }

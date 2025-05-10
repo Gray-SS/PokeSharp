@@ -23,15 +23,7 @@ public sealed class CreatureZone
             {
                 var level = Random.Shared.Next(entry.MinLevel, entry.MaxLevel + 1);
 
-                Creature creature = entry.CreatureData.Create(level);
-                foreach (MoveData move in creature.Data.LearnableMoves.Where(x => x.Key <= level).OrderBy(x => x.Key).SelectMany(x => x.Value))
-                {
-                    creature.AddMove(move);
-
-                    if (creature.Moves.Count == 4)
-                        break;
-                }
-
+                Creature creature = entry.CreatureData.CreateWild(level);
                 return creature;
             }
         }

@@ -1,10 +1,7 @@
-using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using Pokemon.DesktopGL.Battles.Moves;
 using Pokemon.DesktopGL.Core.Coroutines;
 using Pokemon.DesktopGL.Core.Managers;
-using Pokemon.DesktopGL.Core.Screens;
 using Pokemon.DesktopGL.Miscellaneous;
 
 namespace Pokemon.DesktopGL.Battles;
@@ -87,8 +84,12 @@ public sealed class BattleController
         _isAnimating = true;
 
         BattleTurn turn = Battle.GetTurn();
+        BattleContext context = new BattleContext(Battle, TextTyper.Write);
 
-        yield return ExecuteMove(turn.Player, turn.PlayerMove);
+        context.Attacker = Battle.Player;
+        context.AttackerMove = turn.PlayerMove;
+        context.Defender = Battle.Opponent;
+        yield return ExecuteMove(context);
 
         if (Battle.State is BattleState.BattleOver or BattleState.Fleed)
         {
@@ -97,7 +98,11 @@ public sealed class BattleController
         }
 
         yield return new WaitForSeconds(1.0f);
-        yield return ExecuteMove(turn.Opponent, turn.OpponentMove);
+
+        context.Attacker = Battle.Opponent;
+        context.AttackerMove = turn.OpponentMove;
+        context.Defender = Battle.Player;
+        yield return ExecuteMove(context);
 
         if (Battle.State != BattleState.BattleOver)
         {
@@ -109,31 +114,35 @@ public sealed class BattleController
         _isAnimating = false;
     }
 
-    private IEnumerator ExecuteMove(Combatant combatant, IBattleMove move)
+    private IEnumerator ExecuteMove(BattleContext context)
     {
-        Combatant opponent = combatant == Battle.Player ? Battle.Opponent : Battle.Player;
-        BattleCreatureRenderer renderer = combatant == Battle.Player ? _playerRenderer : _opponentRenderer;
-        BattleCreatureRenderer opponentRenderer = combatant == Battle.Player ? _opponentRenderer : _playerRenderer;
+        Combatant attacker = context.Attacker;
+        IBattleMove attackerMove = context.AttackerMove;
+        Combatant defender = context.Defender;
 
-        yield return TextTyper.Write($"{combatant.ActiveCreature.Data.Name} utilise {move.Name}");
-        yield return new WaitForSeconds(1.0f);
+        BattleCreatureRenderer renderer = attacker.IsPlayer ? _playerRenderer : _opponentRenderer;
+        BattleCreatureRenderer opponentRenderer = attacker.IsPlayer ? _opponentRenderer : _playerRenderer;
 
-        if (move is AttackMove)
+        yield return attackerMove.Before(context);
+
+        if (attackerMove is FightMove)
         {
             CoroutineManager.Start(renderer.PlayAttackAnimation());
             CoroutineManager.Start(opponentRenderer.PlayTakeDamageAnimation());
         }
 
-        move.Execute(combatant, opponent);
+        yield return attackerMove.Execute(context);
 
-        if (opponent.ActiveCreature.IsFainted)
+        if (defender.ActiveCreature.IsFainted)
         {
             yield return opponentRenderer.PlayFaintAnimation();
 
-            yield return TextTyper.Write($"{opponent.ActiveCreature.Data.Name} a été mit K.O");
+            yield return TextTyper.Write($"{defender.ActiveCreature.Data.Name} a été mit K.O");
             yield return new WaitForSeconds(1.0f);
 
-            Battle.EndBattle(combatant);
+            Battle.EndBattle(attacker);
         }
+
+        yield return attackerMove.After(context);
     }
 }

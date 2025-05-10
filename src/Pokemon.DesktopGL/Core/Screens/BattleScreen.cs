@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -7,15 +8,24 @@ using Pokemon.DesktopGL.Core.Graphics;
 using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Creatures;
+using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Core.Screens;
+
+public enum BattleScreenState
+{
+    ActionPickup,
+    AttackPickup
+}
 
 public sealed class BattleScreen : Screen
 {
     private UIRenderer _uiRenderer;
 
     private int _selectedIndex;
+    private int _maxSelectionIndex = 4;
     private SpriteFontBase _font;
+    private BattleScreenState _state;
 
     private BattleCreatureRenderer _playerRenderer;
     private BattleCreatureRenderer _opponentRenderer;
@@ -27,7 +37,6 @@ public sealed class BattleScreen : Screen
     private Combatant _opponent;
 
     private Creature _opponentCreature;
-
     public BattleScreen(Creature opponent)
     {
         _opponentCreature = opponent;
@@ -47,6 +56,7 @@ public sealed class BattleScreen : Screen
         _battle = new Battle(_player, _opponent);
         _battleController = new BattleController(_battle, _playerRenderer, _opponentRenderer);
 
+        ChangeState(BattleScreenState.ActionPickup);
         base.Initialize();
     }
 
@@ -65,32 +75,58 @@ public sealed class BattleScreen : Screen
         var inputManager = Game.InputManager;
 
         if (inputManager.IsKeyPressed(Keys.D) || inputManager.IsKeyPressed(Keys.Right))
-            _selectedIndex = (_selectedIndex + 1) % 4;
+            _selectedIndex = (_selectedIndex + 1) % _maxSelectionIndex;
 
         if (inputManager.IsKeyPressed(Keys.A) || inputManager.IsKeyPressed(Keys.Left))
-            _selectedIndex = (_selectedIndex + 4 - 1) % 4;
+            _selectedIndex = (_selectedIndex + _maxSelectionIndex - 1) % _maxSelectionIndex;
 
         if (inputManager.IsKeyPressed(Keys.W) || inputManager.IsKeyPressed(Keys.Up))
-            _selectedIndex = (_selectedIndex + 4 - 2) % 4;
+            _selectedIndex = (_selectedIndex + _maxSelectionIndex - 2) % _maxSelectionIndex;
 
         if (inputManager.IsKeyPressed(Keys.S) || inputManager.IsKeyPressed(Keys.Down))
-            _selectedIndex = (_selectedIndex + 2) % 4;
+            _selectedIndex = (_selectedIndex + 2) % _maxSelectionIndex;
 
         if (inputManager.IsKeyPressed(Keys.Enter))
         {
-            IBattleMove move = _selectedIndex switch
+            if (_state == BattleScreenState.ActionPickup)
             {
-                0 => new AttackMove(),
-                1 => null,
-                2 => null,
-                3 => new FleeMove(),
-                _ => null
-            };
+                switch (_selectedIndex)
+                {
+                    case 0:
+                        ChangeState(BattleScreenState.AttackPickup);
+                        break;
+                    case 3:
+                        _battle.SelectMove(new FleeMove());
+                        break;
+                };
+            }
+            else if (_state == BattleScreenState.AttackPickup)
+            {
+                var moves = _player.ActiveCreature.Moves;
+                if (_selectedIndex < 0 || _selectedIndex >= moves.Count)
+                    return;
 
-            if (move == null)
-                return;
+                MoveData move = moves[_selectedIndex];
+                _battle.SelectMove(new FightMove(move, _selectedIndex));
+                ChangeState(BattleScreenState.ActionPickup);
+            }
+        }
+    }
 
-            _battle.SelectMove(move);
+    private void ChangeState(BattleScreenState state)
+    {
+        _state = state;
+
+        switch (state)
+        {
+            case BattleScreenState.ActionPickup:
+                _selectedIndex = 0;
+                _maxSelectionIndex = 4;
+                break;
+            case BattleScreenState.AttackPickup:
+                _selectedIndex = 0;
+                _maxSelectionIndex = _player.ActiveCreature.Moves.Count;
+                break;
         }
     }
 
@@ -114,7 +150,7 @@ public sealed class BattleScreen : Screen
         actionBounds.Height = (int)Game.WindowManager.AlignY(0.3f);
         actionBounds.Y = (int)Game.WindowManager.AlignY(0.70f);
 
-        DrawActionContainer(actionBounds);
+        DrawBottomContainer(actionBounds);
 
         _uiRenderer.End();
 
@@ -228,7 +264,7 @@ public sealed class BattleScreen : Screen
         _uiRenderer.DrawString(fontBold, $"Lv.{creature.Level}", lvlPosition, Color.Black);
     }
 
-    private void DrawActionContainer(Rectangle bounds)
+    private void DrawBottomContainer(Rectangle bounds)
     {
         var assetsManager = Game.AssetsManager;
         _uiRenderer.Draw(assetsManager.Sprite_Blank, new Rectangle(bounds.Left, bounds.Top, bounds.Width, 10), Color.Black);
@@ -236,6 +272,14 @@ public sealed class BattleScreen : Screen
         bounds.Y += 5;
         bounds.Height -= 10;
 
+        if (_state == BattleScreenState.ActionPickup)
+            DrawActionPickup(bounds);
+        else if (_state == BattleScreenState.AttackPickup)
+            DrawAttackPickup(bounds);
+    }
+
+    private void DrawActionPickup(Rectangle bounds)
+    {
         var leftContainerBounds = bounds;
         leftContainerBounds.Width /= 2;
 
@@ -271,7 +315,7 @@ public sealed class BattleScreen : Screen
         int btnWidth = bounds.Width / 2;
         int btnHeight = bounds.Height / 2;
 
-        var sheet = Game.AssetsManager.Sheet_Battle_Actions;
+        var sheet = Game.AssetsManager.Sheet_Battle_Cursor_Action;
 
         for (int i = 0; i < 4; i++)
         {
@@ -290,6 +334,84 @@ public sealed class BattleScreen : Screen
                 index++;
 
             _uiRenderer.Draw(sheet.GetSprite(index), btnBounds, Color.White);
+        }
+    }
+
+    private void DrawAttackPickup(Rectangle bounds)
+    {
+        bounds.X += 10;
+        bounds.Y += 10;
+        bounds.Width -= 20;
+        bounds.Height -= 20;
+
+        var assetsManager = PokemonGame.Instance.AssetsManager;
+        var bg = assetsManager.Sprite_Battle_Overlay_Fight;
+        _uiRenderer.Draw(bg, bounds, Color.White);
+
+        DrawAttackSelection(assetsManager, bounds);
+        DrawAttackInfo(assetsManager, bounds);
+    }
+
+    private void DrawAttackInfo(AssetsManager assetsManager, Rectangle bounds)
+    {
+        bounds.X = (int)(bounds.Width * 0.765f) + 45;
+        bounds.Y += 50;
+        bounds.Width = (int)(bounds.Width * 0.235f) - 90;
+        bounds.Height -= 90;
+
+        MoveData selectedMove = _player.ActiveCreature.Moves[_selectedIndex];
+
+        var font = assetsManager.Font_PowerClearBold.GetFont(20);
+        var color = new Color(60, 60, 60);
+
+        // TODO: Change this to use the base PP
+        string movePPText = $"{selectedMove.PP}/{selectedMove.PP}";
+        Vector2 movePPSize = font.MeasureString(movePPText);
+        Vector2 movePPPos = new Vector2(bounds.Right, bounds.Top) - movePPSize * new Vector2(1.0f, 0.0f);
+        Vector2 ppPos = new Vector2(bounds.Left, bounds.Top);
+
+        _uiRenderer.DrawString(font, "PP", ppPos, color);
+        _uiRenderer.DrawString(font, movePPText, movePPPos, color);
+
+        string moveTypeText = $"TYPE/{selectedMove.Type.ToString().ToUpper()}";
+        Vector2 moveTypeSize = font.MeasureString(movePPText);
+        Vector2 moveTypePos = new Vector2(bounds.Left, bounds.Bottom) - moveTypeSize * new Vector2(0.0f, 1.0f);
+        _uiRenderer.DrawString(font, moveTypeText, moveTypePos, color);
+    }
+
+    private void DrawAttackSelection(AssetsManager assetsManager, Rectangle bounds)
+    {
+        var sheet = assetsManager.Sheet_Battle_Cursor_Fight;
+
+        var moves = _player.ActiveCreature.Moves;
+
+        int startX = bounds.X + 11;
+        int startY = bounds.Y + 11;
+        int width = (bounds.Width - 330) / 2;
+        int height = (bounds.Height - 16) / 2;
+
+        for (int i = 0; i < moves.Count; i++)
+        {
+            MoveData move = moves[i];
+
+            int data = (int)move.Type * 2;
+            bool isSelected = _selectedIndex == i;
+            if (isSelected) data++;
+
+            int col = i % 2;
+            int row = i / 2;
+
+            int x = startX + width * col;
+            int y = startY + height * row;
+            var attackBounds = new Rectangle(x, y, width, height);
+
+            _uiRenderer.Draw(sheet.GetSprite(data), attackBounds, Color.White);
+
+            Color color = isSelected ? new Color(90, 90, 90) : new Color(60, 60, 60);
+            var font = assetsManager.Font_PowerClearBold.GetFont(25);
+            Vector2 moveNameSize = font.MeasureString(move.Name);
+            Vector2 moveNamePos = attackBounds.Center.ToVector2() - moveNameSize * 0.5f;
+            _uiRenderer.DrawString(font, move.Name, moveNamePos, color);
         }
     }
 }

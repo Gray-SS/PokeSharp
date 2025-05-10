@@ -18,10 +18,12 @@ public class AssetsManager
     public Sprite Sprite_Battle_Databox_Foe { get; private set; }
     public Sprite Sprite_Dialogue_Overlay { get; private set; }
     public Sprite Sprite_Battle_Exp_Overlay { get; private set; }
+    public Sprite Sprite_Battle_Overlay_Fight { get; private set; }
 
     public Sprite Sprite_Fade_Transition { get; private set; }
 
-    public SpriteSheet Sheet_Battle_Actions { get; private set; }
+    public SpriteSheet Sheet_Battle_Cursor_Action { get; private set; }
+    public SpriteSheet Sheet_Battle_Cursor_Fight { get; private set; }
     public SpriteSheet Sheet_Battle_Hp_Overlay { get; private set; }
 
     public FontSystem Font_PowerGreen { get; private set; }
@@ -50,8 +52,10 @@ public class AssetsManager
         Sprite_Battle_Databox = LoadSprite("Textures/UI/Battle/databox_normal");
         Sprite_Battle_Databox_Foe = LoadSprite("Textures/UI/Battle/databox_normal_foe");
         Sprite_Battle_Exp_Overlay = LoadSprite("Textures/UI/Battle/overlay_exp");
+        Sprite_Battle_Overlay_Fight = LoadSprite("Textures/UI/Battle/overlay_fight");
 
-        Sheet_Battle_Actions = new SpriteSheet(LoadSprite("Textures/UI/Battle/cursor_command"), 2, 10, null, null);
+        Sheet_Battle_Cursor_Action = new SpriteSheet(LoadSprite("Textures/UI/Battle/cursor_command"), 2, 10, null, null);
+        Sheet_Battle_Cursor_Fight = new SpriteSheet(LoadSprite("Textures/UI/Battle/cursor_fight"), 2, 19, null, null);
         Sheet_Battle_Hp_Overlay = new SpriteSheet(LoadSprite("Textures/UI/Battle/overlay_hp"), 1, 3, null, null);
 
         Sprite_Dialogue_Overlay = LoadSprite("Textures/UI/Battle/overlay_message");

@@ -1,3 +1,4 @@
+using System;
 using Pokemon.DesktopGL.Battles.Moves;
 
 namespace Pokemon.DesktopGL.Battles;
@@ -72,6 +73,8 @@ public sealed class Battle
 
     private IBattleMove DetermineOpponentMove()
     {
-        return new AttackMove();
+        var moveIndex =Random.Shared.Next(Opponent.ActiveCreature.Moves.Count);
+        var move = Opponent.ActiveCreature.Moves[moveIndex];
+        return new FightMove(move, moveIndex);
     }
 }

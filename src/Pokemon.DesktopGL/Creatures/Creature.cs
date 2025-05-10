@@ -38,6 +38,9 @@ public sealed class Creature
     public void AddMove(MoveData data)
     {
         EnsureValidMove(data);
+        if (_moves.Contains(data))
+            return;
+
         if (_moves.Count >= 4)
             throw new InvalidOperationException("Couldn't add a move to this creature since it already reached the maximum move available (4)");
 

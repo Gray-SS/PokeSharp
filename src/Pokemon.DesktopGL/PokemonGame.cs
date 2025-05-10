@@ -74,7 +74,9 @@ public class PokemonGame : Game
         CreatureRegistry.Load();
         CharacterRegistry.Load();
 
-        PlayerData.AddCreature(CreatureRegistry.GetData("gulpin").Create(4));
+        Creature creature = CreatureRegistry.GetData("gulpin").CreateWild(12);
+
+        PlayerData.AddCreature(creature);
 
         ScreenManager.Push(new OverworldScreen());
     }
