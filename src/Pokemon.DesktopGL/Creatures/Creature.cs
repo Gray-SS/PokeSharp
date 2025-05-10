@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Creatures;
 
 public sealed class Creature
 {
-    public CreatureData Data { get; }
+    public string Name { get; set; }
     public int Level { get; }
-    public int Experience { get; }
+    public int Experience { get; private set; }
     public int HP { get; private set; }
     public Stats BaseStats => Data.BaseStats;
+    public CreatureData Data { get; }
 
     public int MaxHP => CalculateStat(BaseStats.HP, IV.HP, EV.HP, Level, true);
     public int Attack => CalculateStat(BaseStats.Attack, IV.Attack, EV.Attack, Level);
@@ -37,10 +37,12 @@ public sealed class Creature
     {
         EV = ev;
         IV = iv;
-        Data = data;
         Level = level;
+        Data = data;
+        Name = Data.Name;
+
         HP = MaxHP;
-        Experience = data.BaseEXP;
+        Experience = 0;
 
         _moves = new List<MoveData>(4);
     }
@@ -71,9 +73,17 @@ public sealed class Creature
         _moves[index] = data;
     }
 
-    private int CalculateStat(int baseStat, int iv, int ev, int level, bool isHP = false)
+    public int GainEXP(Creature opponent)
     {
-        int stat = ((2 * baseStat + iv + ev / 4) * level) / 100;
+        int exp = opponent.Data.BaseEXP * opponent.Level / 7;
+        Experience += exp;
+
+        return exp;
+    }
+
+    private static int CalculateStat(int baseStat, int iv, int ev, int level, bool isHP = false)
+    {
+        int stat = (2 * baseStat + iv + ev / 4) * level / 100;
         if (isHP)
             return stat + level + 10;
         return stat + 5;

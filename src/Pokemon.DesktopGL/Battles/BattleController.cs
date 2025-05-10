@@ -118,29 +118,35 @@ public sealed class BattleController
         IBattleMove attackerMove = context.AttackerMove;
         Combatant defender = context.Defender;
 
-        BattleCreatureRenderer renderer = attacker.IsPlayer ? _playerRenderer : _opponentRenderer;
-        BattleCreatureRenderer opponentRenderer = attacker.IsPlayer ? _opponentRenderer : _playerRenderer;
+        BattleCreatureRenderer attackerRenderer = attacker.IsPlayer ? _playerRenderer : _opponentRenderer;
+        BattleCreatureRenderer defenderRenderer = attacker.IsPlayer ? _opponentRenderer : _playerRenderer;
 
         yield return attackerMove.Before(context);
 
         if (attackerMove is FightMove)
         {
-            CoroutineManager.Start(renderer.PlayAttackAnimation());
-            CoroutineManager.Start(opponentRenderer.PlayTakeDamageAnimation());
+            CoroutineManager.Start(attackerRenderer.PlayAttackAnimation());
+            CoroutineManager.Start(defenderRenderer.PlayTakeDamageAnimation());
         }
 
         yield return attackerMove.Execute(context);
+        yield return attackerMove.After(context);
 
         if (defender.ActiveCreature.IsFainted)
         {
-            yield return opponentRenderer.PlayFaintAnimation();
+            yield return defenderRenderer.PlayFaintAnimation();
 
             yield return TextTyper.Write($"{defender.ActiveCreature.Data.Name} fainted!");
             yield return new WaitForSeconds(1.0f);
 
+            if (attacker.IsPlayer)
+            {
+                int gainedEXP = attacker.ActiveCreature.GainEXP(defender.ActiveCreature);
+                yield return TextTyper.Write($"You gained {gainedEXP} EXP from beating {defender.ActiveCreature.Data.Name}.");
+                yield return new WaitForSeconds(1.0f);
+            }
+
             Battle.EndBattle(attacker);
         }
-
-        yield return attackerMove.After(context);
     }
 }
