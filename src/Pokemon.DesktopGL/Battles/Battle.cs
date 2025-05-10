@@ -71,10 +71,10 @@ public sealed class Battle
         State = BattleState.PerformingTurn;
     }
 
-    private IBattleMove DetermineOpponentMove()
+    private FightMove DetermineOpponentMove()
     {
-        var moveIndex =Random.Shared.Next(Opponent.ActiveCreature.Moves.Count);
+        var moveIndex = Random.Shared.Next(Opponent.ActiveCreature.Moves.Count);
         var move = Opponent.ActiveCreature.Moves[moveIndex];
-        return new FightMove(move, moveIndex);
+        return new FightMove(move);
     }
 }

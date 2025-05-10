@@ -107,7 +107,7 @@ public sealed class BattleScreen : Screen
                     return;
 
                 MoveData move = moves[_selectedIndex];
-                _battle.SelectMove(new FightMove(move, _selectedIndex));
+                _battle.SelectMove(new FightMove(move));
                 ChangeState(BattleScreenState.ActionPickup);
             }
         }

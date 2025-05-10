@@ -14,30 +14,14 @@ public sealed class CreatureData
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
-    [JsonPropertyName("baseHP")]
-    public required int BaseHP { get; init; }
+    [JsonPropertyName("baseStats")]
+    public required Stats BaseStats { get; init; }
 
-    [JsonPropertyName("baseAttack")]
-    public required int BaseAttack { get; init; }
-
-    [JsonPropertyName("baseDefense")]
-    public required int BaseDefense { get; init; }
-
-    [JsonPropertyName("baseSpeed")]
-    public required int BaseSpeed { get; init; }
-
-    [JsonPropertyName("baseSpAtk")]
-    public required int BaseSpAtk { get; init; }
-
-    [JsonPropertyName("baseSpDef")]
-    public required int BaseSpDef { get; init; }
+    [JsonPropertyName("growthRate")]
+    public required CreatureGrowthRate GrowthRate { get; init; }
 
     [JsonPropertyName("baseEXP")]
     public required int BaseEXP { get; init; }
-
-    [JsonPropertyName("growthRate")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public required CreatureGrowthRate GrowthRate { get; init; }
 
     [JsonPropertyName("catchRate")]
     public required int CatchRate { get; init; }

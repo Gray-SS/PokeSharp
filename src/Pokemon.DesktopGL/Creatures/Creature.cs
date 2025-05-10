@@ -11,13 +11,17 @@ public sealed class Creature
     public int Level { get; }
     public int Experience { get; }
     public int HP { get; private set; }
+    public Stats BaseStats => Data.BaseStats;
 
-    public int MaxHP => Data.BaseHP + Level * 2;
-    public int Attack => Data.BaseAttack + Level;
-    public int Defense => Data.BaseDefense + Level;
-    public int Speed => Data.BaseSpeed + Level;
-    public int SpAtk => Data.BaseSpAtk + Level;
-    public int SpDef => Data.BaseSpDef + Level;
+    public int MaxHP => CalculateStat(BaseStats.HP, IV.HP, EV.HP, Level, true);
+    public int Attack => CalculateStat(BaseStats.Attack, IV.Attack, EV.Attack, Level);
+    public int Defense => CalculateStat(BaseStats.Defense, IV.Defense, EV.Defense, Level);
+    public int Speed => CalculateStat(BaseStats.Speed, IV.Speed, EV.Speed, Level);
+    public int SpAtk => CalculateStat(BaseStats.SpAtk, IV.SpAtk, EV.SpAtk, Level);
+    public int SpDef => CalculateStat(BaseStats.SpDef, IV.SpDef, EV.SpDef, Level);
+
+    public Stats IV { get; }
+    public Stats EV { get; }
 
     public IReadOnlyList<MoveData> Moves => _moves;
 
@@ -25,8 +29,14 @@ public sealed class Creature
 
     private readonly List<MoveData> _moves;
 
-    public Creature(CreatureData data, int level)
+    public Creature(CreatureData data, int level) : this(data, level, Stats.Zero, Stats.GenerateRandom())
     {
+    }
+
+    public Creature(CreatureData data, int level, Stats ev, Stats iv)
+    {
+        EV = ev;
+        IV = iv;
         Data = data;
         Level = level;
         HP = MaxHP;
@@ -59,6 +69,14 @@ public sealed class Creature
             throw new InvalidOperationException($"Couldn't replace the move at index {index}. The index is out of range.");
 
         _moves[index] = data;
+    }
+
+    private int CalculateStat(int baseStat, int iv, int ev, int level, bool isHP = false)
+    {
+        int stat = ((2 * baseStat + iv + ev / 4) * level) / 100;
+        if (isHP)
+            return stat + level + 10;
+        return stat + 5;
     }
 
     private void EnsureValidMove(MoveData data)

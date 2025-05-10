@@ -44,12 +44,12 @@ public sealed class BattleController
         if (Battle.State == BattleState.BattleOver)
         {
             if (Battle.Winner == Battle.Player)
-                yield return TextTyper.Write($"Vous avez gagné !");
+                yield return TextTyper.Write($"You won!");
             else
-                yield return TextTyper.Write($"Vous avez perdu !");
+                yield return TextTyper.Write($"You lost!");
         }
         else if (Battle.State == BattleState.Fleed)
-            yield return TextTyper.Write("Vous avez prit la fuite.");
+            yield return TextTyper.Write("You fled from battle.");
 
         yield return new WaitForSeconds(1.0f);
 
@@ -64,7 +64,7 @@ public sealed class BattleController
     {
         _isAnimating = true;
 
-        yield return TextTyper.Write($"Un {Battle.Opponent.ActiveCreature.Data.Name} sauvage apparait !");
+        yield return TextTyper.Write($"A wild {Battle.Opponent.ActiveCreature.Data.Name} appeared!");
         yield return new WaitForSeconds(1f);
 
         Battle.Start();
@@ -76,7 +76,7 @@ public sealed class BattleController
 
     private IEnumerator ShowActionPrompt()
     {
-        yield return TextTyper.Write($"Qu'est ce que {Battle.Player.ActiveCreature.Data.Name} doit faire ?");
+        yield return TextTyper.Write($"What should {Battle.Player.ActiveCreature.Data.Name} do?");
     }
 
     private IEnumerator ExecuteTurn()
@@ -96,8 +96,6 @@ public sealed class BattleController
             yield return PlayOutro();
             yield break;
         }
-
-        yield return new WaitForSeconds(1.0f);
 
         context.Attacker = Battle.Opponent;
         context.AttackerMove = turn.OpponentMove;
@@ -137,7 +135,7 @@ public sealed class BattleController
         {
             yield return opponentRenderer.PlayFaintAnimation();
 
-            yield return TextTyper.Write($"{defender.ActiveCreature.Data.Name} a été mit K.O");
+            yield return TextTyper.Write($"{defender.ActiveCreature.Data.Name} fainted!");
             yield return new WaitForSeconds(1.0f);
 
             Battle.EndBattle(attacker);
