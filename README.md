@@ -71,7 +71,7 @@ If you are a rights holder and have any concerns, please [open an issue](https:/
 ## Getting Started
 For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. This will prevent you from generating and launching the project on your local machine.  
 
-I'm currently working on a ROM loader that will extract the game assets at runtime in order to solve this issue.
+I'm currently working on a ROM loader that will extract the game assets at runtime from your ROM (that you of course have to own :)) in order to solve this issue.
 
 ---
 
