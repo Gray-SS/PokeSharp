@@ -13,7 +13,7 @@ For the future of this project, I'd like to create an active community that will
 
 It is **not affiliated with Nintendo, Game Freak, or The Pokémon Company**, and is not intended for commercial distribution or public gameplay.
 
-Some **original assets** from the Pokémon games are used **strictly for educational purposes only**, and will be removed if legally required.
+For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. See the Getting Started section for further informations
 
 ---
 
@@ -69,7 +69,8 @@ If you are a rights holder and have any concerns, please [open an issue](https:/
 ---
 
 ## Getting Started
-For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. This will prevent you from generating and launching the project on your local machine. 
+For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. This will prevent you from generating and launching the project on your local machine.  
+
 I'm currently working on a ROM loader that will extract the game assets at runtime in order to solve this issue.
 
 ---
