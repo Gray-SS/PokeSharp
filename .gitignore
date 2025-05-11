@@ -10,9 +10,7 @@
 *.userosscache
 *.sln.docstates
 
-Content/Pokemon
-Content/Textures
-Content/Tilesets
+Content/
 
 *.tiled*
 
