@@ -2,7 +2,7 @@
 
 > ⚠️ This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#.
 
-## 🧠 Purpose
+## Purpose
 
 This project was created as a learning tool to explore and understand the architecture and systems behind turn-based creature-capturing games like **Pokémon**.  
 It is **not affiliated with Nintendo, Game Freak, or The Pokémon Company**, and is not intended for commercial distribution or public gameplay.
@@ -24,7 +24,7 @@ Some **original assets** from the Pokémon games are used **strictly for educati
 
 ---
 
-## 🎮 Game Features
+## Game Features
 
 - **Player Movement**: Classic top-down 2D grid-based movement.
 - **NPCs**:
@@ -39,7 +39,7 @@ Some **original assets** from the Pokémon games are used **strictly for educati
 
 ---
 
-## ⚙️ Engine Features
+## Engine Features
 
 - **Coroutine System**: Custom lightweight coroutine implementation for asynchronous flow.
 - **Tweening System**: Smooth movement/animation handling via coroutine-driven tweening.
@@ -50,7 +50,7 @@ Some **original assets** from the Pokémon games are used **strictly for educati
 
 ---
 
-## 🚫 Disclaimer
+## Disclaimer
 
 This project:
 - Is **strictly for educational use**
@@ -62,12 +62,12 @@ If you are a rights holder and have any concerns, please [open an issue](https:/
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 Instructions for building and running the project will be provided soon.
 
 ---
 
-## 📜 License
+## License
 
 This project is not licensed for redistribution or commercial use. It is shared solely for educational demonstration under fair use assumptions.
