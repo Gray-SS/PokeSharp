@@ -1,9 +1,6 @@
-using System;
 using System.Linq;
 using DotTiled;
 using DotTiled.Serialization;
-using Microsoft.Xna.Framework;
-using Pokemon.DesktopGL.Core;
 
 namespace Pokemon.DesktopGL.World;
 
@@ -18,16 +15,6 @@ public sealed class GameMap
     {
         TiledMap = map;
         Path = path;
-    }
-
-    public (int Col, int Row) GetCoord(Vector2 position)
-    {
-        const float epsilon = 0.001f;
-
-        int col = (int)MathF.Floor((position.X + epsilon) / GameConstants.TileSize);
-        int row = (int)MathF.Floor((position.Y + epsilon) / GameConstants.TileSize);
-
-        return (col, row);
     }
 
     public int GetData(string layerName, int col, int row)

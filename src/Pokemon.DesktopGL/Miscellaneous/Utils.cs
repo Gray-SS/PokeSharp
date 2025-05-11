@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Creatures;
 
@@ -30,6 +31,13 @@ public static class Utils
         /* Fairy   */  { 1f, 0.5f, 1f, 1f, 1f, 1f, 2f, 0.5f, 1f, 1f, 1f, 1f, 1f, 1f, 2f, 2f, 0.5f, 1f },
     };
 
+    public static (int Col, int Row) ConvertWorldPosToMapCoord(Vector2 worldPos)
+    {
+        int col = (int)(worldPos.X / GameConstants.TileSize);
+        int row = (int)(worldPos.Y / GameConstants.TileSize);
+
+        return (col, row);
+    }
 
     public static (int Col, int Row) ConvertMapPosToTileCoord(Vector2 mapPosition)
     {

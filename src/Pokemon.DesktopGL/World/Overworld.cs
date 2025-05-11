@@ -7,6 +7,7 @@ using Pokemon.DesktopGL.Core;
 using Pokemon.DesktopGL.Core.Extensions;
 using Pokemon.DesktopGL.Core.Renderers;
 using Pokemon.DesktopGL.Creatures;
+using Pokemon.DesktopGL.Miscellaneous;
 using Pokemon.DesktopGL.Players;
 
 namespace Pokemon.DesktopGL.World;
@@ -79,19 +80,19 @@ public sealed class Overworld
     public bool TryGetEntityAt(Vector2 position, out Entity entity)
     {
         entity = null;
-        (int Col, int Row) = _map.GetCoord(position);
+        (int Col, int Row) = Utils.ConvertWorldPosToMapCoord(position);
 
         foreach (var otherEntity in _entities)
         {
             Character otherCharacter = otherEntity.Character;
-            (int OtherCol, int OtherRow) = _map.GetCoord(otherCharacter.Position);
+            (int OtherCol, int OtherRow) = Utils.ConvertWorldPosToMapCoord(otherCharacter.Position);
             if (Col == OtherCol && Row == OtherRow)
             {
                 entity = otherEntity;
                 return true;
             }
 
-            (OtherCol, OtherRow) = _map.GetCoord(otherCharacter.TargetPosition);
+            (OtherCol, OtherRow) = Utils.ConvertWorldPosToMapCoord(otherCharacter.TargetPosition);
             if (Col == OtherCol && Row == OtherRow)
             {
                 entity = otherEntity;
@@ -104,13 +105,13 @@ public sealed class Overworld
 
     public bool IsInLeaf(Character character)
     {
-        (int Col, int Row) = _map.GetCoord(character.Position);
+        (int Col, int Row) = Utils.ConvertWorldPosToMapCoord(character.Position);
         return _map.GetData("Grass", Col, Row) == 6;
     }
 
     public bool CanMove(Character character, Vector2 targetPosition)
     {
-        (int Col, int Row) = _map.GetCoord(targetPosition);
+        (int Col, int Row) = Utils.ConvertWorldPosToMapCoord(targetPosition);
 
         if (_map.CollideAt(Col, Row))
             return false;
@@ -121,11 +122,11 @@ public sealed class Overworld
             if (character == otherCharacter)
                 continue;
 
-            (int OtherCol, int OtherRow) = _map.GetCoord(otherCharacter.Position);
+            (int OtherCol, int OtherRow) = Utils.ConvertWorldPosToMapCoord(otherCharacter.Position);
             if (Col == OtherCol && Row == OtherRow)
                 return false;
 
-            (OtherCol, OtherRow) = _map.GetCoord(otherCharacter.TargetPosition);
+            (OtherCol, OtherRow) = Utils.ConvertWorldPosToMapCoord(otherCharacter.TargetPosition);
             if (Col == OtherCol && Row == OtherRow)
                 return false;
         }
