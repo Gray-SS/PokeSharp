@@ -10,6 +10,10 @@
 *.userosscache
 *.sln.docstates
 
+Content/Pokemon
+Content/Textures
+Content/Tilesets
+
 *.tiled*
 
 # User-specific files (MonoDevelop/Xamarin Studio)
