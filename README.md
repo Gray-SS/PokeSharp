@@ -1,17 +1,23 @@
 # PokéSharp (Educational Purpose Only)
 
-> ⚠️ This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#.
+> This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#.
 
 ## Purpose
 
-This project was created as a learning tool to explore and understand the architecture and systems behind turn-based creature-capturing games like **Pokémon**.  
+This project wasn't originally intended for the public and its main aim was to teach me how to develop and finish a project from start to finish, as I often tend not to finish what I start. I set myself the rather crazy challenge of recreating a clone of the Pokémon game in 48 hours of pure work, and I think I can consider that I succeeded in this challenge. 
+Today I've decided to publish the repository in order to share with you a project I'm quite proud of and to allow the community to potentially learn from it. But as you can imagine, we can't reach the moon in 48 hours of work, which is why there's still a lot of work to do.
+
+For the future of this project, I'd like to create an active community that will help me and enable me to create a stable project that will aim to understand and learn how to make a similar project.
+
+> pls Nintendo don't sue me.
+
 It is **not affiliated with Nintendo, Game Freak, or The Pokémon Company**, and is not intended for commercial distribution or public gameplay.
 
 Some **original assets** from the Pokémon games are used **strictly for educational purposes only**, and will be removed if legally required.
 
 ---
 
-## 🖼️ Screenshots
+## Screenshots
 
 ### Gameplay
 ![Player walking in zone](assets/overworld.png)
