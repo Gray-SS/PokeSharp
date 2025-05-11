@@ -1,3 +1,4 @@
-﻿
-using var game = new Pokemon.DesktopGL.PokemonGame();
+﻿using Pokemon.DesktopGL;
+
+using var game = new PokemonGame();
 game.Run();
