@@ -9,7 +9,8 @@ using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Players;
 using Pokemon.DesktopGL.Moves;
-using Pokemon.DesktopGL.ROMs;
+using Pokemon.DesktopGL.ROM;
+using Pokemon.DesktopGL.ROM.Events;
 
 namespace Pokemon.DesktopGL;
 
@@ -19,6 +20,7 @@ public class PokemonGame : Game
     public static PokemonGame Instance { get; private set; }
 
     // Services / Managers
+    public RomManager RomManager { get; private set; }
     public InputManager InputManager { get; private set; }
     public ScreenManager ScreenManager { get; private set; }
     public AssetsManager AssetsManager { get; private set; }
@@ -27,7 +29,6 @@ public class PokemonGame : Game
     public CoroutineManager CoroutineManager { get; private set; }
 
     // Game Properties
-    public ROM ROM { get; }
     public Overworld ActiveWorld { get; set; }
     public PlayerData PlayerData { get; set; }
     public MoveRegistry MoveRegistry { get; private set; }
@@ -37,21 +38,27 @@ public class PokemonGame : Game
     // MonoGame Properties
     public GraphicsDeviceManager Graphics { get; }
 
-    public PokemonGame()
+    private readonly string _romPath;
+
+    public PokemonGame(string romPath)
     {
         if (Instance != null)
             throw new InvalidOperationException("Impossible to create multiple instances of the game");
-
-        ROM = LoadROM();
 
         Instance = this;
         Graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+
+        _romPath = romPath;
     }
 
     protected override void Initialize()
     {
+        RomManager = new RomManager();
+        RomManager.RomLoaded += OnRomLoaded;
+        RomManager.RomLoadFailed += OnRomLoadFailed;
+
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();
         DialogueManager = new DialogueManager();
@@ -65,10 +72,34 @@ public class PokemonGame : Game
 
         PlayerData = new PlayerData();
 
-        WindowManager.SetWindowTitle("PokéSharp");
+        if (!string.IsNullOrEmpty(_romPath) && RomManager.LoadRom(_romPath))
+        {
+            PokemonRom rom = RomManager.Rom;
+            WindowManager.SetWindowTitle($"PokéSharp - {rom.Info}");
+
+            string pokemonName = rom.GetPokemonName(1);
+            System.Console.WriteLine($"Pokémon: {pokemonName}");
+        }
+        else
+        {
+            WindowManager.SetWindowTitle("PokéSharp - Limited version");
+        }
+
         WindowManager.SetResolution("1280x720");
 
         base.Initialize();
+    }
+
+    private void OnRomLoadFailed(object sender, RomLoadFailedArgs e)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Error: {e.ErrorMessage}");
+        Console.ResetColor();
+    }
+
+    private void OnRomLoaded(object sender, RomLoadedArgs e)
+    {
+        Console.WriteLine($"ROM loaded successfully: {e.LoadedRom.Info}");
     }
 
     protected override void LoadContent()
@@ -105,16 +136,5 @@ public class PokemonGame : Game
     protected override void Draw(GameTime gameTime)
     {
         ScreenManager.Draw(gameTime);
-    }
-
-    private static ROM LoadROM()
-    {
-        string[] args = Environment.GetCommandLineArgs();
-
-        if (args.Length < 2)
-            throw new NotImplementedException("You MUST pass the ROM path when running the project. Usage: dotnet run <rom_path>");
-
-        string romPath = args[1];
-        return ROM.LoadFromPath(romPath);
     }
 }
