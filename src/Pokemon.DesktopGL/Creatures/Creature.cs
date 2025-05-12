@@ -17,8 +17,8 @@ public sealed class Creature
     public int Attack => CalculateStat(BaseStats.Attack, IV.Attack, EV.Attack, Level);
     public int Defense => CalculateStat(BaseStats.Defense, IV.Defense, EV.Defense, Level);
     public int Speed => CalculateStat(BaseStats.Speed, IV.Speed, EV.Speed, Level);
-    public int SpAtk => CalculateStat(BaseStats.SpAtk, IV.SpAtk, EV.SpAtk, Level);
-    public int SpDef => CalculateStat(BaseStats.SpDef, IV.SpDef, EV.SpDef, Level);
+    public int SpAttack => CalculateStat(BaseStats.SpAttack, IV.SpAttack, EV.SpAttack, Level);
+    public int SpDefense => CalculateStat(BaseStats.SpDefense, IV.SpDefense, EV.SpDefense, Level);
 
     public Stats IV { get; }
     public Stats EV { get; }

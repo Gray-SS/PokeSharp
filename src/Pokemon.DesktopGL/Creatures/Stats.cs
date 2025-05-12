@@ -17,10 +17,10 @@ public sealed class Stats
     public int Defense { get; set; }
 
     [JsonPropertyName("spAtk")]
-    public int SpAtk { get; set; }
+    public int SpAttack { get; set; }
 
     [JsonPropertyName("spDef")]
-    public int SpDef { get; set; }
+    public int SpDefense { get; set; }
 
     [JsonPropertyName("speed")]
     public int Speed { get; set; }
@@ -33,8 +33,8 @@ public sealed class Stats
             HP = rnd.Next(0, 32),
             Attack = rnd.Next(0, 32),
             Defense = rnd.Next(0, 32),
-            SpAtk = rnd.Next(0, 32),
-            SpDef = rnd.Next(0, 32),
+            SpAttack = rnd.Next(0, 32),
+            SpDefense = rnd.Next(0, 32),
             Speed = rnd.Next(0, 32),
         };
     }
