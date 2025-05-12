@@ -1,0 +1,17 @@
+namespace Pokemon.DesktopGL.ROM.GBA;
+
+public enum GbaRomOffsetKind
+{
+    BASE_STATS,
+    EVOLUTION_DATA,
+    MOVESET_DATA,
+    FOOTPRINT_DATA,
+    FRONT_FRONT_SPRITE,
+    BACK_POKEMON_SPRITE,
+    REGULAR_PALETTES,
+    SHINY_PALETTES,
+    POKEMON_NAMES,
+    ATTACK_NAMES,
+    ABILITY_NAMES,
+    TYPE_NAMES,
+}
