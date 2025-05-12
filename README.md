@@ -1,21 +1,37 @@
-# PokéSharp (Educational Purpose Only)
+# PokéSharp
 
-> This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#.
+> This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#. pls Nintendo don't sue me.
+
+If you'd like to be kept informed of the project's progress, please feel free to join the newly-created discord: https://discord.gg/8zhqU4EjG2
 
 ## Purpose
 
-This project wasn't originally intended for the public and its main aim was to teach me how to develop and finish a project from start to finish, as I often tend not to finish what I start. I set myself the rather crazy challenge of recreating a clone of the Pokémon game in 48 hours of pure work, and I think I can consider that I succeeded in this challenge. 
+This project wasn't originally intended for the public and its main aim was to teach me how to develop and finish a project from start to finish, as I often tend not to finish what I start. I set myself the rather crazy challenge of recreating a clone of the Pokémon game in 48 hours of pure work, and I think I can consider that I succeeded in this challenge.   
+
 Today I've decided to publish the repository in order to share with you a project I'm quite proud of and to allow the community to potentially learn from it. But as you can imagine, we can't reach the moon in 48 hours of work, which is why there's still a lot of work to do.
 
-For the future of this project, I'd like to create an active community that will help me and enable me to create a stable project that will aim to understand and learn how to make a similar project.
+---
 
-> pls Nintendo don't sue me.
+## Little disclaimer
 
-It is **not affiliated with Nintendo, Game Freak, or The Pokémon Company**, and is not intended for commercial distribution or public gameplay.
+This project:
+- Is **strictly for educational use**
+- **Is not for sale or monetized** in any way
+- Will **never be used in a commercial context**
 
-For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. See the Getting Started section for further informations
+It is **not affiliated with Nintendo, Game Freak, or The Pokémon Company**, and is not intended for commercial distribution or public gameplay.  
+
+None of the game's assets are hosted on the repository in order to avoid any copyright problems. This will prevent you from building & running the project on your local machine. See the Getting Started section for further informations
+
+If you are a rights holder and have any concerns, please [open an issue](https://github.com/) or contact me directly.  
 
 ---
+
+## What will PokeSharp become in the future?
+
+PokeSharp's ambition is to become an open-source educational resource for learning how to create a Pokémon-like game engine from scratch, in C# with Monogame. 
+
+Whether you've never contributed to an open-source project before or are already experienced in the field, PokeSharp has been designed as a collaborative project in which everyone can participate.
 
 ## Screenshots
 
@@ -56,22 +72,15 @@ For the moment, none of the game's assets are hosted on the repository in order 
 
 ---
 
-## Disclaimer
+## Contributions
+Although the aim of this project is to become collaborative, much of the architecture needs to be rethought slightly in order to have a solid structure for the future.
 
-This project:
-- Is **strictly for educational use**
-- **Is not for sale or monetized** in any way
-- Will **never be used in a commercial context**
-- May be taken down at any time upon request by the rightful copyright holders
-
-If you are a rights holder and have any concerns, please [open an issue](https://github.com/) or contact me directly.
+That's why I prefer to avoid any kind of contribution at the moment, in the meantime you can still study the structure of the project to familiarise yourself with it.
 
 ---
 
 ## Getting Started
-For the moment, none of the game's assets are hosted on the repository in order to avoid any copyright problems. This will prevent you from generating and launching the project on your local machine.  
-
-I'm currently working on a ROM loader that will extract the game assets at runtime from your ROM (that you of course have to own :)) in order to solve this issue.
+Due to copyright issues, it is not currently possible for you to build & run the project. However, I am actively working on a solution that will load the game's assets at runtime via a ROM. The idea behind this is to avoid any direct link between the Pokémon assets and my project in order to guarantee its durability. Thanks to this, anyone wanting to work on the project will be able to build and run without needing to own assets protected by Pokémon.
 
 ---
 
