@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Linq.Expressions;
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Core.Coroutines;
 using Pokemon.DesktopGL.Core.Managers;
@@ -24,7 +23,6 @@ public class Tween<T> : ICoroutine
     public bool IsRunning { get; private set; }
 
     private float _elapsed;
-    private readonly object _target;
     private readonly Action<T> _setter;
 
     public Tween(T to, float duration, Action<T> setter, Func<T> getter, TweenEase ease, TweenInterpolator<T> interpolator)
