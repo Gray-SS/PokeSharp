@@ -1,11 +1,10 @@
 using System.Collections;
+using Pokemon.DesktopGL.Core.Coroutines;
 
 namespace Pokemon.DesktopGL.Battles.Moves;
 
 public class FleeMove : IBattleMove
 {
-    public string Name => "Fuite";
-
     public IEnumerator Before(BattleContext context)
     {
         yield return null;
@@ -18,7 +17,9 @@ public class FleeMove : IBattleMove
 
     public IEnumerator Execute(BattleContext context)
     {
-        yield return context.Write($"Vous prenez la fuite !");
+        yield return context.Write($"You're fleeing from battle!");
+        yield return new WaitForSeconds(1.0f);
+
         context.Battle.Flee();
     }
 }

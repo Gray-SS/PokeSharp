@@ -10,8 +10,6 @@ namespace Pokemon.DesktopGL.Battles.Moves;
 
 public class FightMove : IBattleMove
 {
-    public string Name => _move.Name;
-
     private float _effectiveness;
     private readonly MoveData _move;
 
@@ -49,11 +47,11 @@ public class FightMove : IBattleMove
 
         int attackStat = move.Category == MoveCategory.Physical
             ? attackerCreature.Attack
-            : attackerCreature.SpAtk;
+            : attackerCreature.SpAttack;
 
         int defenseStat = move.Category == MoveCategory.Physical
             ? targetCreature.Defense
-            : targetCreature.SpDef;
+            : targetCreature.SpDefense;
 
         float stab = attackerCreature.Data.Types.Contains(move.Type)
             ? 1.5f
