@@ -1,37 +1,46 @@
+using System;
+using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System;
 
 namespace Pokemon.DesktopGL.ROM.GBA;
 
 public abstract class GbaPokemonRomProvider : PokemonRomProvider
 {
-    public const int FILE_OFFSET = 0x08000000;
+    public Dictionary<GbaRomOffsetPointers, int> Offsets { get; }
 
-    public Dictionary<GbaRomOffsetKind, int> Offsets { get; }
-
-    public GbaPokemonRomProvider(RomInfo romInfo, byte[] romData, Dictionary<GbaRomOffsetKind, int> offsets) : base(romInfo, romData)
+    public GbaPokemonRomProvider(byte[] romData, Dictionary<GbaRomOffsetPointers, int> offsets) : base(romData, GbaRomAddressResolver.Default)
     {
-        Offsets = offsets;
+        Offsets = offsets ?? throw new ArgumentNullException(nameof(offsets));
     }
 
-    public int GetOffset(GbaRomOffsetKind offset)
+    public int GetOffsetPointer(GbaRomOffsetPointers offsetType)
     {
-        Debug.Assert(Offsets.TryGetValue(offset, out int offsetValue), $"No offset for '{offset}' is defined.");
-        return offsetValue;
+        /*
+            NOTE: If the assert fails, it means the ROM implementation is missing some offsets in the GbaRomOffsets class.
+
+            In theory, this should never happen because an offset validation step is meant to catch such issues beforehand.
+            If you encounter this failure, it's likely that the validation logic in GbaRomOffsets is incomplete or not functioning correctly.
+        */
+        Debug.Assert(Offsets.TryGetValue(offsetType, out int offset), $"ROM implementation isn't fully implemented. Missing offset '{offset}'.");
+        return offset;
     }
 
-    public int GetFileOffset(GbaRomOffsetKind offset)
-        => GetFileOffset(GetOffset(offset));
-
-    public int ReadPointer(GbaRomOffsetKind offset)
+    protected static string DecodeGbaText(ReadOnlySpan<byte> data)
     {
-        int fileOffset = GetFileOffset(offset);
-        int pointer = BitConverter.ToInt32(Data, fileOffset);
+        var sb = new StringBuilder();
+        foreach (byte b in data)
+        {
+            if (b == 0xFF || b == 0x00) break;
 
-        return pointer;
+            if (b >= 0xBB && b <= 0xD4)
+                sb.Append((char)('a' + (b - 0xBB)));
+            else if (b >= 0xA1 && b <= 0xBA)
+                sb.Append((char)('A' + (b - 0xA1)));
+            else
+                sb.Append('?');
+        }
+
+        return sb.ToString();
     }
-
-    public static int GetFileOffset(int offset)
-        => offset - FILE_OFFSET;
 }

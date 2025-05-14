@@ -1,25 +1,19 @@
-using System.Globalization;
-
 namespace Pokemon.DesktopGL.ROM;
 
-public sealed class PokemonRom : IPokemonRomProvider
+public sealed class PokemonRom
 {
     public RomInfo Info { get; }
-    public byte[] Data { get; }
-
-    private readonly IPokemonRomProvider _provider;
+    public byte[] RomData { get; }
+    public IPokemonRomProvider Provider { get; }
 
     public PokemonRom(RomInfo info, byte[] data, IPokemonRomProvider provider)
     {
         Info = info;
-        Data = data;
+        RomData = data;
 
-        _provider = provider;
+        Provider = provider;
     }
 
-    public string GetPokemonName(int index)
-    {
-        string pokemonName = _provider.GetPokemonName(index);
-        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(pokemonName);
-    }
+    public RomAssetsPack ExtractAssetPack()
+        => Provider.ExtractAssetPack();
 }

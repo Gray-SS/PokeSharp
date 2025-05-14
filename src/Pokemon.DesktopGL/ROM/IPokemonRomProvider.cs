@@ -1,8 +1,17 @@
+using Pokemon.DesktopGL.ROM.Graphics;
+
 namespace Pokemon.DesktopGL.ROM;
 
 public interface IPokemonRomProvider
 {
-    byte[] Data { get; }
+    byte[] RomData { get; }
 
-    string GetPokemonName(int index);
+    string ExtractPokemonName(int index);
+
+    RomAssetsPack ExtractAssetPack();
+    IGraphicsData ExtractItemIconSprite(int index);
+    IGraphicsData ExtractPokemonIconSprite(int index);
+    IGraphicsData ExtractFrontPokemonSprite(int index);
+    IGraphicsData ExtractBackPokemonSprite(int index);
+    EntityGraphicsInfo ExtractEntityGraphicsInfo(int index);
 }

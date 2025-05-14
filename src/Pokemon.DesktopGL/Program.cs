@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq.Expressions;
 using Pokemon.DesktopGL;
+using Pokemon.DesktopGL.ROM;
+using Pokemon.DesktopGL.ROM.GBA;
 
 string romPath = null;
 

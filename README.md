@@ -105,11 +105,13 @@ This project is not licensed for redistribution or commercial use. It is shared 
 
 ---
 
-### Rom Implementation
-Theses resources are useful if you want to implement support for a new ROM or fix a bug related to the ROM loading system.
+### GBA Implementation
+Theses resources are useful if you want to implement support for a new GBA ROM or fix a bug related to the ROM loading system.
 
-- **GBA Pokemon Fire Red Decompiled**: https://github.com/pret/pokefirered/
+- **Pokemon Fire Red Decompiled**: https://github.com/pret/pokefirered/
 
-- **GBA Pokemon Fire Red (English/USA) offsets:** https://www.pokecommunity.com/threads/the-offset-reference-please-contribute.369324
+- **Pokemon Fire Red GBA Symbols**: https://raw.githubusercontent.com/pret/pokefirered/symbols/pokefirered.sym
+
+- **Pokemon Fire Red offsets:** https://www.pokecommunity.com/threads/the-offset-reference-please-contribute.369324
 
 - **GBA Cartridge Header:** https://problemkaputt.de/gbatek-gba-cartridge-header.htm

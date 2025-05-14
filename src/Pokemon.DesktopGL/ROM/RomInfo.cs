@@ -16,12 +16,16 @@ public sealed class RomInfo
 
     public required string MakerCode { get; init; }
 
-    public string UniqueGameCode => $"{Platform}_{GameCode}";
+    public required int Version { get; init; }
+
+    public string VersionText => $"v1.{Version}";
+
+    public string UniqueGameCode => $"{Platform}_{GameCode}_{VersionText}";
 
     public bool IsPokemonROM => GameTitle.Contains("POKEMON", StringComparison.OrdinalIgnoreCase);
 
     public override string ToString()
     {
-        return $"{GameTitle} by {Maker} ({Language})";
+        return $"{GameTitle} {VersionText} by {Maker} ({Language})";
     }
 }

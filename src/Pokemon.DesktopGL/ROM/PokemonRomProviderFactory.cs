@@ -20,9 +20,10 @@ public static class PokemonRomProviderFactory
     {
         // NOTE: Implement other Pokémon GBA ROM here
 
+        var offsets = GbaRomOffsets.GetOffsetsByRomInfo(romInfo);
         return romInfo.GameCode switch
         {
-            "BPRE" => new PokemonFireRedProvider(romInfo, romData, GbaRomOffsets.GetOffsetsByGameCode(romInfo.GameCode)),
+            "BPRE" => new PokemonFireRedProvider(romData, offsets),
 
             _ => throw new NotSupportedException("The GBA ROM isn't currently supported. No ROM provider was found.")
         };

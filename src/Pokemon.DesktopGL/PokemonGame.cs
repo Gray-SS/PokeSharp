@@ -11,6 +11,9 @@ using Pokemon.DesktopGL.Players;
 using Pokemon.DesktopGL.Moves;
 using Pokemon.DesktopGL.ROM;
 using Pokemon.DesktopGL.ROM.Events;
+using Microsoft.Xna.Framework.Graphics;
+using System.Runtime.ConstrainedExecution;
+using Pokemon.DesktopGL.ROM.Graphics;
 
 namespace Pokemon.DesktopGL;
 
@@ -39,6 +42,8 @@ public class PokemonGame : Game
     public GraphicsDeviceManager Graphics { get; }
 
     private readonly string _romPath;
+    private Texture2D _currentTexture;
+    private SpriteBatch _spriteBatch;
 
     public PokemonGame(string romPath)
     {
@@ -76,9 +81,6 @@ public class PokemonGame : Game
         {
             PokemonRom rom = RomManager.Rom;
             WindowManager.SetWindowTitle($"PokéSharp - {rom.Info}");
-
-            string pokemonName = rom.GetPokemonName(1);
-            System.Console.WriteLine($"Pokémon: {pokemonName}");
         }
         else
         {
@@ -112,6 +114,17 @@ public class PokemonGame : Game
         Creature creature = CreatureRegistry.GetData("zigzagoon").CreateWild(20);
         PlayerData.AddCreature(creature);
 
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+        if (RomManager.IsRomLoaded)
+        {
+            PokemonRom rom = RomManager.Rom;
+            RomAssetsPack assetPack = rom.ExtractAssetPack();
+
+            EntityGraphicsInfo playerGraphicsInfo = assetPack.PlayerEntityGraphicsInfo;
+            _currentTexture = playerGraphicsInfo.SpriteSheet.GenerateTexture(GraphicsDevice);
+        }
+
         ScreenManager.Push(new OverworldScreen());
     }
 
@@ -136,5 +149,14 @@ public class PokemonGame : Game
     protected override void Draw(GameTime gameTime)
     {
         ScreenManager.Draw(gameTime);
+
+        if (_currentTexture != null)
+        {
+            Rectangle bounds = new Rectangle(200, 200, 16*9*2, 32*2);
+
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch.Draw(_currentTexture, bounds, Color.White);
+            _spriteBatch.End();
+        }
     }
 }
