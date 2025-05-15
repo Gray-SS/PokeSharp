@@ -14,6 +14,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PokeSharp.ROM\PokeSharp.ROM.csproj" />
-    <ProjectReference Include="..\PokeSharp.Assets\PokeSharp.Assets.csproj" />
   </ItemGroup>
 </Project>
