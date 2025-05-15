@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Pokemon.DesktopGL.Core.Managers;
+using PokeSharp.Core.Managers;
 using Pokemon.DesktopGL.Moves;
+using System;
 
 namespace Pokemon.DesktopGL.Creatures;
 
@@ -14,6 +15,8 @@ public sealed class CreatureRegistry
 
     public CreatureRegistry(AssetsManager assetsManager)
     {
+        ArgumentNullException.ThrowIfNull(assetsManager, nameof(assetsManager));
+
         _assetsManager = assetsManager;
         _creatures = new Dictionary<string, CreatureData>();
     }

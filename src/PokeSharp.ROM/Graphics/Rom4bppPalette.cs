@@ -29,7 +29,7 @@ public sealed class Rom4bppPalette : IRomPalette
         {
             if (transparent && i == 0)
             {
-                colors[0] = Color.Transparent;
+                colors[0] = Color.FromArgb(0);
                 continue;
             }
 

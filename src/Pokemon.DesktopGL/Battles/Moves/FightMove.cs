@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
-using Pokemon.DesktopGL.Core.Coroutines;
+using PokeSharp.Core.Coroutines;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Miscellaneous;
 using Pokemon.DesktopGL.Moves;

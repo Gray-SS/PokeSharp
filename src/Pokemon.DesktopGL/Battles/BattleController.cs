@@ -1,8 +1,8 @@
 using System.Collections;
 using Pokemon.DesktopGL.Battles.Moves;
-using Pokemon.DesktopGL.Core.Coroutines;
-using Pokemon.DesktopGL.Core.Managers;
 using Pokemon.DesktopGL.Miscellaneous;
+using PokeSharp.Core.Coroutines;
+using PokeSharp.Core.Managers;
 
 namespace Pokemon.DesktopGL.Battles;
 

@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Creatures;
 

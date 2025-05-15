@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
-using Pokemon.DesktopGL.Core;
-using Pokemon.DesktopGL.Core.Graphics;
+using PokeSharp.Core.Graphics;
 
 namespace Pokemon.DesktopGL.Characters;
 

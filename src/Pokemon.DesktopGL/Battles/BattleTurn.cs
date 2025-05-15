@@ -1,5 +1,3 @@
-using System.Security;
-
 namespace Pokemon.DesktopGL.Battles;
 
 public readonly struct BattleTurn

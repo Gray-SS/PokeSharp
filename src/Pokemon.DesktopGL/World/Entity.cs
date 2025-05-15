@@ -1,5 +1,5 @@
 using Pokemon.DesktopGL.Characters;
-using Pokemon.DesktopGL.Core.Renderers;
+using PokeSharp.Core.Renderers;
 
 namespace Pokemon.DesktopGL.World;
 
