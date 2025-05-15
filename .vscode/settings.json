@@ -7,5 +7,6 @@
         "**/Thumbs.db": true,
         "**/obj": true,
         "**/bin": true,
+        // "**/*.csproj": true,
     }
 }

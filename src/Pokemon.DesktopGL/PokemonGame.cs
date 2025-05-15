@@ -9,11 +9,15 @@ using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Players;
 using Pokemon.DesktopGL.Moves;
-using Pokemon.DesktopGL.ROM;
-using Pokemon.DesktopGL.ROM.Events;
 using Microsoft.Xna.Framework.Graphics;
-using System.Runtime.ConstrainedExecution;
-using Pokemon.DesktopGL.ROM.Graphics;
+using Pokemon.DesktopGL.Core.Graphics;
+using PokeSharp.ROM;
+using PokeSharp.ROM.Graphics;
+using PokeSharp.ROM.Events;
+using System.Runtime.InteropServices;
+using System.Linq;
+using System.Xml.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Pokemon.DesktopGL;
 
@@ -42,7 +46,8 @@ public class PokemonGame : Game
     public GraphicsDeviceManager Graphics { get; }
 
     private readonly string _romPath;
-    private Texture2D _currentTexture;
+
+    private SpriteSheet _spriteSheet;
     private SpriteBatch _spriteBatch;
 
     public PokemonGame(string romPath)
@@ -88,7 +93,6 @@ public class PokemonGame : Game
         }
 
         WindowManager.SetResolution("1280x720");
-
         base.Initialize();
     }
 
@@ -118,11 +122,22 @@ public class PokemonGame : Game
 
         if (RomManager.IsRomLoaded)
         {
-            PokemonRom rom = RomManager.Rom;
-            RomAssetsPack assetPack = rom.ExtractAssetPack();
+            IPokemonRomProvider provider = RomManager.Rom.Provider;
 
-            EntityGraphicsInfo playerGraphicsInfo = assetPack.PlayerEntityGraphicsInfo;
-            _currentTexture = playerGraphicsInfo.SpriteSheet.GenerateTexture(GraphicsDevice);
+            EntityGraphicsInfo playerGraphicsInfo = provider.ExtractEntityGraphicsInfo(10);
+
+            RomSpriteSheet spriteSheet = playerGraphicsInfo.SpriteSheet;
+
+            IRomTexture romTexture = spriteSheet.Texture;
+            var colors = romTexture.ToRGBA().Select(x => new Color(x.R, x.G, x.B, x.A)).ToArray();
+
+            System.Console.WriteLine($"Alpha 0 pixels ? {(colors.Any(x => x.A == 0) ? "True" : "False")}");
+
+            Texture2D texture = new Texture2D(GraphicsDevice, romTexture.Width, romTexture.Height);
+            texture.SetData(colors);
+
+            Sprite sprite = new Sprite(texture);
+            _spriteSheet = new SpriteSheet(sprite, spriteSheet.Columns, spriteSheet.Rows, null, null);
         }
 
         ScreenManager.Push(new OverworldScreen());
@@ -150,12 +165,12 @@ public class PokemonGame : Game
     {
         ScreenManager.Draw(gameTime);
 
-        if (_currentTexture != null)
+        if (_spriteSheet != null)
         {
-            Rectangle bounds = new Rectangle(200, 200, 16*9*2, 32*2);
+            Sprite sprite = _spriteSheet.GetSprite(0);
 
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
-            _spriteBatch.Draw(_currentTexture, bounds, Color.White);
+            _spriteBatch.Draw(sprite.Texture, Vector2.One * 100.0f, sprite.SourceRect, Color.White, 0.0f, Vector2.Zero * 0.5f, 2f, 0, 0.0f);
             _spriteBatch.End();
         }
     }
