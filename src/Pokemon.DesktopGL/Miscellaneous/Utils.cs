@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Pokemon.DesktopGL.Creatures;
-using PokeSharp.Core;
+using PokeSharp.Engine;
 
 namespace Pokemon.DesktopGL.Miscellaneous;
 

@@ -1,8 +1,8 @@
 using System;
 using Microsoft.Xna.Framework;
-using PokeSharp.Core;
-using PokeSharp.Core.Graphics;
-using PokeSharp.Core.Renderers;
+using PokeSharp.Engine;
+using PokeSharp.Engine.Graphics;
+using PokeSharp.Engine.Renderers;
 
 namespace Pokemon.DesktopGL.Characters;
 

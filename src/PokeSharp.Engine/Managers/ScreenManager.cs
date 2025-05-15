@@ -1,0 +1,44 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+
+namespace PokeSharp.Engine.Managers;
+
+public sealed class ScreenManager
+{
+    public Screen ActiveScreen => _screens.Peek();
+
+    private readonly Stack<Screen> _screens;
+
+    public ScreenManager()
+    {
+        _screens = new Stack<Screen>();
+    }
+
+    public void Push(Screen screen)
+    {
+        screen.Initialize();
+        screen.Load();
+
+        _screens.Push(screen);
+    }
+
+    public Screen Pop()
+    {
+        var screen = _screens.Pop();
+        screen.Unload();
+
+        _screens.Peek()?.Load();
+
+        return screen;
+    }
+
+    public void Update(GameTime gameTime)
+    {
+        ActiveScreen?.Update(gameTime);
+    }
+
+    public void Draw(GameTime gameTime)
+    {
+        ActiveScreen?.Draw(gameTime);
+    }
+}

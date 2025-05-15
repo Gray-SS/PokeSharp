@@ -5,8 +5,8 @@ using Pokemon.DesktopGL.World;
 using Pokemon.DesktopGL.Players;
 using Pokemon.DesktopGL.Moves;
 using Microsoft.Xna.Framework.Graphics;
-using PokeSharp.Core.Graphics;
-using PokeSharp.Core;
+using PokeSharp.Engine.Graphics;
+using PokeSharp.Engine;
 using Microsoft.Xna.Framework;
 using PokeSharp.ROM;
 using PokeSharp.ROM.Graphics;
@@ -15,9 +15,9 @@ using Pokemon.DesktopGL.Screens;
 
 namespace Pokemon.DesktopGL;
 
-public class PokemonGame : Engine
+public class PokemonGame : PokesharpEngine
 {
-    public new static PokemonGame Instance => (PokemonGame)Engine.Instance;
+    public new static PokemonGame Instance => (PokemonGame)PokesharpEngine.Instance;
 
     // Game Properties
     public DialogueManager DialogueManager { get; private set; }

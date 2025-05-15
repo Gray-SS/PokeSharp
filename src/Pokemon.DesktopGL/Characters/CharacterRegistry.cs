@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using PokeSharp.Core.Graphics;
-using PokeSharp.Core.Managers;
+using PokeSharp.Engine.Graphics;
+using PokeSharp.Engine.Managers;
 
 namespace Pokemon.DesktopGL.Characters;
 

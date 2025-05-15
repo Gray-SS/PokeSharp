@@ -1,8 +1,8 @@
 using System.Collections;
 using Microsoft.Xna.Framework;
-using PokeSharp.Core.Tweening;
-using PokeSharp.Core.Renderers;
-using PokeSharp.Core.Managers;
+using PokeSharp.Engine.Tweening;
+using PokeSharp.Engine.Renderers;
+using PokeSharp.Engine.Managers;
 
 namespace Pokemon.DesktopGL.Battles;
 

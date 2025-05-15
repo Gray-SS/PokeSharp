@@ -1,13 +1,13 @@
 using Microsoft.Xna.Framework;
-using PokeSharp.Core.Renderers;
+using PokeSharp.Engine.Renderers;
 using Microsoft.Xna.Framework.Graphics;
 using Pokemon.DesktopGL.World;
 using System;
 using System.Collections;
-using PokeSharp.Core.Managers;
-using PokeSharp.Core.Tweening;
+using PokeSharp.Engine.Managers;
+using PokeSharp.Engine.Tweening;
 using Pokemon.DesktopGL.Creatures;
-using PokeSharp.Core;
+using PokeSharp.Engine;
 using Pokemon.DesktopGL.Dialogues;
 
 namespace Pokemon.DesktopGL.Screens;

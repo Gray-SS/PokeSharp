@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using PokeSharp.Core.Graphics;
+using PokeSharp.Engine.Graphics;
 using Pokemon.DesktopGL.Moves;
 
 namespace Pokemon.DesktopGL.Creatures;

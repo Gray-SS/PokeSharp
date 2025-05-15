@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using PokeSharp.Core;
-using PokeSharp.Core.Extensions;
+using PokeSharp.Engine;
+using PokeSharp.Engine.Extensions;
 
 namespace Pokemon.DesktopGL.Characters;
 

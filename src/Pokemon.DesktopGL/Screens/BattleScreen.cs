@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Battles;
 using Pokemon.DesktopGL.Battles.Moves;
-using PokeSharp.Core.Graphics;
-using PokeSharp.Core.Managers;
-using PokeSharp.Core.Renderers;
+using PokeSharp.Engine.Graphics;
+using PokeSharp.Engine.Managers;
+using PokeSharp.Engine.Renderers;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Moves;
-using PokeSharp.Core;
+using PokeSharp.Engine;
 
 namespace Pokemon.DesktopGL.Screens;
 

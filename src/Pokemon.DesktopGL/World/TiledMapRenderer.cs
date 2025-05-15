@@ -3,8 +3,8 @@ using System.IO;
 using DotTiled;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PokeSharp.Core;
-using PokeSharp.Core.Renderers;
+using PokeSharp.Engine;
+using PokeSharp.Engine.Renderers;
 
 using Color = Microsoft.Xna.Framework.Color;
 

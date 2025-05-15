@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-using PokeSharp.Core.Renderers;
+using PokeSharp.Engine.Renderers;
 using System;
 
 namespace Pokemon.DesktopGL.Dialogues;

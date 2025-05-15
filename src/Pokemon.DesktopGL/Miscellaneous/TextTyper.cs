@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Text;
-using PokeSharp.Core.Coroutines;
+using PokeSharp.Engine.Coroutines;
 
 namespace Pokemon.DesktopGL.Miscellaneous;
 

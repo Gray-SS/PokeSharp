@@ -1,7 +1,7 @@
 using Pokemon.DesktopGL.Characters;
 using Pokemon.DesktopGL.Patrol;
 using Pokemon.DesktopGL.World;
-using PokeSharp.Core;
+using PokeSharp.Engine;
 
 namespace Pokemon.DesktopGL.NPCs;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
-using PokeSharp.Core.Extensions;
+using PokeSharp.Engine.Extensions;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Miscellaneous;
 using Pokemon.DesktopGL.Patrol;

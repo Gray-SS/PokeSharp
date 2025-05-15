@@ -1,5 +1,5 @@
 using System.Collections;
-using PokeSharp.Core.Coroutines;
+using PokeSharp.Engine.Coroutines;
 
 namespace Pokemon.DesktopGL.Battles.Moves;
 
