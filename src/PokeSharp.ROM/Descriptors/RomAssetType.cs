@@ -2,7 +2,7 @@ namespace PokeSharp.ROM.Descriptors;
 
 public enum RomAssetType
 {
-    Texture,
+    Sprite,
     Palette,
     Animation,
     SpriteSheet,

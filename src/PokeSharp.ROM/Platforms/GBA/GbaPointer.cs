@@ -6,7 +6,7 @@ namespace PokeSharp.ROM.Platforms.GBA;
 /// Represents a Game Boy Advance memory pointer.
 /// Handles the translation between GBA's virtual address space (0x08XXXXXX) and physical ROM addresses.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential, Size = 4, Pack = 1)]
 public readonly struct GbaPointer
 {
     /// <summary>
@@ -250,6 +250,55 @@ public readonly struct GbaPointer
     }
 
     /// <summary>
+    /// Increment the raw address by one byte to this GBA pointer.
+    /// </summary>
+    /// <remarks>
+    /// The returned pointer can be an invalid pointer so please check it's validity before using any operations
+    /// </remarks>
+    /// <returns>A new GBA pointer with the incremented offset.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
+    public GbaPointer Inc()
+    {
+        if (!IsValid)
+            throw new InvalidOperationException($"Cannot perform pointer arithmetic on invalid GBA pointer: 0x{RawAddress:X8}");
+
+        return new GbaPointer(RawAddress + 1);
+    }
+
+    /// <summary>
+    /// Adds an offset to this GBA pointer.
+    /// </summary>
+    /// <param name="count">The number of element to count by.</param>
+    /// <remarks>
+    /// The returned pointer can be an invalid pointer so please check it's validity before using any operations
+    /// </remarks>
+    /// <returns>A new GBA pointer with the specified count added.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
+    public GbaPointer Add<T>(int count) where T : struct
+    {
+        if (!IsValid)
+            throw new InvalidOperationException($"Cannot perform pointer arithmetic on invalid GBA pointer: 0x{RawAddress:X8}");
+
+        return new GbaPointer(RawAddress + count * Marshal.SizeOf<T>());
+    }
+
+    /// <summary>
+    /// Increment the raw address by one byte to this GBA pointer.
+    /// </summary>
+    /// <remarks>
+    /// The returned pointer can be an invalid pointer so please check it's validity before using any operations
+    /// </remarks>
+    /// <returns>A new GBA pointer with the incremented offset.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
+    public GbaPointer Inc<T>() where T : struct
+    {
+        if (!IsValid)
+            throw new InvalidOperationException($"Cannot perform pointer arithmetic on invalid GBA pointer: 0x{RawAddress:X8}");
+
+        return new GbaPointer(RawAddress + Marshal.SizeOf<T>());
+    }
+
+    /// <summary>
     /// Subtracts an offset in bytes from this GBA pointer.
     /// </summary>
     /// <param name="offset">The number of bytes to offset by.</param>
@@ -267,6 +316,24 @@ public readonly struct GbaPointer
     }
 
     /// <summary>
+    /// Subtracts an offset in element count from this GBA pointer.
+    /// </summary>
+    /// <param name="count">The number of element to offset by.</param>
+    /// <remarks>
+    /// The returned pointer can be an invalid pointer so please check it's validity before using any operations
+    /// </remarks>
+    /// <returns>A new GBA pointer with the specified offset subtracted.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
+    public GbaPointer Subtract<T>(int count) where T : struct
+    {
+        if (!IsValid)
+            throw new InvalidOperationException($"Cannot perform pointer arithmetic on invalid GBA pointer: 0x{RawAddress:X8}");
+
+        return new GbaPointer(RawAddress - count * Marshal.SizeOf<T>());
+    }
+
+
+    /// <summary>
     /// Calculates the offset between two GBA pointers.
     /// </summary>
     /// <param name="other">The other GBA pointer.</param>
@@ -281,35 +348,35 @@ public readonly struct GbaPointer
     }
 
     /// <summary>
-    /// Adds an element count to a GBA pointer.
+    /// Adds an offset in bytes to a GBA pointer.
     /// </summary>
     /// <param name="pointer">The GBA pointer.</param>
-    /// <param name="elementCount">The number of elements to add.</param>
+    /// <param name="offset">The offset to add.</param>
     /// <returns>A new GBA pointer with the specified offset added.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
-    public static GbaPointer operator +(GbaPointer pointer, int elementCount)
+    public static GbaPointer operator +(GbaPointer pointer, int offset)
     {
-        return pointer.Add(elementCount);
+        return pointer.Add(offset);
     }
 
     /// <summary>
-    /// Subtracts an element count from a GBA pointer.
+    /// Subtracts an offset in bytes from a GBA pointer.
     /// </summary>
     /// <param name="pointer">The GBA pointer.</param>
-    /// <param name="elementCount">The number of elements to subtract.</param>
+    /// <param name="offset">The offset in bytes to subtract.</param>
     /// <returns>A new GBA pointer with the specified offset subtracted.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
-    public static GbaPointer operator -(GbaPointer pointer, int elementCount)
+    public static GbaPointer operator -(GbaPointer pointer, int offset)
     {
-        return pointer.Subtract(elementCount);
+        return pointer.Subtract(offset);
     }
 
     /// <summary>
-    /// Calculates the element count between two GBA pointers.
+    /// Calculates the bytes count between two GBA pointers.
     /// </summary>
     /// <param name="left">The first GBA pointer.</param>
     /// <param name="right">The second GBA pointer.</param>
-    /// <returns>The number of elements between the two pointers.</returns>
+    /// <returns>The number of bytes between the two pointers.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
     public static int operator -(GbaPointer left, GbaPointer right)
     {
@@ -317,7 +384,7 @@ public readonly struct GbaPointer
     }
 
     /// <summary>
-    /// Increments the pointer by one element.
+    /// Increments the pointer by one byte.
     /// </summary>
     /// <param name="pointer">The pointer to increment.</param>
     /// <returns>A new pointer that points to the next element.</returns>
@@ -328,7 +395,7 @@ public readonly struct GbaPointer
     }
 
     /// <summary>
-    /// Decrements the pointer by one element.
+    /// Decrements the pointer by one byte.
     /// </summary>
     /// <param name="pointer">The pointer to decrement.</param>
     /// <returns>A new pointer that points to the previous element.</returns>
@@ -336,21 +403,6 @@ public readonly struct GbaPointer
     public static GbaPointer operator --(GbaPointer pointer)
     {
         return pointer.Subtract(1);
-    }
-
-    /// <summary>
-    /// Adds a byte offset directly to the pointer address.
-    /// Use this when you need to manipulate the raw address without element size scaling.
-    /// </summary>
-    /// <param name="byteOffset">The byte offset to add.</param>
-    /// <returns>A new pointer with the offset applied directly to the address.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the pointer is not valid.</exception>
-    public GbaPointer Offset(int byteOffset)
-    {
-        if (!IsValid)
-            throw new InvalidOperationException($"Cannot perform pointer arithmetic on invalid GBA pointer: 0x{RawAddress:X8}");
-
-        return new GbaPointer(RawAddress + byteOffset);
     }
 
     #endregion

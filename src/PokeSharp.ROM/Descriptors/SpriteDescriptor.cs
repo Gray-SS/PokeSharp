@@ -21,7 +21,7 @@ public readonly struct SpriteDescriptor : IRomDescriptor
     public PaletteDescriptor Palette { get; }
 
     public RomPixelFormat PixelFormat { get; }
-    public RomAssetType Type => RomAssetType.Texture;
+    public RomAssetType Type => RomAssetType.Sprite;
 
     public SpriteDescriptor(int offset, int width, int height, bool compressed, SpriteKind kind, PaletteDescriptor palette, RomPixelFormat pixelFormat)
     {

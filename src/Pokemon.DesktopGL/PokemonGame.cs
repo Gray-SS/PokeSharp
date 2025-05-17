@@ -13,6 +13,7 @@ using PokeSharp.ROM;
 using System;
 using PokeSharp.ROM.Graphics;
 using System.Linq;
+using PokeSharp.ROM.Platforms.GBA.Providers;
 
 namespace Pokemon.DesktopGL;
 
@@ -64,7 +65,7 @@ public class PokemonGame : PokesharpEngine
         if (RomManager.IsRomLoaded)
         {
             RomAssetsPack assetsPack = RomManager.Rom.ExtractAssetPack();
-            Console.WriteLine(RomManager.Rom.Provider.Load(assetsPack.PokemonNames[49]));
+            Console.WriteLine(RomManager.Rom.Provider.Load(assetsPack.EntitiesGraphicsInfo[49]));
 
             IRomTexture romTexture = RomManager.Rom.Load(assetsPack.PokemonBackSprites[49]);
             var pixelsData = romTexture.ToRGBA().Select(x => new Color(x.R, x.G, x.B, x.A)).ToArray();

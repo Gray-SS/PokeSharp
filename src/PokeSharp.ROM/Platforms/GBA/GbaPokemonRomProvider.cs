@@ -3,12 +3,14 @@ using System.Diagnostics;
 
 namespace PokeSharp.ROM.Platforms.GBA;
 
-public abstract class GbaPokemonRomProvider : PokemonRomProvider<GbaPointer>
+public abstract class GbaPokemonRomProvider : PokemonRomProvider
 {
+    public RomReader<GbaPointer> Reader { get;  }
     public Dictionary<GbaRomOffsetPointers, int> Offsets { get; }
 
     public GbaPokemonRomProvider(byte[] romData, Dictionary<GbaRomOffsetPointers, int> offsets) : base(romData)
     {
+        Reader = new RomReader<GbaPointer>(romData);
         Offsets = offsets ?? throw new ArgumentNullException(nameof(offsets));
     }
 

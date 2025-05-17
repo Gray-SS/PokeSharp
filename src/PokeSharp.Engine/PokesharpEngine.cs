@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PokeSharp.Engine.Assets;
 using PokeSharp.Engine.Managers;
 using PokeSharp.ROM;
 using PokeSharp.ROM.Events;
@@ -44,8 +43,7 @@ public abstract class PokesharpEngine : Game
         RomManager.RomLoaded += OnRomLoaded;
         RomManager.RomLoadFailed += OnRomLoadFailed;
 
-        var assetsProvider = new RomAssetProvider(GraphicsDevice, RomManager);
-        AssetsManager = new AssetsManager(GraphicsDevice, assetsProvider, Content);
+        AssetsManager = new AssetsManager(GraphicsDevice, Content);
 
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();

@@ -10,14 +10,13 @@ public sealed class RomAssetsPack
 {
     // Sounds
 
+    // Palettes
+    public List<PaletteDescriptor> Palettes { get; }
+
     // Sprites
     public List<SpriteDescriptor> PokemonFrontSprites { get; }
 
     public List<SpriteDescriptor> PokemonBackSprites { get; }
-
-    // Palettes
-    public List<PaletteDescriptor> Palettes { get; }
-
     // Names
     public List<NameDescriptor> PokemonNames { get; }
 
@@ -26,8 +25,7 @@ public sealed class RomAssetsPack
     // Animations
 
     // Objects
-    // public EntityGraphicsInfo PlayerEntityGraphicsInfo { get; set; }
-    // public List<EntityGraphicsInfo> NpcsEntityGraphicsInfo { get; set; }
+    public List<EntityGraphicsDescriptor> EntitiesGraphicsInfo { get; }
 
     // Pokemons Data
 
@@ -40,6 +38,7 @@ public sealed class RomAssetsPack
         PokemonBackSprites = new List<SpriteDescriptor>();
         PokemonFrontSprites = new List<SpriteDescriptor>();
         PokemonNames = new List<NameDescriptor>();
+        EntitiesGraphicsInfo = new List<EntityGraphicsDescriptor>();
         // NpcsEntityGraphicsInfo = new List<EntityGraphicsInfo>();
     }
 }
