@@ -31,7 +31,7 @@ public sealed class RomManager
             if (!romInfo.IsPokemonROM)
                 throw new NotSupportedException($"The provided ROM isn't a pokémon game: {romInfo}");
 
-            PokemonRomProvider romProvider = PokemonRomProviderFactory.GetProvider(romInfo, romData);
+            IPokemonRomProvider romProvider = PokemonRomProviderFactory.GetProvider(romInfo, romData);
             Debug.Assert(romProvider != null, $"{nameof(romProvider)} was null");
 
             Rom = new PokemonRom(romInfo, romData, romProvider);

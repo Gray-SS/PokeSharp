@@ -8,10 +8,11 @@ using Microsoft.Xna.Framework.Graphics;
 using PokeSharp.Engine.Graphics;
 using PokeSharp.Engine;
 using Microsoft.Xna.Framework;
+using Pokemon.DesktopGL.Screens;
 using PokeSharp.ROM;
+using System;
 using PokeSharp.ROM.Graphics;
 using System.Linq;
-using Pokemon.DesktopGL.Screens;
 
 namespace Pokemon.DesktopGL;
 
@@ -29,6 +30,7 @@ public class PokemonGame : PokesharpEngine
 
     private SpriteSheet _spriteSheet;
     private SpriteBatch _spriteBatch;
+    private Sprite _sprite;
 
     public PokemonGame(string romPath) : base(romPath)
     {
@@ -61,20 +63,16 @@ public class PokemonGame : PokesharpEngine
 
         if (RomManager.IsRomLoaded)
         {
-            IPokemonRomProvider provider = RomManager.Rom.Provider;
+            RomAssetsPack assetsPack = RomManager.Rom.ExtractAssetPack();
+            Console.WriteLine(RomManager.Rom.Provider.Load(assetsPack.PokemonNames[49]));
 
-            EntityGraphicsInfo playerGraphicsInfo = provider.ExtractEntityGraphicsInfo(10);
-
-            RomSpriteSheet spriteSheet = playerGraphicsInfo.SpriteSheet;
-
-            IRomTexture romTexture = spriteSheet.Texture;
-            Color[] colors = romTexture.ToRGBA().Select(x => new Color(x.R, x.G, x.B, x.A)).ToArray();
+            IRomTexture romTexture = RomManager.Rom.Load(assetsPack.PokemonBackSprites[49]);
+            var pixelsData = romTexture.ToRGBA().Select(x => new Color(x.R, x.G, x.B, x.A)).ToArray();
 
             Texture2D texture = new Texture2D(GraphicsDevice, romTexture.Width, romTexture.Height);
-            texture.SetData(colors);
+            texture.SetData(pixelsData);
 
-            Sprite sprite = new Sprite(texture);
-            _spriteSheet = new SpriteSheet(sprite, spriteSheet.Columns, spriteSheet.Rows, null, null);
+            _sprite = new Sprite(texture);
         }
 
         ScreenManager.Push(new OverworldScreen());
@@ -98,6 +96,13 @@ public class PokemonGame : PokesharpEngine
 
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             _spriteBatch.Draw(sprite.Texture, Vector2.One * 100.0f, sprite.SourceRect, Color.White, 0.0f, Vector2.Zero * 0.5f, 2f, 0, 0.0f);
+            _spriteBatch.End();
+        }
+
+        if (_sprite != null)
+        {
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch.Draw(_sprite.Texture, Vector2.One * 100, _sprite.SourceRect, Color.White, 0.0f, Vector2.Zero, 2f, 0, 0);
             _spriteBatch.End();
         }
     }

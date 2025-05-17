@@ -105,8 +105,11 @@ This project is not licensed for redistribution or commercial use. It is shared 
 
 ---
 
+
 ### GBA Implementation
 Theses resources are useful if you want to implement support for a new GBA ROM or fix a bug related to the ROM loading system.
+
+- **Disassembled projects**: https://glitchcity.wiki/wiki/List_of_Pok%C3%A9mon_disassembly_projects
 
 - **Pokemon Fire Red Decompiled**: https://github.com/pret/pokefirered/
 

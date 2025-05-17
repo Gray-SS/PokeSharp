@@ -9,6 +9,8 @@ using PokeSharp.Engine.Tweening;
 using Pokemon.DesktopGL.Creatures;
 using PokeSharp.Engine;
 using Pokemon.DesktopGL.Dialogues;
+using PokeSharp.Engine.Assets;
+using PokeSharp.Engine.Graphics;
 
 namespace Pokemon.DesktopGL.Screens;
 

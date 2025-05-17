@@ -5,7 +5,7 @@ namespace PokeSharp.ROM;
 
 public static class PokemonRomProviderFactory
 {
-    public static PokemonRomProvider GetProvider(RomInfo romInfo, byte[] romData)
+    public static IPokemonRomProvider GetProvider(RomInfo romInfo, byte[] romData)
     {
         return romInfo.Platform switch
         {
@@ -15,10 +15,9 @@ public static class PokemonRomProviderFactory
         };
     }
 
-    private static PokemonRomProvider GetGbaRomProvider(RomInfo romInfo, byte[] romData)
+    private static IPokemonRomProvider GetGbaRomProvider(RomInfo romInfo, byte[] romData)
     {
         // NOTE: Implement other Pokémon GBA ROM here
-
         var offsets = GbaRomOffsets.GetOffsetsByRomInfo(romInfo);
         return romInfo.GameCode switch
         {

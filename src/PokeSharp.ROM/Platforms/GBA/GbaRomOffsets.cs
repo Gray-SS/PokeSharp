@@ -31,15 +31,14 @@ public static class GbaRomOffsets
 
     private static void CheckIfVirtualAddresses(Dictionary<GbaRomOffsetPointers, int> offsets)
     {
-        var addressResolver = GbaRomAddressResolver.Default;
         var physicalAddressesOffsets = offsets
-            .Where(p => addressResolver.IsPhysical(p.Value))
+            .Where(p => !GbaPointer.IsGbaPointer(p.Value))
             .Select(p => $"{p.Key}: 0x{p.Value:X8}");
 
         if (physicalAddressesOffsets.Any())
         {
             throw new NotSupportedException(
-                $"Invalid offsets. Physical offsets found: {string.Join(", ", physicalAddressesOffsets)}");
+                $"Invalid offsets. Non pointer offsets found: {string.Join(", ", physicalAddressesOffsets)}");
         }
     }
 
@@ -70,7 +69,9 @@ public static class GbaRomOffsets
             [GbaRomOffsetPointers.SHINY_PALETTES] = 0x082380CC, // Table of pointers
             [GbaRomOffsetPointers.ICON_PALETTES] = 0x083D3740, // Table of pointers
 
-            [GbaRomOffsetPointers.ENTITY_GRAPHICS_INFO] = 0x083A3BB0,
+            // 0839fdb0
+            // gObjectEventGraphicsInfoPointers
+            [GbaRomOffsetPointers.ENTITY_GRAPHICS_INFO] = 0x0839FDB0,
             [GbaRomOffsetPointers.ENTITY_PALETTES] = 0x083A5158,
         },
     };

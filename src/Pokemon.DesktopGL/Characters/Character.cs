@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using PokeSharp.Engine;
 using PokeSharp.Engine.Extensions;

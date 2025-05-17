@@ -1,3 +1,6 @@
+using PokeSharp.ROM.Descriptors;
+using PokeSharp.ROM.Graphics;
+
 namespace PokeSharp.ROM;
 
 public sealed class PokemonRom
@@ -16,4 +19,13 @@ public sealed class PokemonRom
 
     public RomAssetsPack ExtractAssetPack()
         => Provider.ExtractAssetPack();
+
+    public string Load(NameDescriptor descriptor)
+        => Provider.Load(descriptor);
+
+    public IRomTexture Load(SpriteDescriptor descriptor)
+        => Provider.Load(descriptor);
+
+    public IRomPalette Load(PaletteDescriptor descriptor)
+        => Provider.Load(descriptor);
 }

@@ -1,11 +1,9 @@
-using System;
 using System.Buffers.Binary;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 
 namespace PokeSharp.ROM;
 
-public class RomReader
+public class RomReader<TPointer> where TPointer : unmanaged
 {
     public byte[] Data { get; }
 
@@ -123,13 +121,10 @@ public class RomReader
     public virtual byte[] ReadBytes(int baseOffset, int offset, int length)
         => ReadBytes(baseOffset + offset, length);
 
-    public virtual int ReadPointer(int baseOffset)
-    {
-        EnsurePositionInBounds(baseOffset, 4);
-        return ReadInt32(baseOffset);
-    }
+    public virtual TPointer ReadPointer(int baseOffset)
+        => Read<TPointer>(baseOffset);
 
-    public virtual int ReadPointer(int baseOffset, int offset)
+    public virtual TPointer ReadPointer(int baseOffset, int offset)
         => ReadPointer(baseOffset + offset);
 
     public virtual T Read<T>(int baseOffset) where T : unmanaged
@@ -143,6 +138,19 @@ public class RomReader
 
     public virtual T Read<T>(int baseOffset, int offset) where T : unmanaged
         => Read<T>(baseOffset + offset);
+
+    public virtual T ReadArrayEntry<T>(int baseOffset, int index) where T : unmanaged
+    {
+        int size = Marshal.SizeOf<T>();
+        int offset = baseOffset + size * index;
+        EnsurePositionInBounds(offset, size);
+
+        ReadOnlySpan<byte> span = Data.AsSpan(offset, size);
+        return MemoryMarshal.Read<T>(span);
+    }
+
+    public virtual T ReadArrayEntry<T>(int baseOffset, int offset, int index) where T : unmanaged
+        => ReadArrayEntry<T>(baseOffset + offset, index);
 
     /// <summary>
     /// Fast way of accessing a pointer to a structure without copying anything.

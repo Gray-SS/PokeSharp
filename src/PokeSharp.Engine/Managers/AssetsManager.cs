@@ -2,12 +2,15 @@ using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using PokeSharp.Engine.Assets;
 using PokeSharp.Engine.Graphics;
 
 namespace PokeSharp.Engine.Managers;
 
 public class AssetsManager
 {
+    public IAssetProvider Provider => _provider;
+
     public Sprite Sprite_Blank { get; private set; } = null!;
 
     public Sprite Sprite_Battle_Forest_Bg { get; private set; } = null!;
@@ -28,19 +31,21 @@ public class AssetsManager
     public FontSystem Font_PowerGreen { get; private set; } = null!;
     public FontSystem Font_PowerClearBold { get; private set; } = null!;
 
+    private readonly GraphicsDevice _graphics;
     private readonly ContentManager _content;
-    private readonly GraphicsDevice _graphicsDevice;
+    private readonly IAssetProvider _provider;
 
-    public AssetsManager(GraphicsDevice graphics, ContentManager contentManager)
+    public AssetsManager(GraphicsDevice graphics, IAssetProvider provider, ContentManager contentManager)
     {
+        _graphics = graphics;
+        _provider = provider;
         _content = contentManager;
-        _graphicsDevice = graphics;
     }
 
     public void LoadGlobalAssets()
     {
-        var blankTexture = new Texture2D(_graphicsDevice, 1, 1);
-        blankTexture.SetData([ Color.White ]);
+        var blankTexture = new Texture2D(_graphics, 1, 1);
+        blankTexture.SetData([Color.White]);
 
         Sprite_Blank = new Sprite(blankTexture);
 

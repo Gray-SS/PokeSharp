@@ -2,6 +2,7 @@ using System.Collections;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using PokeSharp.Engine.Managers;
 using PokeSharp.Engine.Renderers;
 using PokeSharp.Engine.Tweening;
 
@@ -10,6 +11,7 @@ namespace PokeSharp.Engine;
 public abstract class Screen
 {
     public PokesharpEngine Engine { get; }
+    public RomManager RomManager => Engine.RomManager;
     public GameWindow Window => Engine.Window;
     public ContentManager Content => Engine.Content;
     public GraphicsDeviceManager Graphics => Engine.Graphics;

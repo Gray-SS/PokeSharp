@@ -30,9 +30,9 @@ public readonly struct EntityGraphicsInfo
     /// <summary>
     /// The animations of this entity
     /// </summary>
-    public GraphicsAnimation[] Animations { get; }
+    public RomAnimation[] Animations { get; }
 
-    public EntityGraphicsInfo(int width, int height, int shadowSize, IRomPalette palette, RomSpriteSheet spriteSheet, GraphicsAnimation[] animations)
+    public EntityGraphicsInfo(int width, int height, int shadowSize, IRomPalette palette, RomSpriteSheet spriteSheet, RomAnimation[] animations)
     {
         Width = width;
         Height = height;
