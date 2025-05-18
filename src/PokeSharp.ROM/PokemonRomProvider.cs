@@ -17,4 +17,7 @@ public abstract class PokemonRomProvider : IPokemonRomProvider
     public abstract string Load(NameDescriptor desc);
     public abstract IRomTexture Load(SpriteDescriptor desc);
     public abstract IRomPalette Load(PaletteDescriptor desc);
+    public abstract RomAnimation Load(AnimationDescriptor desc);
+    public abstract RomSpriteSheet Load(SpriteSheetDescriptor desc);
+    public abstract EntityGraphicsInfo Load(EntityGraphicsDescriptor desc);
 }
