@@ -1,31 +1,34 @@
+using PokeSharp.Engine.Graphics.Animations;
+
 namespace PokeSharp.Engine.Graphics;
 
 public class Animation
 {
-    public bool IsLooping { get; }
-    public float Frequency { get; }
-    public float InverseFrequency { get; }
-    public int FramesCount { get; }
-    public IReadOnlyList<Sprite> Sprites { get; }
+    public IReadOnlyList<Sprite> Frames { get; }
+    public IReadOnlyList<IAnimationCmd> Commands { get; }
 
-    public Animation(List<Sprite> sprites, float frequency = 12.0f, bool isLooping = true)
+    public Animation(List<Sprite> frames, List<IAnimationCmd> commands)
     {
-        Sprites = sprites;
-        Frequency = frequency;
-        InverseFrequency = 1f / frequency;
-        IsLooping = isLooping;
-        FramesCount = Sprites.Count;
+        Frames = frames;
+        Commands = commands;
     }
 
     public static Animation FromSpriteSheet(SpriteSheet sheet, int index)
-        => FromSpriteSheet(sheet, index, index, 0.0f, false);
+        => FromSpriteSheet(sheet, index, index, 4, true);
 
-    public static Animation FromSpriteSheet(SpriteSheet sheet, int from, int to, float frequency = 10.0f, bool isLooping = true)
+    public static Animation FromSpriteSheet(SpriteSheet sheet, int from, int to, int frameDuration, bool isLooping = true)
     {
-        var sprites = new List<Sprite>();
+        var frames = new List<Sprite>();
+        var cmds = new List<IAnimationCmd>();
         for (int i = from; i <= to; i++)
-            sprites.Add(sheet.GetSprite(i));
+        {
+            frames.Add(sheet.GetSprite(i));
+            cmds.Add(new AnimationCmdFrame(i - from, frameDuration, false, false));
+        }
 
-        return new Animation(sprites, frequency, isLooping);
+        if (isLooping)
+            cmds.Add(new AnimationCmdJump(0));
+
+        return new Animation(frames, cmds);
     }
 }
