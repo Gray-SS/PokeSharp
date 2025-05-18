@@ -9,11 +9,8 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
 {
     private const int MAX_FRAMES_COUNT = 9;
 
-    private readonly Dictionary<int, IRomPalette> _palettes;
-
     public PokemonFireRedProvider(byte[] romData, Dictionary<GbaRomOffsetPointers, int> offsets) : base(romData, offsets)
     {
-        _palettes = new Dictionary<int, IRomPalette>();
     }
 
     public override RomAssetsPack ExtractAssetPack()
@@ -46,9 +43,9 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
 
         PaletteDescriptor palette = ExtractEntityPalette(info.PaletteTag);
         SpriteSheetDescriptor spriteSheet = ExtractEntitySpriteSheet(in info, palette);
-        // RomAnimation[] animations = ExtractEntityAnimations(info.AnimsPtr);
+        AnimationDescriptor[] animations = ExtractEntityAnimations(in info);
 
-        return new EntityGraphicsDescriptor();
+        return new EntityGraphicsDescriptor(graphicsInfoOffset, palette, spriteSheet, animations);
     }
 
     private PaletteDescriptor ExtractEntityPalette(short paletteTag)
@@ -64,15 +61,50 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
                 break;
 
             if (palette.Tag == paletteTag)
-                return new PaletteDescriptor(palette.RawDataPtr.PhysicalAddress, true, RomPixelFormat.Bpp4);
+            {
+                int offset = palettesPtr.Add<SpritePalette>(i).PhysicalAddress;
+                return new PaletteDescriptor(offset, false, RomPixelFormat.Bpp4);
+            }
         }
 
         throw new InvalidOperationException($"Unable a matching palette for object event graphics with palette tag: 0x{paletteTag:X4}.");
     }
 
+    private AnimationDescriptor[] ExtractEntityAnimations(in ObjectEventGraphicsInfo info)
+    {
+        GbaPointer animsPointer = info.AnimsPtr;
+        var animations = new List<AnimationDescriptor>();
+        var seenPointers = new HashSet<GbaPointer>();
+
+        const int MAX_ANIMATIONS = 50;
+
+        for (int i = 0; i < MAX_ANIMATIONS; i++)
+        {
+            GbaPointer animBasePointer = Reader.ReadPointer(animsPointer.PhysicalAddress);
+
+            if (!animBasePointer.ReferencesValidLocation(RomData.Length) || seenPointers.Contains(animBasePointer))
+                break;
+
+            seenPointers.Add(animBasePointer);
+
+            var animDesc = new AnimationDescriptor(animBasePointer.PhysicalAddress);
+            animations.Add(animDesc);
+
+            // Increment the offset of the pointer to get the next animation pointer
+            animsPointer = animsPointer.Inc<GbaPointer>();
+        }
+
+        return [.. animations];
+    }
+
     private SpriteSheetDescriptor ExtractEntitySpriteSheet(in ObjectEventGraphicsInfo info, PaletteDescriptor palette)
     {
+        int baseOffset = info.ImagesPtr.PhysicalAddress;
+        int framesCount = GetFramesCount(info.ImagesPtr);
+        int frameDataLength = info.Width * info.Height / 2;
+        int dataLength = frameDataLength * framesCount;
 
+        return new SpriteSheetDescriptor(baseOffset, palette, info.Width, info.Height, framesCount, frameDataLength, dataLength);
     }
 
     private void ExtractPokemons(RomAssetsPack pack)
@@ -162,105 +194,15 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
         return Rom4bppPalette.FromRawData(data, true);
     }
 
-    public EntityGraphicsInfo ExtractEntityGraphicsInfo(int index)
-    {
-        GbaPointer offsetPtr = GetPointer(GbaRomOffsetPointers.ENTITY_GRAPHICS_INFO);
-        offsetPtr.Add<GbaPointer>(index);
-
-        GbaPointer graphicsInfoPtr = Reader.ReadPointer(offsetPtr.PhysicalAddress);
-        ObjectEventGraphicsInfo info = Reader.Read<ObjectEventGraphicsInfo>(graphicsInfoPtr.PhysicalAddress);
-
-        IRomPalette palette = GetOrExtractEntityPalette(info.PaletteTag);
-        RomSpriteSheet spriteSheet = ExtractEntitySpriteSheet(in info, palette);
-        RomAnimation[] animations = ExtractEntityAnimations(info.AnimsPtr);
-
-        return new EntityGraphicsInfo(info.Width, info.Height, info.ShadowSize, palette, spriteSheet, animations);
-    }
-
-    private int GetFramesCount(GbaPointer imagesPointer)
-    {
-        int framesCount = 0;
-        int spriteFrameImageSize = Marshal.SizeOf<SpriteFrameImage>();
-
-        for (int i = 0; i < MAX_FRAMES_COUNT; i++)
-        {
-            SpriteFrameImage sfi = Reader.Read<SpriteFrameImage>(imagesPointer.PhysicalAddress, spriteFrameImageSize * i);
-
-            if (sfi.DataPtr == GbaPointer.Null || sfi.Size == 0)
-                break;
-
-            framesCount++;
-        }
-
-        return framesCount == 0 ? 1 : framesCount;
-    }
-
-    private RomSpriteSheet ExtractEntitySpriteSheet(in ObjectEventGraphicsInfo info, IRomPalette palette)
-    {
-        int baseOffset = info.ImagesPtr.PhysicalAddress;
-        int framesCount = GetFramesCount(info.ImagesPtr);
-        int frameDataLength = info.Width * info.Height / 2;
-
-        byte[] rawData = new byte[frameDataLength * framesCount];
-        ReadOnlySpan<SpriteFrameImage> frames = Reader.ReadArrayRef<SpriteFrameImage>(baseOffset, framesCount);
-
-        for (int i = 0; i < frames.Length; i++)
-        {
-            ref readonly SpriteFrameImage sfi = ref frames[i];
-
-            int spriteDataOffset = sfi.DataPtr.PhysicalAddress;
-            ReadOnlySpan<byte> frameSegment = Reader.ReadSpan(spriteDataOffset, frameDataLength);
-
-            Span<byte> rawDataSegment = rawData.AsSpan(frameDataLength * i, frameDataLength);
-            frameSegment.CopyTo(rawDataSegment);
-        }
-
-        var image = new Rom4bppTexture(info.Width, info.Height * framesCount, rawData, palette);
-        return new RomSpriteSheet(image, 1, framesCount);
-    }
-
-    private RomAnimation[] ExtractEntityAnimations(GbaPointer animsPointer)
-    {
-        var animations = new List<RomAnimation>();
-        var seenPointers = new HashSet<GbaPointer>();
-
-        const int MAX_ANIMATIONS = 50;
-
-        for (int i = 0; i < MAX_ANIMATIONS; i++)
-        {
-            GbaPointer animBasePointer = Reader.ReadPointer(animsPointer.PhysicalAddress);
-
-            if (!animBasePointer.ReferencesValidLocation(RomData.Length) || seenPointers.Contains(animBasePointer))
-                break;
-
-            seenPointers.Add(animBasePointer);
-
-            try
-            {
-                RomAnimation animation = ExtractEntityAnimation(animBasePointer);
-                animations.Add(animation);
-            }
-            catch (Exception)
-            {
-                break;
-            }
-
-            animsPointer = animsPointer.Inc<GbaPointer>();
-        }
-
-        return [.. animations];
-    }
-
-    private RomAnimation ExtractEntityAnimation(GbaPointer animPointer)
+    public override RomAnimation Load(AnimationDescriptor desc)
     {
         var frames = new List<IRomAnimationCmd>();
-        int animCmdSize = Marshal.SizeOf<AnimCmd>();
-        int crntAnimCmdOffset = animPointer.PhysicalAddress;
+        GbaPointer animPointer = GbaPointer.FromPhysicalAddress(desc.Offset);
 
         AnimCmd cmd;
         do
         {
-            cmd = Reader.Read<AnimCmd>(crntAnimCmdOffset);
+            cmd = Reader.Read<AnimCmd>(animPointer.PhysicalAddress);
             switch (cmd.Type)
             {
                 case AnimCmdType.Loop:
@@ -277,46 +219,65 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
                     break;
             }
 
-            crntAnimCmdOffset += animCmdSize;
-
-            // Si on a un Jump ou un End, on arrête d'extraire
+            // If we have a jump or end command then this is the end of the animation
             if (cmd.Type == AnimCmdType.Jump || cmd.Type == AnimCmdType.End)
                 break;
+
+            animPointer = animPointer.Inc<AnimCmd>();
 
         } while (true);
 
         return new RomAnimation([.. frames]);
     }
 
-    private IRomPalette GetOrExtractEntityPalette(short paletteTag)
+    public override RomSpriteSheet Load(SpriteSheetDescriptor desc)
     {
-        GbaPointer palettesPtr = GetPointer(GbaRomOffsetPointers.ENTITY_PALETTES);
-        ReadOnlySpan<SpritePalette> palettes = Reader.ReadArrayRef<SpritePalette>(palettesPtr.PhysicalAddress, 19);
+        byte[] rawData = new byte[desc.DataLength];
+        ReadOnlySpan<SpriteFrameImage> frames = Reader.ReadArrayRef<SpriteFrameImage>(desc.Offset, desc.FramesCount);
 
-        for (int i = 0; i < palettes.Length; i++)
+        for (int i = 0; i < frames.Length; i++)
         {
-            ref readonly SpritePalette palette = ref palettes[i];
+            ref readonly SpriteFrameImage sfi = ref frames[i];
 
-            if (palette.RawDataPtr == GbaPointer.Null)
-                break;
+            int spriteDataOffset = sfi.DataPtr.PhysicalAddress;
+            ReadOnlySpan<byte> frameSegment = Reader.ReadSpan(spriteDataOffset, desc.FrameDataLength);
 
-            if (palette.Tag == paletteTag)
-                return GetOrExtractPalette(palette.RawDataPtr.PhysicalAddress);
+            Span<byte> rawDataSegment = rawData.AsSpan(desc.FrameDataLength * i, desc.FrameDataLength);
+            frameSegment.CopyTo(rawDataSegment);
         }
 
-        throw new InvalidOperationException("Couldn't load the sprite palette from the palette tag");
+        var palette = Load(desc.Palette);
+        var image = new Rom4bppTexture(desc.FrameWidth, desc.FrameHeight * desc.FramesCount, rawData, palette);
+        return new RomSpriteSheet(image, 1, desc.FramesCount);
     }
 
-    private IRomPalette GetOrExtractPalette(int paletteOffset)
+    public override EntityGraphicsInfo Load(EntityGraphicsDescriptor desc)
     {
-        if (_palettes.TryGetValue(paletteOffset, out IRomPalette? palette))
-            return palette;
+        ObjectEventGraphicsInfo info = Reader.Read<ObjectEventGraphicsInfo>(desc.Offset);
 
-        ReadOnlySpan<byte> paletteData = Reader.ReadSpan(paletteOffset, Rom4bppPalette.BYTES_COUNT);
-        palette = Rom4bppPalette.FromRawData(paletteData, true);
+        IRomPalette palette = Load(desc.Palette);
+        RomSpriteSheet spriteSheet = Load(desc.SpriteSheet);
+        RomAnimation[] animations = [.. desc.Animations.Select(Load)];
 
-        _palettes[paletteOffset] = palette;
-        return palette;
+        return new EntityGraphicsInfo(info.Width, info.Height, info.ShadowSize, palette, spriteSheet, animations);
+    }
+
+    private int GetFramesCount(GbaPointer imagesPointer)
+    {
+        int framesCount = 0;
+        int spriteFrameImageSize = Marshal.SizeOf<SpriteFrameImage>();
+
+        for (int i = 0; i < MAX_FRAMES_COUNT * 6; i++)
+        {
+            SpriteFrameImage sfi = Reader.Read<SpriteFrameImage>(imagesPointer.PhysicalAddress, spriteFrameImageSize * i);
+
+            if (sfi.DataPtr == GbaPointer.Null || sfi.Size == 0)
+                break;
+
+            framesCount++;
+        }
+
+        return framesCount == 0 ? 1 : framesCount;
     }
 
     #region Helper Structs
@@ -484,4 +445,4 @@ public sealed class PokemonFireRedProvider : GbaPokemonRomProvider
     }
 
     #endregion
-} 
+}
