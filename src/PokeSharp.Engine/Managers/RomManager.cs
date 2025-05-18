@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using PokeSharp.ROM;
 using PokeSharp.ROM.Events;
 
@@ -6,8 +7,13 @@ namespace PokeSharp.Engine.Managers;
 
 public sealed class RomManager
 {
+    [MemberNotNullWhen(true, nameof(IsRomLoaded))]
     public PokemonRom? Rom { get; private set; }
-    public bool IsRomLoaded => Rom != null;
+
+    [MemberNotNullWhen(true, nameof(IsRomLoaded))]
+    public RomAssetsPack? AssetPack { get; private set; }
+
+    public bool IsRomLoaded => Rom != null && AssetPack != null;
 
     public event EventHandler<RomLoadedArgs>? RomLoaded;
     public event EventHandler<RomLoadFailedArgs>? RomLoadFailed;
@@ -35,6 +41,8 @@ public sealed class RomManager
             Debug.Assert(romProvider != null, $"{nameof(romProvider)} was null");
 
             Rom = new PokemonRom(romInfo, romData, romProvider);
+            AssetPack = Rom.ExtractAssetPack();
+
             RomLoaded?.Invoke(this, new RomLoadedArgs(Rom));
             return true;
         }
