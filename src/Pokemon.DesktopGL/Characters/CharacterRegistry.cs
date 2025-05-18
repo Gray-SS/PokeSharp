@@ -47,10 +47,10 @@ public sealed class CharacterRegistry
 
             data.RunAnimations = new AnimationPack(new Dictionary<string, Animation>()
             {
-                { "Down", Animation.FromSpriteSheet(sheet, 0, 3) },
-                { "Left", Animation.FromSpriteSheet(sheet, 4, 7) },
-                { "Right", Animation.FromSpriteSheet(sheet, 8, 11) },
-                { "Up", Animation.FromSpriteSheet(sheet, 12, 15) },
+                { "Down", Animation.FromSpriteSheet(sheet, 0, 3, 8) },
+                { "Left", Animation.FromSpriteSheet(sheet, 4, 7, 8) },
+                { "Right", Animation.FromSpriteSheet(sheet, 8, 11, 8) },
+                { "Up", Animation.FromSpriteSheet(sheet, 12, 15, 8) },
             });
 
             _characters.Add(data.Id, data);
