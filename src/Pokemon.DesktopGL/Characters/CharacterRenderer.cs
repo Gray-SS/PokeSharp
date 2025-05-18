@@ -82,6 +82,6 @@ public class CharacterRenderer
     public void Draw(GameRenderer renderer)
     {
         var pos = _character.Position + Offset;
-        renderer.Draw(_animPlayer.Sprite, pos, _character.Size, Color.White);
+        renderer.Draw(_animPlayer.Frame, pos, _character.Size, Color.White);
     }
 }
