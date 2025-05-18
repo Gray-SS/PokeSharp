@@ -1,6 +1,6 @@
 namespace PokeSharp.ROM.Descriptors;
 
-public readonly struct SpriteSheetDescriptor : IRomDescriptor
+public readonly struct RomSpriteSheetDescriptor : IRomDescriptor
 {
     public int Offset { get; }
     public int FrameWidth { get; }
@@ -8,11 +8,11 @@ public readonly struct SpriteSheetDescriptor : IRomDescriptor
     public int FramesCount { get; }
     public int FrameDataLength { get; }
     public int DataLength { get; }
-    public PaletteDescriptor Palette { get; }
+    public RomPaletteDescriptor Palette { get; }
 
     public RomAssetType Type => RomAssetType.SpriteSheet;
 
-    public SpriteSheetDescriptor(int offset, PaletteDescriptor palette, int frameWidth, int frameHeight, int framesCount, int frameDataLength, int dataLength)
+    public RomSpriteSheetDescriptor(int offset, RomPaletteDescriptor palette, int frameWidth, int frameHeight, int framesCount, int frameDataLength, int dataLength)
     {
         Offset = offset;
         Palette = palette;

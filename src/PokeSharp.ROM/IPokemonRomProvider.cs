@@ -7,12 +7,12 @@ public interface IPokemonRomProvider
 {
     byte[] RomData { get; }
 
-    string Load(NameDescriptor desc);
-    IRomTexture Load(SpriteDescriptor desc);
-    IRomPalette Load(PaletteDescriptor desc);
-    RomAnimation Load(AnimationDescriptor desc);
-    RomSpriteSheet Load(SpriteSheetDescriptor desc);
-    EntityGraphicsInfo Load(EntityGraphicsDescriptor desc);
+    string Load(RomNameDescriptor desc);
+    IRomTexture Load(RomSpriteDescriptor desc);
+    IRomPalette Load(RomPaletteDescriptor desc);
+    RomAnimation Load(RomAnimationDescriptor desc);
+    RomSpriteSheet Load(RomSpriteSheetDescriptor desc);
+    EntityGraphicsInfo Load(RomEntityGraphicsDescriptor desc);
 
     RomAssetsPack ExtractAssetPack();
 }

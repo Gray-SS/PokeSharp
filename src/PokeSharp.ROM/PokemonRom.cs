@@ -20,12 +20,12 @@ public sealed class PokemonRom
     public RomAssetsPack ExtractAssetPack()
         => Provider.ExtractAssetPack();
 
-    public string Load(NameDescriptor descriptor)
+    public string Load(RomNameDescriptor descriptor)
         => Provider.Load(descriptor);
 
-    public IRomTexture Load(SpriteDescriptor descriptor)
+    public IRomTexture Load(RomSpriteDescriptor descriptor)
         => Provider.Load(descriptor);
 
-    public IRomPalette Load(PaletteDescriptor descriptor)
+    public IRomPalette Load(RomPaletteDescriptor descriptor)
         => Provider.Load(descriptor);
 }

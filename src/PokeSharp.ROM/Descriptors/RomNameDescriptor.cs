@@ -5,14 +5,14 @@ public enum NameKind
     Pokemom
 }
 
-public readonly struct NameDescriptor : IRomDescriptor
+public readonly struct RomNameDescriptor : IRomDescriptor
 {
     public int Address { get; }
     public int Length { get; }
     public NameKind Kind { get; }
     public RomAssetType Type => RomAssetType.Name;
 
-    public NameDescriptor(int offset, int length, NameKind kind)
+    public RomNameDescriptor(int offset, int length, NameKind kind)
     {
         Kind = kind;
         Address = offset;
