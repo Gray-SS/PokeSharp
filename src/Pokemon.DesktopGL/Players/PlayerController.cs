@@ -2,8 +2,8 @@ using System.Linq;
 using Microsoft.Xna.Framework.Input;
 using Pokemon.DesktopGL.Characters;
 using PokeSharp.Engine;
-using PokeSharp.Engine.Managers;
 using Pokemon.DesktopGL.World;
+using PokeSharp.Engine.Inputs;
 
 namespace Pokemon.DesktopGL.Players;
 
