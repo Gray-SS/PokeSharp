@@ -2,10 +2,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PokeSharp.Engine.Managers;
 
-namespace PokeSharp.Engine;
+namespace PokeSharp.Engine.Miscellaneous;
 
 public class Camera
 {
+    public static Camera Active => PokesharpEngine.Instance.ScreenManager.ActiveScreen.Camera;
+
     public Vector2 Position { get; set; }
     public float Rotation { get; set; }
     public float Zoom
@@ -23,7 +25,6 @@ public class Camera
     {
         _resolutionManager = resolutionManager;
     }
-
 
     public virtual Matrix TransformMatrix
     {
