@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Pokemon.DesktopGL.Dialogues;
 
+// TODO: Implement the DialogueManager with the TextTyper class
 public class DialogueManager
 {
     private readonly Queue<string> _lines = new();
