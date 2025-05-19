@@ -1,9 +1,8 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Input;
 using PokeSharp.Engine.Assets;
-using PokeSharp.Engine.Assets.Importers;
 using PokeSharp.Engine.Managers;
+using PokeSharp.Engine.UI;
 using PokeSharp.ROM;
 using PokeSharp.ROM.Events;
 
@@ -15,12 +14,14 @@ public abstract class PokesharpEngine : Game
     public static PokesharpEngine Instance { get; private set; } = null!;
 
     // Services / Managers
+    public UIManager UIManager { get; private set; } = null!;
     public RomManager RomManager { get; private set; } = null!;
     public InputManager InputManager { get; private set; } = null!;
     public ScreenManager ScreenManager { get; private set; } = null!;
     public AssetsManager AssetsManager { get; private set; } = null!;
     public WindowManager WindowManager { get; private set; } = null!;
     public CoroutineManager CoroutineManager { get; private set; } = null!;
+    public ResolutionManager ResolutionManager { get; private set; } = null!;
 
     // MonoGame Properties
     public GraphicsDeviceManager Graphics { get; }
@@ -48,10 +49,12 @@ public abstract class PokesharpEngine : Game
 
         AssetsManager = new AssetsManager(GraphicsDevice, Content, RomManager);
 
+        UIManager = new UIManager();
         InputManager = new InputManager();
         ScreenManager = new ScreenManager();
         CoroutineManager = new CoroutineManager();
-        WindowManager = new WindowManager(Window, Graphics);
+        WindowManager = new WindowManager(Window);
+        ResolutionManager = new ResolutionManager(Graphics, Window);
 
         if (!string.IsNullOrEmpty(_romPath) && RomManager.LoadRom(_romPath))
         {
@@ -63,7 +66,10 @@ public abstract class PokesharpEngine : Game
             WindowManager.SetWindowTitle("PokéSharp - Limited version");
         }
 
-        WindowManager.SetResolution("1280x720");
+        // ResolutionManager.IsVirtualResEnabled = true;
+        ResolutionManager.SetResolution(Resolution.R1280x720);
+        // ResolutionManager.SetVirtualResolution(Resolution.R800x400);
+
         base.Initialize();
     }
 
@@ -82,6 +88,7 @@ public abstract class PokesharpEngine : Game
     protected override void LoadContent()
     {
         AssetsManager.LoadGlobalAssets(GraphicsDevice);
+        UIManager.Initialize(AssetsManager);
     }
 
     protected override void Update(GameTime gameTime)
@@ -96,7 +103,7 @@ public abstract class PokesharpEngine : Game
             Exit();
 
         if (InputManager.IsKeyPressed(Keys.F11))
-            WindowManager.ToggleFullscreen();
+            ResolutionManager.ToggleFullscreen();
 
         ScreenManager.Update(gameTime);
     }
