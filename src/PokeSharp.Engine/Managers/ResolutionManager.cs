@@ -128,6 +128,16 @@ public sealed class ResolutionManager : IDisposable
             throw new InvalidOperationException($"Invalid resolution {resolution}: Resolution too large (maximum: {MaxResolution.Width}x{MaxResolution.Height})");
     }
 
+    public Vector2 ScreenToGame(Vector2 position)
+    {
+        return Vector2.Transform(position, RealToVirtualMatrix);
+    }
+
+    public Vector2 GameToScreen(Vector2 position)
+    {
+        return Vector2.Transform(position, VirtualToRealMatrix);
+    }
+
     public void ToggleFullscreen()
     {
         _graphics.ToggleFullScreen();
