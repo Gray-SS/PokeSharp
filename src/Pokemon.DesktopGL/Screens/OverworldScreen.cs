@@ -16,7 +16,6 @@ public sealed class OverworldScreen : Screen
 {
     public new PokemonGame Engine => GetEngine<PokemonGame>();
 
-    private Camera _camera;
     private UIRenderer _uiRenderer;
     private GameRenderer _gameRenderer;
 
@@ -27,7 +26,6 @@ public sealed class OverworldScreen : Screen
 
     protected override void Initialize()
     {
-        _camera = new Camera(ResolutionManager);
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _gameRenderer = new GameRenderer(GraphicsDevice);
         _dialogueRenderer = new DialogueBoxRenderer(Engine.DialogueManager);
@@ -43,7 +41,7 @@ public sealed class OverworldScreen : Screen
 
     protected override void Load()
     {
-        _camera.Zoom = 1.0f;
+        Camera.Zoom = 1.0f;
         _world.Player.Character.MovementEnabled = true;
         _world.Player.Character.RotationEnabled = true;
 
@@ -66,7 +64,7 @@ public sealed class OverworldScreen : Screen
         _world.Player.Character.RotationEnabled = false;
         _world.Player.Character.Rotate(Direction.Down, force: true);
 
-        CoroutineManager.Start(Tween.To((v) => _camera.Zoom = v, () => _camera.Zoom, 3f, 1f, Easing.InOutQuad));
+        CoroutineManager.Start(Tween.To((v) => Camera.Zoom = v, () => Camera.Zoom, 3f, 1f, Easing.InOutQuad));
         yield return FadeIn();
 
         CreatureZone zone = _world.GetCurrentZone();
@@ -90,7 +88,7 @@ public sealed class OverworldScreen : Screen
 
         var target = _world.Player.Character.Position;
 
-        var viewportSize = _camera.Viewport.Bounds.Size.ToVector2();
+        var viewportSize = Camera.Viewport.Bounds.Size.ToVector2();
         var halfView = viewportSize * 0.5f;
 
         int mapPixelWidth  = (int)(_map.TiledMap.Width * GameConstants.TileSize);
@@ -100,14 +98,14 @@ public sealed class OverworldScreen : Screen
         float clampedY = MathHelper.Clamp(target.Y, halfView.Y + 20, mapPixelHeight - halfView.Y - 40);
 
         Vector2 clampedTarget = new(clampedX, clampedY);
-        _camera.Position = Vector2.Lerp(_camera.Position, clampedTarget, 0.05f);
+        Camera.Position = Vector2.Lerp(Camera.Position, clampedTarget, 0.05f);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        _gameRenderer.Begin(_camera);
+        _gameRenderer.Begin(Camera);
         _world.Draw(_gameRenderer);
         _gameRenderer.End();
 
