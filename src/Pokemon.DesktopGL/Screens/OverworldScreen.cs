@@ -25,9 +25,9 @@ public sealed class OverworldScreen : Screen
     private GameMap _map;
     private Overworld _world;
 
-    public override void Initialize()
+    protected override void Initialize()
     {
-        _camera = new Camera(Engine.WindowManager);
+        _camera = new Camera(ResolutionManager);
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _gameRenderer = new GameRenderer(GraphicsDevice);
         _dialogueRenderer = new DialogueBoxRenderer(Engine.DialogueManager);
@@ -39,11 +39,9 @@ public sealed class OverworldScreen : Screen
 
         _world.Load();
         _world.Player.Character.Moved += OnPlayerMove;
-
-        base.Initialize();
     }
 
-    public override void Load()
+    protected override void Load()
     {
         _camera.Zoom = 1.0f;
         _world.Player.Character.MovementEnabled = true;
@@ -77,13 +75,13 @@ public sealed class OverworldScreen : Screen
         Engine.ScreenManager.Push(new BattleScreen(creature));
     }
 
-    public override void Unload()
+    protected override void Unload()
     {
         Engine.ActiveWorld = null;
         _world = null;
     }
 
-    public override void Update(GameTime gameTime)
+    protected override void Update(GameTime gameTime)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -105,7 +103,7 @@ public sealed class OverworldScreen : Screen
         _camera.Position = Vector2.Lerp(_camera.Position, clampedTarget, 0.05f);
     }
 
-    public override void Draw(GameTime gameTime)
+    protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
@@ -116,7 +114,5 @@ public sealed class OverworldScreen : Screen
         _uiRenderer.Begin();
         _dialogueRenderer.Draw(_uiRenderer);
         _uiRenderer.End();
-
-        base.Draw(gameTime);
     }
 }
