@@ -9,6 +9,7 @@ using PokeSharp.Engine.Renderers;
 using Pokemon.DesktopGL.Creatures;
 using Pokemon.DesktopGL.Moves;
 using PokeSharp.Engine;
+using PokeSharp.Engine.Assets;
 
 namespace Pokemon.DesktopGL.Screens;
 
@@ -44,7 +45,7 @@ public sealed class BattleScreen : Screen
         _opponentCreature = opponent;
     }
 
-    public override void Initialize()
+    protected override void Initialize()
     {
         _uiRenderer = new UIRenderer(GraphicsDevice);
         _font = Engine.AssetsManager.Font_PowerGreen.GetFont(30);
@@ -59,15 +60,14 @@ public sealed class BattleScreen : Screen
         _battleController = new BattleController(_battle, _playerRenderer, _opponentRenderer);
 
         ChangeState(BattleScreenState.ActionPickup);
-        base.Initialize();
     }
 
-    public override void Load()
+    protected override void Load()
     {
         CoroutineManager.Start(FadeOut());
     }
 
-    public override void Update(GameTime gameTime)
+    protected override void Update(GameTime gameTime)
     {
         _battleController.Update();
 
@@ -132,7 +132,7 @@ public sealed class BattleScreen : Screen
         }
     }
 
-    public override void Draw(GameTime gameTime)
+    protected override void Draw(GameTime gameTime)
     {
         _uiRenderer.Begin();
 
@@ -155,8 +155,6 @@ public sealed class BattleScreen : Screen
         DrawBottomContainer(actionBounds);
 
         _uiRenderer.End();
-
-        base.Draw(gameTime);
     }
 
     private void DrawBackground(Rectangle bounds)
