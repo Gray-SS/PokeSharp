@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PokeSharp.Engine.Assets;
+using PokeSharp.Engine.Inputs;
 using PokeSharp.Engine.Managers;
 using PokeSharp.Engine.UI;
 using PokeSharp.ROM;
@@ -50,16 +51,16 @@ public abstract class PokesharpEngine : Game
         AssetsManager = new AssetsManager(GraphicsDevice, Content, RomManager);
 
         UIManager = new UIManager();
-        InputManager = new InputManager();
         ScreenManager = new ScreenManager();
         CoroutineManager = new CoroutineManager();
         WindowManager = new WindowManager(Window);
         ResolutionManager = new ResolutionManager(Graphics, Window);
+        InputManager = new InputManager(ResolutionManager);
 
         if (!string.IsNullOrEmpty(_romPath) && RomManager.LoadRom(_romPath))
         {
             PokemonRom rom = RomManager.Rom!;
-            WindowManager.SetWindowTitle($"PokéSharp - {rom.Info}");
+            
         }
         else
         {
@@ -67,14 +68,15 @@ public abstract class PokesharpEngine : Game
         }
 
         // ResolutionManager.IsVirtualResEnabled = true;
-        ResolutionManager.SetResolution(Resolution.R1280x720);
         // ResolutionManager.SetVirtualResolution(Resolution.R800x400);
+        ResolutionManager.SetResolution(Resolution.R1280x720);
 
         base.Initialize();
     }
 
     private void OnRomLoadFailed(object? sender, RomLoadFailedArgs e)
     {
+        WindowManager.SetWindowTitle($"PokéSharp - Limited Mode");
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"Error: {e.ErrorMessage}");
         Console.ResetColor();
@@ -82,6 +84,7 @@ public abstract class PokesharpEngine : Game
 
     private void OnRomLoaded(object? sender, RomLoadedArgs e)
     {
+        WindowManager.SetWindowTitle($"PokéSharp - {e.LoadedRom.Info}");
         Console.WriteLine($"ROM loaded successfully: {e.LoadedRom.Info}");
     }
 
