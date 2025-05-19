@@ -2,7 +2,7 @@ using System.Collections;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PokeSharp.Engine.Managers;
-using PokeSharp.Engine.Renderers;
+using PokeSharp.Engine.Miscellaneous;
 using PokeSharp.Engine.Tweening;
 using PokeSharp.Engine.UI;
 
@@ -10,8 +10,7 @@ namespace PokeSharp.Engine;
 
 public abstract class Screen
 {
-    public bool IsActive => Engine.ScreenManager.ActiveScreen == this;
-
+    public Camera Camera { get; }
     public PokesharpEngine Engine { get; }
     public Rectangle RenderBounds => _renderBounds;
     public UIManager UIManager => Engine.UIManager;
@@ -33,6 +32,7 @@ public abstract class Screen
         Engine = PokesharpEngine.Instance;
         ResolutionManager.ResolutionChanged += OnResolutionChanged;
         ResolutionManager.VirtualResolutionChanged += OnVirtualResolutionChanged;
+        Camera = new Camera(ResolutionManager);
 
         CalculateRenderBounds(ResolutionManager.Resolution, ResolutionManager.VirtualResolution);
     }
