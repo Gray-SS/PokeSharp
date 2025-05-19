@@ -4,15 +4,7 @@ using Pokemon.DesktopGL;
 
 string romPath = null;
 
-if (args.Length < 1)
-{
-    Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine("No ROM path provided. The game will run in limited mode.");
-
-    Console.ForegroundColor = ConsoleColor.White;
-    Console.WriteLine("Usage: dotnet run <rom_path>");
-}
-else
+if (args.Length >= 1)
 {
     romPath = args[0];
 
@@ -21,7 +13,6 @@ else
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"Error: The specified ROM path doesn't exists: {romPath}.");
         Console.ResetColor();
-        Console.WriteLine("Usage: dotnet run <rom_path>");
 
         // Exit with error status code if the specified ROM path doesn't exists
         Environment.Exit(1);
