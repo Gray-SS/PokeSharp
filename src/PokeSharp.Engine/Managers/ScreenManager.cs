@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace PokeSharp.Engine.Managers;
@@ -16,29 +15,29 @@ public sealed class ScreenManager
 
     public void Push(Screen screen)
     {
-        screen.Initialize();
-        screen.Load();
+        screen.DoInitialize();
+        screen.DoLoad();
+
 
         _screens.Push(screen);
     }
-
     public Screen Pop()
     {
         var screen = _screens.Pop();
-        screen.Unload();
+        screen.DoUnload();
 
-        _screens.Peek()?.Load();
+        _screens.Peek()?.DoLoad();
 
         return screen;
     }
 
     public void Update(GameTime gameTime)
     {
-        ActiveScreen?.Update(gameTime);
+        ActiveScreen?.DoUpdate(gameTime);
     }
 
     public void Draw(GameTime gameTime)
     {
-        ActiveScreen?.Draw(gameTime);
+        ActiveScreen?.DoDraw(gameTime);
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PokeSharp.Engine.Managers;
@@ -15,22 +14,23 @@ public class Camera
         set => _zoom = Math.Max(value, 0.1f);
     }
 
-    public Viewport Viewport => new Viewport(0, 0, _windowManager.WindowWidth, _windowManager.WindowHeight);
+    public Viewport Viewport => _resolutionManager.VirtualViewport;
 
     private float _zoom = 1.0f;
-    private readonly WindowManager _windowManager;
+    private readonly ResolutionManager _resolutionManager;
 
-    public Camera(WindowManager windowManager)
+    public Camera(ResolutionManager resolutionManager)
     {
-        _windowManager = windowManager;
+        _resolutionManager = resolutionManager;
     }
+
 
     public virtual Matrix TransformMatrix
     {
         get
         {
-            var width = _windowManager.WindowWidth;
-            var height = _windowManager.WindowHeight;
+            var width = _resolutionManager.VirtualResolution.Width;
+            var height = _resolutionManager.VirtualResolution.Height;
 
             return Matrix.CreateTranslation(new Vector3(-Position, 0))
                 * Matrix.CreateScale(Zoom)
@@ -39,19 +39,7 @@ public class Camera
         }
     }
 
-
     public Matrix InverseTransformMatrix => Matrix.Invert(TransformMatrix);
-
-    public Rectangle GetWorldBounds()
-    {
-        var halfScreenSize = _windowManager.WindowSize * 0.5f;
-        var topLeft = ScreenToWorld(-halfScreenSize);
-        var bottomRight = ScreenToWorld(halfScreenSize);
-        int width = (int)(bottomRight.X - topLeft.X);
-        int height = (int)(bottomRight.Y - topLeft.Y);
-
-        return new Rectangle((int)topLeft.X, (int)topLeft.Y, width, height);
-    }
 
     public Vector2 ScreenToWorld(Vector2 screenPosition)
     {
