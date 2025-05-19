@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
-using PokeSharp.Engine.Managers;
 using Pokemon.DesktopGL.Moves;
 using System;
+using PokeSharp.Engine.Assets;
+using PokeSharp.Engine.Graphics;
 
 namespace Pokemon.DesktopGL.Creatures;
 
@@ -36,8 +36,8 @@ public sealed class CreatureRegistry
 
         foreach (CreatureData data in creatures)
         {
-            data.BackSprite = _assetsManager.LoadSprite(data.BackSpritePath);
-            data.FrontSprite = _assetsManager.LoadSprite(data.FrontSpritePath);
+            data.BackSprite = _assetsManager.Load<Sprite>(AssetSource.Content, data.BackSpritePath);
+            data.FrontSprite = _assetsManager.Load<Sprite>(AssetSource.Content, data.FrontSpritePath);
 
             MoveRegistry moveRegistry = PokemonGame.Instance.MoveRegistry;
             data.LearnableMoves = new Dictionary<int, MoveData[]>();

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using PokeSharp.Engine.Assets;
 using PokeSharp.Engine.Graphics;
-using PokeSharp.Engine.Managers;
 
 namespace Pokemon.DesktopGL.Characters;
 
@@ -34,7 +34,7 @@ public sealed class CharacterRegistry
 
         foreach (CharacterData data in datas)
         {
-            Sprite sprite = _assetsManager.LoadSprite(data.SpritesheetPath);
+            Sprite sprite = _assetsManager.Load<Sprite>( AssetSource.Content, data.SpritesheetPath);
             SpriteSheet sheet = new SpriteSheet(sprite, 4, 4, null, null);
 
             data.IdleAnimations = new AnimationPack(new Dictionary<string, Animation>()
