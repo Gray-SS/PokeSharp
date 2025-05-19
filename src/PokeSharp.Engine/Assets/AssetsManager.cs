@@ -14,6 +14,8 @@ namespace PokeSharp.Engine.Assets;
 public class AssetsManager
 {
     public Sprite Sprite_Blank { get; private set; } = null!;
+    public Sprite Sprite_Button { get; private set; } = null!;
+    public Sprite Sprite_Background { get; private set; } = null!;
 
     public Sprite Sprite_Battle_Forest_Bg { get; private set; } = null!;
     public Sprite Sprite_Battle_Grass_Base0 { get; private set; } = null!;
@@ -50,6 +52,9 @@ public class AssetsManager
         blankTexture.SetData([Color.White]);
 
         Sprite_Blank = new Sprite(blankTexture);
+
+        Sprite_Button = Load<Sprite>(AssetSource.Content, "UI/button");
+        Sprite_Background = Load<Sprite>(AssetSource.Content, "UI/background");
 
         Sprite_Battle_Forest_Bg = Load<Sprite>(AssetSource.Content, "Textures/Battlepacks/forest_bg");
         Sprite_Battle_Grass_Base0 = Load<Sprite>(AssetSource.Content, "Textures/Battlepacks/grass_base0");
