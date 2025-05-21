@@ -1,28 +1,31 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PokeSharp.Core.Resolutions.Events;
 
-namespace PokeSharp.Core.Services;
+namespace PokeSharp.Core.Resolutions;
 
-public sealed class ResolutionManager : IDisposable
+public sealed class ResolutionManager : IResolutionManager, IDisposable
 {
+    public bool IsFullScreen { get; }
+
     public Viewport Viewport => new Viewport
     {
         X = 0,
         Y = 0,
-        Width = Resolution.Width,
-        Height = Resolution.Height
+        Width = ResolutionSize.Width,
+        Height = ResolutionSize.Height
     };
 
     public Viewport VirtualViewport => new Viewport
     {
         X = 0,
         Y = 0,
-        Width = VirtualResolution.Width,
-        Height = VirtualResolution.Height
+        Width = VirtualResolutionSize.Width,
+        Height = VirtualResolutionSize.Height
     };
 
-    public Resolution Resolution => _resolution;
-    public Resolution VirtualResolution => _virtualResolution;
+    public ResolutionSize ResolutionSize => _resolution;
+    public ResolutionSize VirtualResolutionSize => _virtualResolution;
     public Matrix VirtualToRealMatrix { get; private set; }
     public Matrix RealToVirtualMatrix { get; private set; }
 
@@ -31,14 +34,14 @@ public sealed class ResolutionManager : IDisposable
 
     private bool _disposed;
     private bool _virtualResEnabled;
-    private Resolution _resolution;
-    private Resolution _virtualResolution;
+    private ResolutionSize _resolution;
+    private ResolutionSize _virtualResolution;
 
     private readonly GameWindow _window;
     private readonly GraphicsDeviceManager _graphics;
 
-    public static readonly Resolution MinResolution = new(320, 240);
-    public static readonly Resolution MaxResolution = new(7680, 4320);
+    public static readonly ResolutionSize MinResolution = new(320, 240);
+    public static readonly ResolutionSize MaxResolution = new(7680, 4320);
 
     public ResolutionManager(Engine engine)
     {
@@ -46,7 +49,7 @@ public sealed class ResolutionManager : IDisposable
         _window.ClientSizeChanged += OnClientSizeChanged;
 
         _graphics = engine.Graphics;
-        _resolution = new Resolution(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _resolution = new ResolutionSize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
         _virtualResolution = _resolution;
     }
 
@@ -54,8 +57,8 @@ public sealed class ResolutionManager : IDisposable
     {
         var size = _window.ClientBounds.Size;
 
-        Resolution old = _resolution;
-        _resolution = new Resolution(size.X, size.Y);
+        ResolutionSize old = _resolution;
+        _resolution = new ResolutionSize(size.X, size.Y);
 
         UpdateTransformMatrices();
         ResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, _resolution, old));
@@ -83,11 +86,11 @@ public sealed class ResolutionManager : IDisposable
 
         if (_virtualResEnabled)
         {
-            SetVirtualResolution(Resolution);
+            SetVirtualResolution(ResolutionSize);
         }
     }
 
-    public void SetResolution(Resolution resolution)
+    public void SetResolution(ResolutionSize resolution)
     {
         if (resolution.Width <= 0 || resolution.Height <= 0)
             throw new InvalidOperationException("Error setting resolution: Resolution dimension must be bigger than 0");
@@ -98,7 +101,7 @@ public sealed class ResolutionManager : IDisposable
         _graphics.PreferredBackBufferHeight = resolution.Height;
         _graphics.ApplyChanges();
 
-        Resolution old = _resolution;
+        ResolutionSize old = _resolution;
         _resolution = resolution;
 
         if (!_virtualResEnabled)
@@ -108,21 +111,21 @@ public sealed class ResolutionManager : IDisposable
         ResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
 
-    public void SetVirtualResolution(Resolution resolution)
+    public void SetVirtualResolution(ResolutionSize resolution)
     {
         if (!_virtualResEnabled)
             throw new InvalidOperationException("Error setting virtual resolution: Virtual resolution isn't enabled");
 
         ValidateResolution(resolution);
 
-        Resolution old = _virtualResolution;
+        ResolutionSize old = _virtualResolution;
         _virtualResolution = resolution;
 
         UpdateTransformMatrices();
         VirtualResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
 
-    private static void ValidateResolution(Resolution resolution)
+    private static void ValidateResolution(ResolutionSize resolution)
     {
         if (resolution.Width <= 0 || resolution.Height <= 0)
             throw new InvalidOperationException($"Invalid resolution {resolution}: Width and height must be greater than 0");
@@ -134,19 +137,20 @@ public sealed class ResolutionManager : IDisposable
             throw new InvalidOperationException($"Invalid resolution {resolution}: Resolution too large (maximum: {MaxResolution.Width}x{MaxResolution.Height})");
     }
 
-    public Vector2 ScreenToGame(Vector2 position)
+    public Vector2 ScreenToVirtual(Vector2 screenPos)
     {
-        return Vector2.Transform(position, RealToVirtualMatrix);
+        return Vector2.Transform(screenPos, RealToVirtualMatrix);
     }
 
-    public Vector2 GameToScreen(Vector2 position)
+    public Vector2 VirtualToScreen(Vector2 virtualPos)
     {
-        return Vector2.Transform(position, VirtualToRealMatrix);
+        return Vector2.Transform(virtualPos, VirtualToRealMatrix);
     }
 
-    public void ToggleFullscreen()
+    public bool ToggleFullScreen()
     {
         _graphics.ToggleFullScreen();
+        return _graphics.IsFullScreen;
     }
 
     public void Dispose()
@@ -156,74 +160,5 @@ public sealed class ResolutionManager : IDisposable
             _window.ClientSizeChanged -= OnClientSizeChanged;
             _disposed = true;
         }
-    }
-}
-
-public sealed class ResolutionChangedArgs : EventArgs
-{
-    public ResolutionManager ResolutionManager { get; }
-    public Resolution NewResolution { get; }
-    public Resolution OldResolution { get; }
-
-    public ResolutionChangedArgs(ResolutionManager resolutionManager, Resolution newResolution, Resolution oldResolution)
-    {
-        ArgumentNullException.ThrowIfNull(resolutionManager, nameof(resolutionManager));
-
-        ResolutionManager = resolutionManager;
-        NewResolution = newResolution;
-        OldResolution = oldResolution;
-    }
-}
-
-public readonly struct Resolution : IEquatable<Resolution>
-{
-    public int Width { get; }
-    public int Height { get; }
-
-    public float AspectRatio => (float)Width / Height;
-    public bool IsLandscape => Width > Height;
-    public bool IsPortrait => Height > Width;
-    public bool IsSquare => Width == Height;
-
-    public static readonly Resolution R800x400 = new(800, 400);
-    public static readonly Resolution R1280x720 = new(1280, 720);
-    public static readonly Resolution R1920x1080 = new(1920, 1080);
-    public static readonly Resolution R3840x2160 = new(3840, 2160);
-    public static readonly Resolution R2560x1440 = new(2560, 1440);
-
-    public Resolution(int width, int height)
-    {
-        Width = width;
-        Height = height;
-    }
-
-    public bool Equals(Resolution other)
-    {
-        return Width == other.Width && Height == other.Height;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Resolution resolution && Equals(resolution);
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Width, Height);
-    }
-
-    public override string ToString()
-    {
-        return $"{Width}x{Height}";
-    }
-
-    public static bool operator ==(Resolution left, Resolution right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Resolution left, Resolution right)
-    {
-        return !left.Equals(right);
     }
 }

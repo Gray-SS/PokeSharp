@@ -2,6 +2,7 @@ using Ninject;
 using Microsoft.Xna.Framework;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Services;
+using PokeSharp.Core.Resolutions;
 
 namespace PokeSharp.Core;
 
@@ -10,7 +11,7 @@ public abstract class Engine : Game
     public IKernel Kernel { get; }
     public GraphicsDeviceManager Graphics { get; }
 
-    private IEngineHook[] _hooks = null!;
+    private IEngineHookDispatcher _hooksDispatcher = null!;
 
     public Engine()
     {
@@ -40,33 +41,21 @@ public abstract class Engine : Game
     protected sealed override void LoadContent()
     {
         Kernel.Load("*.dll");
-        _hooks = Kernel.Get<ReflectionManager>().InstantiateClassesOfType<IEngineHook>();
 
-        ResolutionManager resolutionManager = Kernel.Get<ResolutionManager>();
-        resolutionManager.SetResolution(Resolution.R1280x720);
-
-        foreach (IEngineHook hook in _hooks)
-        {
-            hook.Initialize();
-        }
+        _hooksDispatcher = Kernel.Get<IEngineHookDispatcher>();
+        _hooksDispatcher.Initialize();
     }
 
     protected sealed override void Update(GameTime gameTime)
     {
-        foreach (IEngineHook hook in _hooks)
-        {
-            hook.Update(gameTime);
-        }
+        _hooksDispatcher.Update(gameTime);
     }
 
     protected sealed override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        foreach (IEngineHook hook in _hooks)
-        {
-            hook.Draw(gameTime);
-        }
+        _hooksDispatcher.Draw(gameTime);
     }
 
     #region Singleton

@@ -15,6 +15,8 @@
     <ProjectReference Include="..\..\Engine\PokeSharp.Core\PokeSharp.Core.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
+    <ProjectReference Include="..\..\Editor\PokeSharp.Editor\PokeSharp.Editor.csproj" />
+    <ProjectReference Include="..\..\Editor\PokeSharp.Editor.UI\PokeSharp.Editor.UI.csproj" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />

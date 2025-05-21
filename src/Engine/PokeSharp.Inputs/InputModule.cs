@@ -6,6 +6,6 @@ public sealed class InputModule : NinjectModule
 {
     public override void Load()
     {
-        Bind<InputManager>().ToSelf().InSingletonScope();
+        Bind<IInputManager>().To<InputManager>().InSingletonScope();
     }
 }

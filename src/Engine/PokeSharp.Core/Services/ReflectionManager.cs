@@ -3,7 +3,7 @@ using PokeSharp.Core.Attributes;
 
 namespace PokeSharp.Core.Services;
 
-public sealed class ReflectionManager
+public sealed class ReflectionManager : IReflectionManager
 {
     private readonly Assembly[] _assemblies;
 
@@ -23,7 +23,10 @@ public sealed class ReflectionManager
                 !x.IsAbstract &&
                 x.IsClass))
             {
-                var service = (T)S.GetService(type);
+                T service = type.IsAssignableTo(typeof(Engine)) ?
+                    (T)(object)Engine.Instance :
+                    (T)S.GetService(type);
+
                 int priority = type.GetCustomAttribute<PriorityAttribute>()?.Priority ?? 0;
 
                 if (!prioritizedInstances.TryGetValue(priority, out List<T>? value))

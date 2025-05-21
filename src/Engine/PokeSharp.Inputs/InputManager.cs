@@ -2,12 +2,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PokeSharp.Core;
 using PokeSharp.Core.Attributes;
-using PokeSharp.Core.Services;
+using PokeSharp.Core.Resolutions;
 
 namespace PokeSharp.Inputs;
 
 [Priority(10)]
-public sealed class InputManager : IEngineHook
+public sealed class InputManager : IInputManager, IEngineHook
 {
     public Vector2 MousePosition { get; private set; }
 
@@ -16,9 +16,9 @@ public sealed class InputManager : IEngineHook
 
     private KeyboardState _kbState;
     private KeyboardState _lastKbState;
-    private ResolutionManager _resManager;
+    private IResolutionManager _resManager;
 
-    public InputManager(ResolutionManager resManager)
+    public InputManager(IResolutionManager resManager)
     {
         _resManager = resManager;
     }
@@ -40,7 +40,7 @@ public sealed class InputManager : IEngineHook
         _msState = Mouse.GetState();
 
         var mousePos = _msState.Position.ToVector2();
-        MousePosition = _resManager.ScreenToGame(mousePos);
+        MousePosition = _resManager.VirtualToScreen(mousePos);
     }
 
     public bool IsMouseButtonDown(MouseButton button)
@@ -60,8 +60,8 @@ public sealed class InputManager : IEngineHook
     {
         return button switch
         {
-            MouseButton.Left => _msState.LeftButton == ButtonState.Released,
             MouseButton.Middle => _msState.MiddleButton == ButtonState.Released,
+            MouseButton.Left => _msState.LeftButton == ButtonState.Released,
             MouseButton.Right => _msState.RightButton == ButtonState.Released,
             MouseButton.XButton1 => _msState.XButton1 == ButtonState.Released,
             MouseButton.XButton2 => _msState.XButton2 == ButtonState.Released,

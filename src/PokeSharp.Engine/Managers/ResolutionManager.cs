@@ -5,6 +5,7 @@ namespace PokeSharp.Engine.Managers;
 
 public sealed class ResolutionManager : IDisposable
 {
+
     public bool IsVirtualResEnabled { get; set; }
 
     public Viewport Viewport => new Viewport
