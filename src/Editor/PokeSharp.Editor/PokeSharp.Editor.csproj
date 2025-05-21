@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Engine\PokeSharp.Assets\PokeSharp.Assets.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Core\PokeSharp.Core.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
+    <ProjectReference Include="..\PokeSharp.Editor.UI\PokeSharp.Editor.UI.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

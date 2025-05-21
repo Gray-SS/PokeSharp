@@ -8,5 +8,6 @@
         "**/obj": true,
         "**/bin": true,
         // "**/*.csproj": true,
-    }
+    },
+    "explorer.compactFolders": false
 }
