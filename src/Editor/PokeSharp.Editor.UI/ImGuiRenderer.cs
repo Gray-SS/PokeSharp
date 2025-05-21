@@ -1,29 +1,27 @@
 using Microsoft.Xna.Framework;
 using PokeSharp.Core;
 using PokeSharp.Core.Services;
+using PokeSharp.Editor.UI.Services;
 using PokeSharp.Rendering;
 
 namespace PokeSharp.Editor.UI;
 
 public sealed class ImGuiRenderer : IRenderer
 {
-    private readonly IImGuiHook[] _hooks;
+    private readonly IGuiHookDispatcher _dispatcher;
     private readonly MonoGame.ImGuiNet.ImGuiRenderer _imGuiRenderer;
 
-    public ImGuiRenderer(Engine engine, ReflectionManager reflectionManager)
+    public ImGuiRenderer(Engine engine, IGuiHookDispatcher dispatcher)
     {
-        _hooks = reflectionManager.InstantiateClassesOfType<IImGuiHook>();
+        _dispatcher = dispatcher;
         _imGuiRenderer = new MonoGame.ImGuiNet.ImGuiRenderer(engine);
         _imGuiRenderer.RebuildFontAtlas();
     }
 
-    public void Render(GameTime gameTime)
+    public void Draw(GameTime gameTime)
     {
         _imGuiRenderer.BeginLayout(gameTime);
-        foreach (IImGuiHook hook in _hooks)
-        {
-            hook.DrawGui();
-        }
+        _dispatcher.Draw();
         _imGuiRenderer.EndLayout();
     }
 }

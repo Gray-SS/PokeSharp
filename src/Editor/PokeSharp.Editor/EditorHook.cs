@@ -23,6 +23,6 @@ public sealed class EditorHook : IEngineHook
 
     public void Draw(GameTime gameTime)
     {
-        _imGuiRenderer.Render(gameTime);
+        _imGuiRenderer.Draw(gameTime);
     }
 }

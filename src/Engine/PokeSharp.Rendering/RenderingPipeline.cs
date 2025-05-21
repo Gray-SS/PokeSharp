@@ -25,7 +25,7 @@ public sealed class RenderingPipeline : IRenderingPipeline
     {
         foreach (IRenderer renderer in _renderers)
         {
-            renderer.Render(gameTime);
+            renderer.Draw(gameTime);
         }
     }
 }

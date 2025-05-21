@@ -1,6 +1,6 @@
 namespace PokeSharp.Editor.UI;
 
-public interface IImGuiHook
+public interface IGuiHook
 {
     void DrawGui();
 }

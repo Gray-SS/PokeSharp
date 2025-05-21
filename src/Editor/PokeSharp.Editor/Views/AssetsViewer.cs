@@ -3,7 +3,7 @@ using PokeSharp.Editor.UI;
 
 namespace PokeSharp.Editor.Views;
 
-public sealed class AssetsViewer : IImGuiHook
+public sealed class AssetsViewer : IGuiHook
 {
     public void DrawGui()
     {

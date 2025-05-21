@@ -4,5 +4,5 @@ namespace PokeSharp.Rendering;
 
 public interface IRenderer
 {
-    void Render(GameTime gameTime);
+    void Draw(GameTime gameTime);
 }
