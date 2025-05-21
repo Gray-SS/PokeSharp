@@ -1,12 +1,15 @@
 using Ninject;
+using Ninject.Infrastructure;
 using Microsoft.Xna.Framework;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Services;
-using PokeSharp.Core.Resolutions;
+using PokeSharp.Core.Extensions;
+using PokeSharp.Core.Attributes;
 
 namespace PokeSharp.Core;
 
-public abstract class Engine : Game
+[Priority(999)]
+public abstract class Engine : Game, IHaveKernel
 {
     public IKernel Kernel { get; }
     public GraphicsDeviceManager Graphics { get; }
@@ -33,6 +36,8 @@ public abstract class Engine : Game
         Content.RootDirectory = "Content";
     }
 
+    protected abstract void LoadModules(IKernel kernel);
+
     protected sealed override void Initialize()
     {
         base.Initialize();
@@ -40,7 +45,8 @@ public abstract class Engine : Game
 
     protected sealed override void LoadContent()
     {
-        Kernel.Load("*.dll");
+        this.LoadCoreModule();
+        this.LoadModules(Kernel);
 
         _hooksDispatcher = Kernel.Get<IEngineHookDispatcher>();
         _hooksDispatcher.Initialize();
@@ -53,9 +59,12 @@ public abstract class Engine : Game
 
     protected sealed override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
         _hooksDispatcher.Draw(gameTime);
+    }
+
+    protected virtual void LoadCoreModule()
+    {
+        Kernel.LoadCoreModule();
     }
 
     #region Singleton
@@ -79,4 +88,12 @@ public abstract class Engine : Game
     private static Engine _instance = null!;
 
     #endregion // Singleton
+}
+
+public abstract class Engine<TSelf> : Engine where TSelf : Engine<TSelf>
+{
+    protected sealed override void LoadCoreModule()
+    {
+        Kernel.LoadCoreModule<TSelf>();
+    }
 }

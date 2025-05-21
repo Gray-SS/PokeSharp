@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using PokeSharp.Core;
-using PokeSharp.Core.Services;
 using PokeSharp.Editor.UI.Services;
 using PokeSharp.Rendering;
 

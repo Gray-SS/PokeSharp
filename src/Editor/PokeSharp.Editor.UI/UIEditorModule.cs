@@ -1,9 +1,10 @@
 using Ninject.Modules;
+using PokeSharp.Core.Services;
 using PokeSharp.Editor.UI.Services;
 
 namespace PokeSharp.Editor.UI;
 
-public sealed class UIEditorModule : NinjectModule
+public sealed class EditorUiModule : NinjectModule
 {
     public override void Load()
     {

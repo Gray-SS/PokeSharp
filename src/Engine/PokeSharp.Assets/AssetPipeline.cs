@@ -6,13 +6,15 @@ namespace PokeSharp.Assets;
 
 public sealed class AssetPipeline
 {
+    public IReadOnlyCollection<object> LoadedAssets => _cachedAssets.Values;
+
     private readonly IAssetImporter[] _importers;
     private readonly Dictionary<(Type inputType, Type outputType), IAssetProcessor> _processors;
 
-    private readonly ReflectionManager _reflectionManager;
+    private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
 
-    public AssetPipeline(ReflectionManager reflectionManager)
+    public AssetPipeline(IReflectionManager reflectionManager)
     {
         _reflectionManager = reflectionManager;
 

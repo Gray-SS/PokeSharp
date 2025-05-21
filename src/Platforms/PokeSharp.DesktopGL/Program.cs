@@ -1,8 +1,14 @@
-﻿using PokeSharp.DesktopGL;
+﻿using System.Linq;
+using PokeSharp.DesktopGL;
+
 
 #if DEBUG
-using var game = new PokesharpGL();
+
+bool enableEditor = args.Contains("--editor");
+
+using var game = new PokesharpGame(enableEditor);
 game.Run();
+
 #else
 try
 {

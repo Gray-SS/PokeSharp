@@ -4,7 +4,7 @@ using PokeSharp.Core.Services;
 
 namespace PokeSharp.Core;
 
-public sealed class EngineModule : NinjectModule
+public class CoreModule : NinjectModule
 {
     public override void Load()
     {
@@ -12,5 +12,16 @@ public sealed class EngineModule : NinjectModule
         Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
         Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
         Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
+    }
+}
+
+public sealed class CoreModule<TEngine> : CoreModule
+    where TEngine : Engine
+{
+    public override void Load()
+    {
+        base.Load();
+
+        Bind<TEngine>().ToConstant((TEngine)Engine.Instance);
     }
 }
