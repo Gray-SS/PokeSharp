@@ -8,7 +8,7 @@ using PokeSharp.Core.Attributes;
 
 namespace PokeSharp.Core;
 
-[Priority(999)]
+[Priority(-1)]
 public abstract class Engine : Game, IHaveKernel
 {
     public IKernel Kernel { get; }

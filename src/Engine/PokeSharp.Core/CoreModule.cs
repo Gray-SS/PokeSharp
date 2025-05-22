@@ -1,4 +1,5 @@
 using Ninject.Modules;
+using PokeSharp.Core.Coroutines;
 using PokeSharp.Core.Resolutions;
 using PokeSharp.Core.Services;
 
@@ -10,6 +11,7 @@ public class CoreModule : NinjectModule
     {
         Bind<Engine>().ToConstant(Engine.Instance);
         Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
+        Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();
         Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
         Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
     }

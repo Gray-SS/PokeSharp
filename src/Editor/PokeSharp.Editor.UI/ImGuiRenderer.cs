@@ -1,3 +1,4 @@
+using ImGuiNET;
 using Microsoft.Xna.Framework;
 using PokeSharp.Core;
 using PokeSharp.Editor.UI.Services;
@@ -14,7 +15,23 @@ public sealed class ImGuiRenderer : IRenderer
     {
         _dispatcher = dispatcher;
         _imGuiRenderer = new MonoGame.ImGuiNet.ImGuiRenderer(engine);
+
+        ConfigureImGui();
+    }
+
+    private unsafe void ConfigureImGui()
+    {
+        ImGuiIOPtr io = ImGui.GetIO();
+
+        ImFontConfig* nativeConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+        ImFontConfigPtr ptr = new ImFontConfigPtr(nativeConfig);
+        ptr.SizePixels = 18.0f;
+
+        io.Fonts.AddFontDefault(ptr);
+
         _imGuiRenderer.RebuildFontAtlas();
+
+        ImGuiNative.ImFontConfig_destroy(ptr.NativePtr);
     }
 
     public void Draw(GameTime gameTime)

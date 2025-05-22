@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using PokeSharp.Assets.Exceptions;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Services;
 
@@ -9,7 +10,7 @@ public sealed class AssetPipeline
     public IReadOnlyCollection<object> LoadedAssets => _cachedAssets.Values;
 
     private readonly IAssetImporter[] _importers;
-    private readonly Dictionary<(Type inputType, Type outputType), IAssetProcessor> _processors;
+    private readonly IAssetProcessor[] _processors;
 
     private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
@@ -29,94 +30,161 @@ public sealed class AssetPipeline
         return _reflectionManager.InstantiateClassesOfType<IAssetImporter>();
     }
 
-    private Dictionary<(Type inputType, Type outputType), IAssetProcessor> LoadProcessors()
+    private IAssetProcessor[] LoadProcessors()
     {
-        IAssetProcessor[] processors = _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
-        return processors.ToDictionary(x => (x.InputType, x.OutputType));
+        return _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
     }
 
-    public T Load<T>(string path) where T : class
+    public object Load(string path)
     {
-        if (TryGetCachedAsset(path, out T? cachedAsset))
+        if (TryGetCachedAsset(path, out object? cachedAsset))
         {
             return cachedAsset;
         }
 
         string ext = Path.GetExtension(path);
 
-        IAssetImporter? importer = _importers.FirstOrDefault(x => x.CanImport(ext));
-        if (importer == null)
+        IAssetImporter importer = this.GetAssetImporterFromExtension(ext);
+        object importedAsset = ImportAssetInternal(importer, path);
+
+        IAssetProcessor processor = this.GetDefaultProcessorFromImporter(importer, importedAsset);
+        object loadedAsset = ProcessAssetInternal(processor, importedAsset, path);
+
+        _cachedAssets[path] = loadedAsset;
+        return loadedAsset;
+    }
+
+    public T Load<T>(string path) where T : class
+    {
+        object loadedAsset = Load(path);
+        if (loadedAsset is not T asset)
         {
-            throw new EngineException($"""
-                No asset importer found for file extension '{ext}'.
-                The format may not be supported, or the extension might be incorrect. Please verify the file type.
+            throw new AssetPipelineException($"""
+                The processed asset is of type '{loadedAsset.GetType().Name}', but the pipeline expected '{typeof(T).Name}'.
+                Ensure the processor output type matches the requested asset type.
             """);
         }
 
+        return asset;
+    }
+
+    private IAssetImporter GetAssetImporterFromExtension(string ext)
+    {
+        IAssetImporter? importer = _importers.FirstOrDefault(x => x.CanImport(ext));
+        if (importer is null)
+        {
+            throw new AssetPipelineException($"""
+                No importer found for file extension '{ext}'.
+                This asset type may not be supported. Please verify the extension and ensure a matching importer is registered.
+            """);
+        }
+
+        return importer;
+    }
+
+    private IAssetProcessor GetDefaultProcessorFromImporter(IAssetImporter importer, object rawAsset)
+    {
+        IAssetProcessor? processor = _processors.FirstOrDefault(x => importer.ProcessorType == x.GetType());
+        if (processor == null)
+        {
+            throw new AssetPipelineException($"""
+                The default processor '{importer.ProcessorType.Name}' for importer '{importer.GetType().Name}' was not found for asset of type '{rawAsset.GetType().Name}'.
+                Make sure the module associated with the processor is registered.
+            """);
+        }
+
+        return processor;
+    }
+
+    private object ImportAssetInternal(IAssetImporter importer, string path)
+    {
         object? rawAsset;
         try
         {
             rawAsset = importer.Import(path);
         }
+        catch (AssetImporterException)
+        {
+            throw; // Re-throw user-thrown asset-specific exception.
+        }
+        catch (AssetProcessorException)
+        {
+            throw new AssetPipelineException($"""
+                A processor exception was thrown during import by '{importer.GetType().Name}'.
+                This indicates a misuse of exception types. Importers must throw {nameof(AssetImporterException)} instead.
+            """);
+        }
+        catch (EngineException)
+        {
+            throw new AssetPipelineException($"""
+                An {nameof(EngineException)} was thrown during asset import from '{path}' using '{importer.GetType().Name}'.
+                Please use the appropriate {nameof(AssetImporterException)} instead, to indicate an importer-level error.
+            """);
+        }
         catch (Exception ex)
         {
-            throw new EngineException($"""
-                An exception occurred while importing asset at '{path}' using '{importer.GetType().Name}'.
-                Please ensure the file format is valid and that the importer supports it.
+            throw new AssetPipelineException($"""
+                An unexpected error occurred while importing asset from '{path}' using '{importer.GetType().Name}'.
+                Please ensure the file format is valid and that the importer handles it correctly.
             """, ex);
         }
 
-        if (rawAsset == null)
+        if (rawAsset is null)
         {
-            throw new EngineException($"""
-                Failed to import asset at '{path}' using importer '{importer.GetType().Name}'.
-                The importer returned null, which indicates an unexpected error during import.
+            throw new AssetPipelineException($"""
+                Importer '{importer.GetType().Name}' returned null for asset at '{path}'.
+                This indicates an internal failure. Ensure the file is valid and supported by the importer.
             """);
         }
 
-        Type rawAssetType = rawAsset.GetType();
-        if (!_processors.TryGetValue((rawAssetType, typeof(T)), out IAssetProcessor? processor))
-        {
-            throw new EngineException($"""
-                No processor available to convert from '{rawAssetType.Name}' to '{typeof(T).Name}'.
-                Note: the asset pipeline does not support multi-step conversions (e.g., A → B → C).
-                A direct processor must exist between the raw and final asset type.
-            """);
-        }
+        return rawAsset;
+    }
 
+    private object ProcessAssetInternal(IAssetProcessor processor, object rawAsset, string path)
+    {
         object? asset;
         try
         {
             asset = processor.Process(rawAsset);
         }
+        catch (AssetProcessorException)
+        {
+            throw;
+        }
+        catch (AssetImporterException)
+        {
+            throw new AssetPipelineException($"""
+                An import exception was thrown during processing by '{processor.GetType().Name}'.
+                This is likely a misuse of exception types. Processors should throw {nameof(AssetProcessorException)} instead.
+            """);
+        }
+        catch (EngineException)
+        {
+            throw new AssetPipelineException($"""
+                An {nameof(EngineException)} was thrown while processing asset at '{path}' using '{processor.GetType().Name}'.
+                Processors must throw {nameof(AssetProcessorException)} to indicate asset processing errors.
+            """);
+        }
         catch (Exception ex)
         {
-            throw new EngineException($"""
-                An exception occurred while processing asset at '{path}' using '{processor.GetType().Name}'.
-                Check the processor logic and input data format.
+            throw new AssetPipelineException($"""
+                An unexpected error occurred while processing asset at '{path}' using '{processor.GetType().Name}'.
+                Verify the processor logic and that the input asset is valid and correctly formatted.
             """, ex);
         }
 
-        if (asset == null)
+        if (asset is null)
         {
-            throw new EngineException($"""
-                Failed to process asset at '{path}' using processor '{processor.GetType().Name}'.
-                The processor returned null, indicating an internal failure during processing.
+            throw new AssetPipelineException($"""
+                Processor '{processor.GetType().Name}' returned null for asset at '{path}'.
+                This likely indicates an unhandled error during processing.
             """);
         }
 
-        if (asset is not T assetT)
-        {
-            throw new EngineException($"""
-                The processed asset is of type '{asset.GetType().Name}', which is not compatible with the expected type '{typeof(T).Name}'.
-                Ensure the correct processor is used and that the expected output type is accurate.
-            """);
-        }
-
-        return assetT;
+        return asset;
     }
 
-    private bool TryGetCachedAsset<T>(string path, [NotNullWhen(true)] out T? cachedAsset) where T : class
+    private bool TryGetCachedAsset(string path, [NotNullWhen(true)] out object? cachedAsset)
     {
         cachedAsset = null;
 
@@ -125,15 +193,7 @@ public sealed class AssetPipeline
             return false;
         }
 
-        if (asset is not T assetT)
-        {
-            throw new EngineException($"""
-                Cached asset at '{path}' is of type '{asset.GetType().Name}', which does not match the expected type '{typeof(T).Name}'.
-                Make sure to request the asset with the correct type.
-            """);
-        }
-
-        cachedAsset = assetT;
+        cachedAsset = asset;
         return true;
     }
 }

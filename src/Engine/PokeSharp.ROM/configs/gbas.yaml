@@ -1,0 +1,15 @@
+# This file is used to configure the GBA ROMs for PokeSharp.
+
+- &firered-en-1.0
+  Name: Pokémon FireRed
+  Language: en
+  Version: 0 # 0 for 1.0, 1 for 1.1
+  GameCode: BPRE
+  Species:
+    Count: 151
+    Names: 0x08245EE0
+    NameLength: 11
+    FrontSprites: 0x082350AC
+    BackSprites: 0x0823654C
+  Entities:
+    Graphics: 0x0839FDB0

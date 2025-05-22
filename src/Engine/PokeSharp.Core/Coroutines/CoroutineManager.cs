@@ -1,9 +1,11 @@
 using System.Collections;
 using Microsoft.Xna.Framework;
+using PokeSharp.Core.Attributes;
 
 namespace PokeSharp.Core.Coroutines;
 
-public class CoroutineManager : IEngineHook
+[Priority(999)]
+public class CoroutineManager : ICoroutineManager, IEngineHook
 {
     private readonly List<Coroutine> _coroutines = new();
 

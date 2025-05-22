@@ -1,31 +1,15 @@
-using PokeSharp.ROM.Descriptors;
-using PokeSharp.ROM.Graphics;
+using PokeSharp.ROM.Platforms.Gba;
 
 namespace PokeSharp.ROM;
 
 public sealed class PokemonRom
 {
     public RomInfo Info { get; }
-    public byte[] RomData { get; }
-    public IPokemonRomProvider Provider { get; }
+    public GbaConfig Config { get; }
 
-    public PokemonRom(RomInfo info, byte[] data, IPokemonRomProvider provider)
+    public PokemonRom(RomInfo info, GbaConfig config)
     {
         Info = info;
-        RomData = data;
-
-        Provider = provider;
+        Config = config;
     }
-
-    public RomAssetsPack ExtractAssetPack()
-        => Provider.ExtractAssetPack();
-
-    public string Load(RomNameDescriptor descriptor)
-        => Provider.Load(descriptor);
-
-    public IRomTexture Load(RomSpriteDescriptor descriptor)
-        => Provider.Load(descriptor);
-
-    public IRomPalette Load(RomPaletteDescriptor descriptor)
-        => Provider.Load(descriptor);
 }

@@ -6,7 +6,7 @@ using PokeSharp.Core.Resolutions;
 
 namespace PokeSharp.Inputs;
 
-[Priority(10)]
+[Priority(999)]
 public sealed class InputManager : IInputManager, IEngineHook
 {
     public Vector2 MousePosition { get; private set; }

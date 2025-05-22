@@ -1,9 +1,11 @@
 using Microsoft.Xna.Framework;
 using PokeSharp.Core;
+using PokeSharp.Core.Attributes;
 using PokeSharp.Editor.UI;
 
 namespace PokeSharp.Editor;
 
+[Priority(-2)]
 public sealed class EditorHook : IEngineHook
 {
     private readonly ImGuiRenderer _imGuiRenderer;

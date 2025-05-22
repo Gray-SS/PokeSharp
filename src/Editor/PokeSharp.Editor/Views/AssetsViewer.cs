@@ -1,4 +1,5 @@
 using ImGuiNET;
+using NativeFileDialogSharp;
 using PokeSharp.Assets;
 using PokeSharp.Editor.UI;
 
@@ -8,6 +9,9 @@ public sealed class AssetsViewer : IGuiHook
 {
     private readonly AssetPipeline _pipeline;
 
+    private bool _openErrorPopup = false;
+    private string? _errorMessage;
+
     public AssetsViewer(AssetPipeline pipeline)
     {
         _pipeline = pipeline;
@@ -15,20 +19,59 @@ public sealed class AssetsViewer : IGuiHook
 
     public void DrawGui()
     {
-        if (ImGui.Begin("Assets viewer"))
+        if (ImGui.Begin("Assets viewer", ImGuiWindowFlags.MenuBar))
         {
-            if (ImGui.CollapsingHeader("ROM"))
+            if (ImGui.BeginMenuBar())
             {
-                ImGui.Dummy(new(0, 5));
-                ImGui.TextWrapped("All the assets from THE ROM");
-
-                foreach (object asset in _pipeline.LoadedAssets)
+                if (ImGui.BeginMenu("File"))
                 {
-                    ImGui.Text($"{asset}");
+                    if (ImGui.MenuItem("Load asset"))
+                    {
+                        DialogResult result = Dialog.FileOpen(defaultPath: Environment.CurrentDirectory);
+                        if (result.IsOk)
+                        {
+                            try
+                            {
+                                object asset = _pipeline.Load(result.Path);
+                                Console.WriteLine($"Asset successfully loaded: {asset.GetType().Name}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _errorMessage = ex.Message;
+                                _openErrorPopup = true;
+                            }
+                        }
+                    }
+
+                    ImGui.EndMenu();
                 }
+
+                ImGui.EndMenuBar();
+            }
+
+            foreach (object asset in _pipeline.LoadedAssets)
+            {
+                ImGui.TextUnformatted(asset.GetType().Name);
             }
 
             ImGui.End();
+        }
+
+        if (_openErrorPopup)
+        {
+            ImGui.OpenPopup("error");
+            _openErrorPopup = false;
+        }
+
+        if (ImGui.BeginPopupModal("error"))
+        {
+            ImGui.TextWrapped(_errorMessage ?? "An unknown error occurred.");
+            ImGui.Separator();
+            if (ImGui.Button("Close"))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
     }
 }

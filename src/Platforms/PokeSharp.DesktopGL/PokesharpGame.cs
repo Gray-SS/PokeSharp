@@ -6,9 +6,14 @@ using PokeSharp.Core.Resolutions;
 using PokeSharp.Editor.Extensions;
 using PokeSharp.Inputs.Extensions;
 using PokeSharp.Rendering.Extensions;
+using PokeSharp.Inputs;
+using Microsoft.Xna.Framework.Input;
+using PokeSharp.Core.Attributes;
+using PokeSharp.ROM.Extensions;
 
 namespace PokeSharp.DesktopGL;
 
+[Priority(-1)]
 public class PokesharpGame : Engine<PokesharpGame>, IEngineHook
 {
     public bool EditorEnabled { get; }
@@ -20,6 +25,7 @@ public class PokesharpGame : Engine<PokesharpGame>, IEngineHook
 
     protected override void LoadModules(IKernel kernel)
     {
+        kernel.LoadRomModule();
         kernel.LoadAssetsModule();
         kernel.LoadInputsModule();
         kernel.LoadRenderingModule();
@@ -38,6 +44,10 @@ public class PokesharpGame : Engine<PokesharpGame>, IEngineHook
 
     void IEngineHook.Update(GameTime gameTime)
     {
+        if (Input.IsKeyPressed(Keys.Escape))
+        {
+            Exit();
+        }
     }
 
     void IEngineHook.Draw(GameTime gameTime)
