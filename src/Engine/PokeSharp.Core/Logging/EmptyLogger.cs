@@ -2,6 +2,10 @@ namespace PokeSharp.Core.Logging;
 
 public sealed class EmptyLogger : ILogger
 {
+    public void Trace(string message)
+    {
+    }
+
     public void Debug(string message)
     {
     }

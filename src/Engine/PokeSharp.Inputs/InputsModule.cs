@@ -5,7 +5,7 @@ namespace PokeSharp.Inputs;
 
 public sealed class InputsModule : Module
 {
-    public override string ModuleName => "Inputs";
+    public override string Name => "Inputs";
 
     public override void Configure(IKernel kernel)
     {

@@ -1,27 +1,54 @@
 using Microsoft.Xna.Framework;
-using Ninject;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using PokeSharp.Core;
-using PokeSharp.Core.Logging;
-using PokeSharp.Core.Modules;
 using PokeSharp.Core.Resolutions;
+using PokeSharp.Inputs;
 
 namespace PokeSharp.Editor;
 
 public sealed class EditorEngine : Engine
 {
-    public EditorEngine(IKernel kernel, ILogger logger, IModuleLoader moduleLoader) : base(kernel, logger, moduleLoader)
+    private SpriteBatch _spriteBatch = null!;
+
+    public EditorEngine(EngineConfiguration config) : base(config)
     {
+        Window.AllowUserResizing = true;
     }
 
     protected override void OnInitialize()
     {
-        Resolution.SetResolution(ResolutionSize.R800x600);
+        Resolution.SetResolution(ResolutionSize.R1920x1080);
+
         base.OnInitialize();
+    }
+
+    protected override void OnLoad()
+    {
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+        base.OnLoad();
+    }
+
+    protected override void OnUpdate(GameTime gameTime)
+    {
+        base.OnUpdate(gameTime);
+
+        if (Input.IsKeyPressed(Keys.Escape))
+        {
+            Exit();
+        }
+
+        if (Input.IsKeyPressed(Keys.F11))
+        {
+            Resolution.ToggleFullScreen();
+        }
     }
 
     protected override void OnDraw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.PaleVioletRed);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
         base.OnDraw(gameTime);
     }
 }

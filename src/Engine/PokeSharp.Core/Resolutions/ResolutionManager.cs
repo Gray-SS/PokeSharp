@@ -1,12 +1,13 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PokeSharp.Core.Logging;
 using PokeSharp.Core.Resolutions.Events;
 using PokeSharp.Core.Windowing;
 using PokeSharp.Core.Windowing.Events;
 
 namespace PokeSharp.Core.Resolutions;
 
-public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDisposable
+public sealed class ResolutionManager : IResolutionManager, IDisposable
 {
     public bool IsFullScreen { get; }
 
@@ -39,18 +40,22 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
     private ResolutionSize _resolution;
     private ResolutionSize _virtualResolution;
 
-    private readonly IWindowManager _window = null!;
-    private readonly GraphicsDeviceManager _graphics = null!;
+    private readonly ILogger _logger;
+    private readonly IWindowManager _window;
+    private readonly GraphicsDeviceManager _graphics;
 
     public static readonly ResolutionSize MinResolution = new(320, 240);
     public static readonly ResolutionSize MaxResolution = new(7680, 4320);
 
-    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics)
+    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics, ILogger logger)
     {
+        _logger = logger;
         _window = window;
         _window.SizeChanged += OnWindowSizeChanged;
 
         _graphics = graphics;
+        _resolution = new ResolutionSize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _virtualResolution = _resolution;
     }
 
     private void OnWindowSizeChanged(object? sender, WindowSizeChangedArgs e)
@@ -82,6 +87,8 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
 
     public void EnableVirtualResolution(bool enable)
     {
+        _logger.Info($"Virtual resolution has been {(enable ? "Enabled" : "Disabled")}");
+
         _virtualResEnabled = enable;
 
         if (_virtualResEnabled)
@@ -107,6 +114,7 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
         if (!_virtualResEnabled)
             _virtualResolution = resolution;
 
+        _logger.Info($"Resolution set to {resolution}");
         UpdateTransformMatrices();
         ResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
@@ -121,6 +129,7 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
         ResolutionSize old = _virtualResolution;
         _virtualResolution = resolution;
 
+        _logger.Info($"Virtual resolution set to {resolution}");
         UpdateTransformMatrices();
         VirtualResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
@@ -150,7 +159,10 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
     public bool ToggleFullScreen()
     {
         _graphics.ToggleFullScreen();
-        return _graphics.IsFullScreen;
+        bool result = _graphics.IsFullScreen;
+
+        _logger.Info($"Fullscreen property has changed: {(result ? "Enabled" : "Disabled")}");
+        return result;
     }
 
     public void Dispose()
@@ -160,19 +172,5 @@ public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDispos
             _window.SizeChanged -= OnWindowSizeChanged;
             _disposed = true;
         }
-    }
-
-    public void Initialize()
-    {
-        _resolution = new ResolutionSize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
-        _virtualResolution = _resolution;
-    }
-
-    public void Update(GameTime gameTime)
-    {
-    }
-
-    public void Draw(GameTime gameTime)
-    {
     }
 }

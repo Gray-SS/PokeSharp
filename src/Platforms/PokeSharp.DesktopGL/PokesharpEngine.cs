@@ -11,7 +11,7 @@ namespace PokeSharp.DesktopGL;
 
 public class PokesharpEngine : Engine
 {
-    public PokesharpEngine(IKernel kernel, ILogger logger, IModuleLoader moduleLoader) : base(kernel, logger, moduleLoader)
+    public PokesharpEngine(EngineConfiguration config) : base(config)
     {
     }
 

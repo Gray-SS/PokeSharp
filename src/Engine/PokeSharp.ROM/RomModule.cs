@@ -8,7 +8,7 @@ public sealed class RomModule : Module
 {
     private static readonly string GBA_CONFIG_PATH = Path.Combine(AppContext.BaseDirectory, "configs", "gbas.yaml");
 
-    public override string ModuleName => "Rom";
+    public override string Name => "Rom";
 
     public override void Configure(IKernel kernel)
     {

@@ -20,14 +20,18 @@ public abstract class Engine : Game
     private readonly IModuleLoader _moduleLoader;
     private IEngineHookDispatcher _hooksDispatcher = null!;
 
-    public Engine(IKernel kernel, ILogger logger, IModuleLoader moduleLoader)
+    public Engine(EngineConfiguration config)
     {
         ValidateSingleInstance();
 
         _instance = this;
-        _logger = logger;
-        _kernel = kernel;
-        _moduleLoader = moduleLoader;
+
+        // We're not using dependency injection for the engine logger,
+        // because injecting it through EngineConfiguration would set its context
+        // to EngineConfiguration instead of Engine.
+        _logger = LoggerFactory.GetLogger(typeof(Engine));
+        _kernel = config.Kernel;
+        _moduleLoader = config.ModuleLoader;
 
         Graphics = new GraphicsDeviceManager(this);
 
@@ -41,6 +45,7 @@ public abstract class Engine : Game
     /// <param name="dispatcher"></param>
     internal void InjectDispatcher(IEngineHookDispatcher dispatcher)
     {
+        _logger.Debug($"{nameof(IEngineHookDispatcher)} has been successfully injected into '{nameof(Engine)}'");
         _hooksDispatcher = dispatcher;
     }
 
@@ -67,11 +72,11 @@ public abstract class Engine : Game
 
     #endregion // Engine related API
 
-    #region Monogame related API
+    #region Monogame related
 
     protected sealed override void Initialize()
     {
-        LoadGraphicsModules();
+        LoadModules();
 
         IWindowManager windowManager = _kernel.Get<IWindowManager>();
         windowManager.Title = $"{App.AppName} - {App.AppVersion}";
@@ -95,11 +100,6 @@ public abstract class Engine : Game
         _logger.Info("Running the game loop...");
     }
 
-    protected override void EndRun()
-    {
-        _logger.Info("Game loop successfully runned.");
-    }
-
     protected sealed override void Update(GameTime gameTime)
     {
         OnUpdate(gameTime);
@@ -120,9 +120,13 @@ public abstract class Engine : Game
 
     #region Helpers
 
-    private void LoadGraphicsModules()
+    private void LoadModules()
     {
+        _moduleLoader.LoadModules();
+        if (!_moduleLoader.IsLoaded)
+            throw new AppException("The module loader have not been loaded correctly.");
 
+        _logger.Info($"{_moduleLoader.LoadedModules.Count()} module(s) loaded.");
     }
 
     private void ValidateSingleInstance()

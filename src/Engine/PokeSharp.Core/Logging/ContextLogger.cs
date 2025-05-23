@@ -1,11 +1,11 @@
 namespace PokeSharp.Core.Logging;
 
-public sealed class ContextedLogger : ILogger
+public sealed class ContextLogger : ILogger
 {
     private readonly string _context;
     private readonly LoggerSettings _settings;
 
-    public ContextedLogger(LoggerSettings settings, string context)
+    public ContextLogger(LoggerSettings settings, string context)
     {
         _context = context;
         _settings = settings;
@@ -23,6 +23,11 @@ public sealed class ContextedLogger : ILogger
         {
             output.Log(in entry);
         }
+    }
+
+    public void Trace(string message)
+    {
+        Log(LogLevel.Trace, message);
     }
 
     public void Debug(string message)

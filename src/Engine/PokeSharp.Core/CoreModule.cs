@@ -12,7 +12,7 @@ namespace PokeSharp.Core;
 
 public class CoreModule : Module
 {
-    public override string ModuleName => "Core";
+    public override string Name => "Core";
 
     public override void Configure(IKernel kernel)
     {

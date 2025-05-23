@@ -36,10 +36,11 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
             _kernel = ConfigureContainer();
             ConfigureLogging();
 
-            _logger.Debug("Running application...");
+            _logger.Info("Starting application...");
 
             ServiceLocator.Initialize(this);
             ConfigureModules();
+            LogLoggerSettings();
 
             RunEngine();
         }
@@ -66,7 +67,6 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
         kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
         kernel.Bind<ILogger>().ToProvider<LoggerProvider>();
-        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
 
         return kernel;
     }
@@ -74,9 +74,14 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
     private void ConfigureLogging()
     {
         LoggerSettings loggerSettings = _kernel.Get<LoggerSettings>();
-        loggerSettings.AddOutput(new FileLogOutput(targetDirectory: "logs"));
+        ConfigureLogging(loggerSettings);
 
-        _logger = new ContextedLogger(loggerSettings, "App");
+        _logger = new ContextLogger(loggerSettings, "App");
+    }
+
+    protected virtual void ConfigureLogging(LoggerSettings settings)
+    {
+        settings.AddOutput(new FileLogOutput(targetDirectory: "logs"));
     }
 
     private void ConfigureModules()
@@ -87,7 +92,22 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
 
         ModuleLoader.ConfigureModules();
         if (!ModuleLoader.IsConfigured)
+        {
             throw new AppException("The module loader have not been configured correctly.");
+        }
+    }
+
+    private void LogLoggerSettings()
+    {
+        LoggerSettings settings = _kernel.Get<LoggerSettings>();
+
+        _logger.Info("Logger settings:");
+        _logger.Info($"\tMinimum log level: {settings.LogLevel}");
+        _logger.Info("\tOutputs:");
+        foreach (ILogOutput output in settings.Outputs)
+        {
+            _logger.Info($"\t- {output.GetType().Name}:{output.Name}");
+        }
     }
 
     private void RunEngine()

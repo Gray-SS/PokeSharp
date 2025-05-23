@@ -5,7 +5,7 @@ namespace PokeSharp.Assets;
 
 public sealed class AssetsModule : Module
 {
-    public override string ModuleName => "Assets";
+    public override string Name => "Assets";
 
     public override void Configure(IKernel kernel)
     {

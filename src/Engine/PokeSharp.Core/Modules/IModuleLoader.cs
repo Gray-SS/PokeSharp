@@ -1,3 +1,5 @@
+using PokeSharp.Core.Modules.Events;
+
 namespace PokeSharp.Core.Modules;
 
 public interface IModuleLoader
@@ -5,7 +7,10 @@ public interface IModuleLoader
     bool IsLoaded { get; }
     bool IsConfigured { get; }
 
-    IReadOnlyCollection<IModule> LoadedModules { get; }
+    IEnumerable<IModule> LoadedModules { get; }
+    IEnumerable<IModule> RegisteredModules { get; }
+
+    event EventHandler<ModuleStateChangedArgs>? ModuleStateChanged;
 
     void RegisterModule(IModule module);
 

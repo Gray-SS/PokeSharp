@@ -29,7 +29,7 @@ public sealed class ReflectionManager : IReflectionManager
             return;
         }
 
-        _logger.Debug($"Registered assembly '{assemblyName}' for reflection scanning");
+        _logger.Debug($"Registered assembly '{assemblyName}'.");
     }
 
     public T[] InstantiateClassesOfType<T>() where T : class
@@ -54,8 +54,9 @@ public sealed class ReflectionManager : IReflectionManager
         where T : class
     {
         var assemblyName = assembly.GetName().Name;
-        _logger.Debug($"Scanning assembly '{assemblyName}' for '{typeof(T).Name}' implementations");
+        _logger.Trace($"Scanning assembly '{assemblyName}' for '{typeof(T).Name}' implementations");
         var initialCount = prioritizedInstances.SelectMany(x => x.Value).Count();
+        var failedCount = 0;
 
         var concreteTypes = GetConcreteTypesAssignableFrom<T>(assembly);
 
@@ -70,6 +71,7 @@ public sealed class ReflectionManager : IReflectionManager
             }
             catch (Exception ex)
             {
+                failedCount++;
                 _logger.Error($"Failed to instantiate '{concreteType.Name}' from assembly '{assemblyName}': {ex.Message}");
             }
         }
@@ -80,7 +82,8 @@ public sealed class ReflectionManager : IReflectionManager
             var foundCount = finalCount - initialCount;
             _logger.Debug($"{foundCount} assignable types have been found and resolved through scanning '{assemblyName}'");
         }
-        else _logger.Debug($"No assignable types have been through scanning '{assemblyName}'");
+        else if (failedCount == 0) _logger.Debug($"No assignable types have been found through scanning '{assemblyName}'");
+        else _logger.Debug($"Failed to instantiate {failedCount} concrete types through scanning '{assemblyName}'");
     }
 
     private static IEnumerable<Type> GetConcreteTypesAssignableFrom<T>(Assembly assembly)
@@ -93,7 +96,7 @@ public sealed class ReflectionManager : IReflectionManager
 
     private T CreateInstance<T>(Type concreteType) where T : class
     {
-        _logger.Debug($"Found concrete type: '{concreteType.Name}'");
+        _logger.Trace($"Found concrete type: '{concreteType.Name}'");
 
         // Try to find a bindable interface
         var bindableInterface = FindBindableInterface<T>(concreteType);
@@ -102,12 +105,12 @@ public sealed class ReflectionManager : IReflectionManager
         if (bindableInterface != null)
         {
             instance = (T)_kernel.Get(bindableInterface);
-            _logger.Debug($"Resolved '{concreteType.Name}' via interface '{bindableInterface.Name}'");
+            _logger.Trace($"Resolved '{concreteType.Name}' via interface '{bindableInterface.Name}'");
         }
         else
         {
             instance = (T)_kernel.Get(concreteType);
-            _logger.Debug($"Resolved '{concreteType.Name}' via direct binding (fallback)");
+            _logger.Trace($"Resolved '{concreteType.Name}' via direct binding (fallback)");
         }
 
         return instance;
@@ -128,7 +131,7 @@ public sealed class ReflectionManager : IReflectionManager
 
         if (priorityAttr != null)
         {
-            _logger.Debug($"Priority attribute found with value: {priority}.");
+            _logger.Trace($"Priority attribute found with value: {priority}.");
         }
 
         return priority;

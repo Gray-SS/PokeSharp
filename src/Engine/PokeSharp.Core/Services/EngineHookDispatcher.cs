@@ -28,6 +28,7 @@ public sealed class EngineHookDispatcher : IEngineHookDispatcher
         _logger.Info("Initializing engine hooks...");
         foreach (IEngineHook hook in _hooks)
         {
+            _logger.Trace($"Initializing engine hook: {hook.GetType().Name}");
             hook.Initialize();
         }
     }

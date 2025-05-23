@@ -10,6 +10,7 @@ public sealed class LoggerSettings
 
     public LoggerSettings()
     {
+        LogLevel = LogLevel.Debug;
         _outputs = new List<ILogOutput>();
     }
 

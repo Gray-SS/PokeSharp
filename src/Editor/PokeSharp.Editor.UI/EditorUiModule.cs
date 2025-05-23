@@ -6,7 +6,7 @@ namespace PokeSharp.Editor.UI;
 
 public sealed class EditorUiModule : Module
 {
-    public override string ModuleName => "Editor.UI";
+    public override string Name => "Editor.UI";
 
     public override void Configure(IKernel kernel)
     {
