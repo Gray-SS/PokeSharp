@@ -2,8 +2,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Ninject;
+using Ninject.Planning.Bindings;
 using PokeSharp.Core.Coroutines;
+using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
+using PokeSharp.Core.Modules.Exceptions;
 using PokeSharp.Core.Resolutions;
 using PokeSharp.Core.Services;
 using PokeSharp.Core.Windowing;
@@ -20,7 +23,7 @@ public class CoreModule<TEngine> : Module
         kernel.Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
         kernel.Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();
         kernel.Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
-        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
+
         kernel.Bind<IWindowManager>().To<WindowManager>();
     }
 
@@ -34,5 +37,7 @@ public class CoreModule<TEngine> : Module
         kernel.Bind<ContentManager>().ToConstant(engine.Content);
         kernel.Bind<GraphicsDeviceManager>().ToConstant(engine.Graphics);
         kernel.Bind<GraphicsDevice>().ToConstant(engine.GraphicsDevice);
+
+        engine.InjectDispatcher(kernel.Get<IEngineHookDispatcher>());
     }
 }

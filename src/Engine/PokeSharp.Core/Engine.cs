@@ -22,8 +22,8 @@ public abstract class Engine : Game
     {
         if (_instance != null)
         {
-            throw new EngineException("Only one instance of '{nameof(Engine)}' is allowed."
-                                    + "You tried to create a second instance of '{GetType().Name}'."
+            throw new EngineException($"Only one instance of '{nameof(Engine)}' is allowed. "
+                                    + $"You tried to create a second instance of '{GetType().Name}'. "
                                     + "Ensure your application only instantiates a single Engine.");
         }
 
@@ -36,6 +36,11 @@ public abstract class Engine : Game
 
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
+    }
+
+    internal void InjectDispatcher(IEngineHookDispatcher dispatcher)
+    {
+        _hooksDispatcher = dispatcher;
     }
 
     protected sealed override void Initialize()
@@ -106,8 +111,6 @@ public abstract class Engine : Game
         _moduleLoader.ConfigureModules();
         if (!_moduleLoader.IsConfigured)
             throw new AppException("The module loader have not been configured correctly.");
-
-        _kernel.Rebind<ILogger>().ToProvider<LoggerProvider>().InTransientScope();
 
         _moduleLoader.LoadModules();
         if (!_moduleLoader.IsLoaded)

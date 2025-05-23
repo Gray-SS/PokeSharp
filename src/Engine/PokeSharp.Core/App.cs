@@ -33,16 +33,14 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         try
         {
             _kernel = ConfigureContainer();
-
-            ServiceLocator.Initialize(this);
-
             ConfigureLogging();
 
-            _logger.Debug("Starting application...");
+            _logger.Debug("Running application...");
+
+            ServiceLocator.Initialize(this);
             RegisterAppModules();
 
-            _logger.Debug("Contextual logger configured.");
-
+            // Auto-bindé car les modules sont chargés plus tard dans le Engine justement.
             using TEngine engine = _kernel.Get<TEngine>();
             engine.Run();
         }
@@ -64,6 +62,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
 
         // App specific services
         kernel.Bind<IApp>().ToConstant(this);
+        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
         kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
 
@@ -73,23 +72,24 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
     private void ConfigureLogging()
     {
         _kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
+        _kernel.Bind<ILogger>().ToProvider<LoggerProvider>();
 
         LoggerSettings loggerSettings = _kernel.Get<LoggerSettings>();
         loggerSettings.AddOutput(new FileLogOutput(targetDirectory: "logs"));
 
-        _kernel.Bind<ILogger>().To<ContextedLogger>().WithConstructorArgument("context", "App");
-
-        _logger = _kernel.Get<ILogger>();
-        _logger.Debug("Logging configured");
+        _logger = new ContextedLogger(loggerSettings, "App");
     }
 
     private void RegisterAppModules()
     {
         ModuleLoader = Kernel.Get<IModuleLoader>();
-
-        _logger.Debug("Registering modules...");
         ModuleLoader.RegisterModule(new CoreModule<TEngine>());
         RegisterModules(ModuleLoader);
+    }
+
+    private void RunEngine()
+    {
+        
     }
 
     protected virtual void RegisterModules(IModuleLoader loader)
