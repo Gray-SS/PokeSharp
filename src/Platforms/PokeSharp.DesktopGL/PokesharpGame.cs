@@ -1,57 +1,40 @@
-﻿using Ninject;
-using Microsoft.Xna.Framework;
-using PokeSharp.Assets.Extensions;
-using PokeSharp.Core;
-using PokeSharp.Core.Resolutions;
-using PokeSharp.Editor.Extensions;
-using PokeSharp.Inputs.Extensions;
-using PokeSharp.Rendering.Extensions;
-using PokeSharp.Inputs;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PokeSharp.Core.Attributes;
-using PokeSharp.ROM.Extensions;
+using Ninject;
+using PokeSharp.Core;
+using PokeSharp.Core.Logging;
+using PokeSharp.Core.Modules;
+using PokeSharp.Core.Resolutions;
+using PokeSharp.Inputs;
 
 namespace PokeSharp.DesktopGL;
 
-[Priority(-1)]
-public class PokesharpGame : Engine<PokesharpGame>, IEngineHook
+public class PokesharpGame : Engine
 {
-    public bool EditorEnabled { get; }
-
-    public PokesharpGame(bool editorEnabled)
+    public PokesharpGame(IKernel kernel, ILogger logger, IModuleLoader moduleLoader) : base(kernel, logger, moduleLoader)
     {
-        EditorEnabled = editorEnabled;
     }
 
-    protected override void LoadModules(IKernel kernel)
+    protected override void OnInitialize()
     {
-        kernel.LoadRomModule();
-        kernel.LoadAssetsModule();
-        kernel.LoadInputsModule();
-        kernel.LoadRenderingModule();
-
-        if (EditorEnabled)
-        {
-            kernel.LoadEditorModule();
-        }
-    }
-
-    void IEngineHook.Initialize()
-    {
-        // Sets the resolution to 1280x720 by default
         Resolution.SetResolution(ResolutionSize.R1280x720);
+        base.OnInitialize();
     }
 
-    void IEngineHook.Update(GameTime gameTime)
+    protected override void OnUpdate(GameTime gameTime)
     {
-        if (Input.IsKeyPressed(Keys.Escape))
+        base.OnUpdate(gameTime);
+
+        if (Input.IsKeyDown(Keys.F11))
         {
-            Exit();
+            Resolution.ToggleFullScreen();
         }
     }
 
-    void IEngineHook.Draw(GameTime gameTime)
+    protected override void OnDraw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        base.OnDraw(gameTime);
     }
 }

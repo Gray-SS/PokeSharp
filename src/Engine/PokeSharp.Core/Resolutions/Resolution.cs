@@ -5,7 +5,7 @@ namespace PokeSharp.Core.Resolutions;
 
 public static class Resolution
 {
-    private static readonly IResolutionManager _resManager = S.GetService<IResolutionManager>();
+    private static readonly IResolutionManager _resManager = ServiceLocator.GetService<IResolutionManager>();
 
     public static Viewport Viewport => _resManager.Viewport;
     public static Viewport VirtualViewport => _resManager.VirtualViewport;

@@ -1,11 +1,14 @@
-using Ninject.Modules;
+using Ninject;
+using PokeSharp.Core.Modules;
 
 namespace PokeSharp.Assets;
 
-public sealed class AssetsModule : NinjectModule
+public sealed class AssetsModule : Module
 {
-    public override void Load()
+    public override string ModuleName => "Assets";
+
+    public override void Configure(IKernel kernel)
     {
-        Bind<AssetPipeline>().ToSelf().InSingletonScope();
+        kernel.Bind<AssetPipeline>().ToSelf().InSingletonScope();
     }
 }

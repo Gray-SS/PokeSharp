@@ -6,7 +6,7 @@ namespace PokeSharp.Inputs;
 
 public static class Input
 {
-    private static readonly IInputManager _inputManager = S.GetService<IInputManager>();
+    private static readonly IInputManager _inputManager = ServiceLocator.GetService<IInputManager>();
 
     public static Vector2 GetMousePos()
     {

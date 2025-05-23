@@ -33,7 +33,6 @@ public sealed class AssetsViewer : IGuiHook
                             try
                             {
                                 object asset = _pipeline.Load(result.Path);
-                                Console.WriteLine($"Asset successfully loaded: {asset.GetType().Name}");
                             }
                             catch (Exception ex)
                             {

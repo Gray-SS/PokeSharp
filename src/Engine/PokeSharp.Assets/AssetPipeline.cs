@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using PokeSharp.Assets.Exceptions;
 using PokeSharp.Core.Exceptions;
+using PokeSharp.Core.Logging;
 using PokeSharp.Core.Services;
 
 namespace PokeSharp.Assets;
@@ -12,11 +13,13 @@ public sealed class AssetPipeline
     private readonly IAssetImporter[] _importers;
     private readonly IAssetProcessor[] _processors;
 
+    private readonly ILogger _logger;
     private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
 
-    public AssetPipeline(IReflectionManager reflectionManager)
+    public AssetPipeline(IReflectionManager reflectionManager, ILogger logger)
     {
+        _logger = logger;
         _reflectionManager = reflectionManager;
 
         _importers = LoadImporters();
@@ -37,6 +40,8 @@ public sealed class AssetPipeline
 
     public object Load(string path)
     {
+        _logger.Info($"Loading '{path}'...");
+
         if (TryGetCachedAsset(path, out object? cachedAsset))
         {
             return cachedAsset;

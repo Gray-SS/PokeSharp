@@ -1,10 +1,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PokeSharp.Core.Resolutions.Events;
+using PokeSharp.Core.Windowing;
+using PokeSharp.Core.Windowing.Events;
 
 namespace PokeSharp.Core.Resolutions;
 
-public sealed class ResolutionManager : IResolutionManager, IDisposable
+public sealed class ResolutionManager : IResolutionManager, IEngineHook, IDisposable
 {
     public bool IsFullScreen { get; }
 
@@ -37,28 +39,26 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
     private ResolutionSize _resolution;
     private ResolutionSize _virtualResolution;
 
-    private readonly GameWindow _window;
-    private readonly GraphicsDeviceManager _graphics;
+    private readonly IWindowManager _window = null!;
+    private readonly GraphicsDeviceManager _graphics = null!;
 
     public static readonly ResolutionSize MinResolution = new(320, 240);
     public static readonly ResolutionSize MaxResolution = new(7680, 4320);
 
-    public ResolutionManager(Engine engine)
+    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics)
     {
-        _window = engine.Window;
-        _window.ClientSizeChanged += OnClientSizeChanged;
+        _window = window;
+        _window.SizeChanged += OnWindowSizeChanged;
 
-        _graphics = engine.Graphics;
-        _resolution = new ResolutionSize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
-        _virtualResolution = _resolution;
+        _graphics = graphics;
     }
 
-    private void OnClientSizeChanged(object? sender, EventArgs e)
+    private void OnWindowSizeChanged(object? sender, WindowSizeChangedArgs e)
     {
-        var size = _window.ClientBounds.Size;
+        var size = e.Size;
 
         ResolutionSize old = _resolution;
-        _resolution = new ResolutionSize(size.X, size.Y);
+        _resolution = new ResolutionSize((int)size.X, (int)size.Y);
 
         UpdateTransformMatrices();
         ResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, _resolution, old));
@@ -157,8 +157,22 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
     {
         if (!_disposed)
         {
-            _window.ClientSizeChanged -= OnClientSizeChanged;
+            _window.SizeChanged -= OnWindowSizeChanged;
             _disposed = true;
         }
+    }
+
+    public void Initialize()
+    {
+        _resolution = new ResolutionSize(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _virtualResolution = _resolution;
+    }
+
+    public void Update(GameTime gameTime)
+    {
+    }
+
+    public void Draw(GameTime gameTime)
+    {
     }
 }

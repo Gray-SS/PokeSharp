@@ -1,29 +1,38 @@
-using Ninject.Modules;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Ninject;
 using PokeSharp.Core.Coroutines;
+using PokeSharp.Core.Modules;
 using PokeSharp.Core.Resolutions;
 using PokeSharp.Core.Services;
+using PokeSharp.Core.Windowing;
 
 namespace PokeSharp.Core;
 
-public class CoreModule : NinjectModule
-{
-    public override void Load()
-    {
-        Bind<Engine>().ToConstant(Engine.Instance);
-        Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
-        Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();
-        Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
-        Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
-    }
-}
-
-public sealed class CoreModule<TEngine> : CoreModule
+public class CoreModule<TEngine> : Module
     where TEngine : Engine
 {
+    public override string ModuleName => "Core";
+
+    public override void Configure(IKernel kernel)
+    {
+        kernel.Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
+        kernel.Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();
+        kernel.Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
+        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
+        kernel.Bind<IWindowManager>().To<WindowManager>();
+    }
+
     public override void Load()
     {
-        base.Load();
+        IKernel kernel = App.Kernel;
+        TEngine engine = kernel.Get<TEngine>();
 
-        Bind<TEngine>().ToConstant((TEngine)Engine.Instance);
+        kernel.Bind<Engine>().ToConstant(engine);
+        kernel.Bind<GameWindow>().ToConstant(engine.Window);
+        kernel.Bind<ContentManager>().ToConstant(engine.Content);
+        kernel.Bind<GraphicsDeviceManager>().ToConstant(engine.Graphics);
+        kernel.Bind<GraphicsDevice>().ToConstant(engine.GraphicsDevice);
     }
 }

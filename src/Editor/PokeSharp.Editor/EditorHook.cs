@@ -5,7 +5,7 @@ using PokeSharp.Editor.UI;
 
 namespace PokeSharp.Editor;
 
-[Priority(-2)]
+[Priority(-999)]
 public sealed class EditorHook : IEngineHook
 {
     private readonly ImGuiRenderer _imGuiRenderer;
