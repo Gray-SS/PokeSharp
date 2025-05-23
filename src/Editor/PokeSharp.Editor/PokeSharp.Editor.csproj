@@ -9,6 +9,10 @@
     <PackageReference Include="NativeFileDialogSharp" Version="0.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Engine\PokeSharp.ROM\PokeSharp.ROM.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

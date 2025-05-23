@@ -5,12 +5,14 @@ using PokeSharp.Core.Attributes;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
 using Ninject;
+using PokeSharp.Core.Windowing;
 
 namespace PokeSharp.Core;
 
 [Priority(-100)]
 public abstract class Engine : Game
 {
+    public IApp App => ServiceLocator.CurrentApp;
     public GraphicsDeviceManager Graphics { get; }
 
     private readonly IKernel _kernel;
@@ -20,12 +22,7 @@ public abstract class Engine : Game
 
     public Engine(IKernel kernel, ILogger logger, IModuleLoader moduleLoader)
     {
-        if (_instance != null)
-        {
-            throw new EngineException($"Only one instance of '{nameof(Engine)}' is allowed. "
-                                    + $"You tried to create a second instance of '{GetType().Name}'. "
-                                    + "Ensure your application only instantiates a single Engine.");
-        }
+        ValidateSingleInstance();
 
         _instance = this;
         _logger = logger;
@@ -38,14 +35,46 @@ public abstract class Engine : Game
         Content.RootDirectory = "Content";
     }
 
+    /// <summary>
+    /// Cette fonction sert à inject le IEngineHookDispatcher.
+    /// </summary>
+    /// <param name="dispatcher"></param>
     internal void InjectDispatcher(IEngineHookDispatcher dispatcher)
     {
         _hooksDispatcher = dispatcher;
     }
 
+    #region Engine related API
+
+    protected virtual void OnInitialize()
+    {
+        _hooksDispatcher.Initialize();
+    }
+
+    protected virtual void OnLoad()
+    {
+    }
+
+    protected virtual void OnUpdate(GameTime gameTime)
+    {
+        _hooksDispatcher.Update(gameTime);
+    }
+
+    protected virtual void OnDraw(GameTime gameTime)
+    {
+        _hooksDispatcher.Draw(gameTime);
+    }
+
+    #endregion // Engine related API
+
+    #region Monogame related API
+
     protected sealed override void Initialize()
     {
-        LoadModules();
+        LoadGraphicsModules();
+
+        IWindowManager windowManager = _kernel.Get<IWindowManager>();
+        windowManager.Title = $"{App.AppName} - {App.AppVersion}";
 
         _logger.Info("Initializing the game loop...");
         OnInitialize();
@@ -87,37 +116,26 @@ public abstract class Engine : Game
         _logger.Info("Exiting the game loop...");
     }
 
-    protected virtual void OnInitialize()
+    #endregion // Monogame related API
+
+    #region Helpers
+
+    private void LoadGraphicsModules()
     {
-        _hooksDispatcher.Initialize();
+
     }
 
-    protected virtual void OnLoad()
+    private void ValidateSingleInstance()
     {
+        if (_instance != null)
+        {
+            throw new EngineException($"Only one instance of '{nameof(Engine)}' is allowed. " +
+                                    $"You tried to create a second instance of '{GetType().Name}'. " +
+                                    "Ensure your application only instantiates a single Engine.");
+        }
     }
 
-    protected virtual void OnUpdate(GameTime gameTime)
-    {
-        _hooksDispatcher.Update(gameTime);
-    }
-
-    protected virtual void OnDraw(GameTime gameTime)
-    {
-        _hooksDispatcher.Draw(gameTime);
-    }
-
-    private void LoadModules()
-    {
-        _moduleLoader.ConfigureModules();
-        if (!_moduleLoader.IsConfigured)
-            throw new AppException("The module loader have not been configured correctly.");
-
-        _moduleLoader.LoadModules();
-        if (!_moduleLoader.IsLoaded)
-            throw new AppException("The module loader have not been loaded correctly.");
-
-        _logger.Debug($"{_moduleLoader.LoadedModules.Count} module(s) loaded.");
-    }
+    #endregion
 
     #region Singleton
 

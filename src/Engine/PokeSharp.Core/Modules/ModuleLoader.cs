@@ -95,17 +95,19 @@ public sealed class ModuleLoader : IModuleLoader
             throw new ModuleException(msg);
         }
 
+        _logger.Debug("Loading modules assemblies...");
+        foreach (IModule module in _modules)
+        {
+            Type moduleType = module.GetType();
+            IReflectionManager reflectionManager = _kernel.Get<IReflectionManager>();
+            reflectionManager.RegisterAssembly(moduleType.Assembly);
+        }
+
         _logger.Debug("Loading modules...");
         foreach (IModule module in _modules)
         {
             _logger.Debug($"Loading module '{module.ModuleName}'...");
-
-            Type moduleType = module.GetType();
-            IReflectionManager reflectionManager = _kernel.Get<IReflectionManager>();
-            reflectionManager.RegisterAssembly(moduleType.Assembly);
-
             module.Load();
-
             _logger.Info($"Module loaded: '{module.ModuleName}'");
         }
 

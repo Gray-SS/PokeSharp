@@ -9,9 +9,9 @@ using PokeSharp.Inputs;
 
 namespace PokeSharp.DesktopGL;
 
-public class PokesharpGame : Engine
+public class PokesharpEngine : Engine
 {
-    public PokesharpGame(IKernel kernel, ILogger logger, IModuleLoader moduleLoader) : base(kernel, logger, moduleLoader)
+    public PokesharpEngine(IKernel kernel, ILogger logger, IModuleLoader moduleLoader) : base(kernel, logger, moduleLoader)
     {
     }
 
@@ -25,9 +25,14 @@ public class PokesharpGame : Engine
     {
         base.OnUpdate(gameTime);
 
-        if (Input.IsKeyDown(Keys.F11))
+        if (Input.IsKeyPressed(Keys.F11))
         {
             Resolution.ToggleFullScreen();
+        }
+
+        if (Input.IsKeyPressed(Keys.Escape))
+        {
+            Exit();
         }
     }
 

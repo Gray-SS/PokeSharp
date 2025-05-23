@@ -1,5 +1,6 @@
 using Ninject;
 using Ninject.Infrastructure;
+using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
 using PokeSharp.Core.Services;
@@ -38,11 +39,9 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
             _logger.Debug("Running application...");
 
             ServiceLocator.Initialize(this);
-            RegisterAppModules();
+            ConfigureModules();
 
-            // Auto-bindé car les modules sont chargés plus tard dans le Engine justement.
-            using TEngine engine = _kernel.Get<TEngine>();
-            engine.Run();
+            RunEngine();
         }
         catch (Exception ex)
         {
@@ -65,36 +64,41 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         kernel.Bind<TEngine>().ToSelf().InSingletonScope();
         kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
+        kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
+        kernel.Bind<ILogger>().ToProvider<LoggerProvider>();
+        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
 
         return kernel;
     }
 
     private void ConfigureLogging()
     {
-        _kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
-        _kernel.Bind<ILogger>().ToProvider<LoggerProvider>();
-
         LoggerSettings loggerSettings = _kernel.Get<LoggerSettings>();
         loggerSettings.AddOutput(new FileLogOutput(targetDirectory: "logs"));
 
         _logger = new ContextedLogger(loggerSettings, "App");
     }
 
-    private void RegisterAppModules()
+    private void ConfigureModules()
     {
         ModuleLoader = Kernel.Get<IModuleLoader>();
-        ModuleLoader.RegisterModule(new CoreModule<TEngine>());
+        ModuleLoader.RegisterModule(new CoreModule());
         RegisterModules(ModuleLoader);
+
+        ModuleLoader.ConfigureModules();
+        if (!ModuleLoader.IsConfigured)
+            throw new AppException("The module loader have not been configured correctly.");
     }
 
     private void RunEngine()
     {
-        
+        using TEngine engine = _kernel.Get<TEngine>();
+        _kernel.Bind<Engine>().ToConstant(engine);
+
+        engine.Run();
     }
 
-    protected virtual void RegisterModules(IModuleLoader loader)
-    {
-    }
+    protected abstract void RegisterModules(IModuleLoader loader);
 
     private void Cleanup()
     {

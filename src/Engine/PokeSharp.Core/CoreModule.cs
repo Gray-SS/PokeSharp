@@ -1,20 +1,16 @@
+using Ninject;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Ninject;
-using Ninject.Planning.Bindings;
 using PokeSharp.Core.Coroutines;
-using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
-using PokeSharp.Core.Modules.Exceptions;
 using PokeSharp.Core.Resolutions;
 using PokeSharp.Core.Services;
 using PokeSharp.Core.Windowing;
 
 namespace PokeSharp.Core;
 
-public class CoreModule<TEngine> : Module
-    where TEngine : Engine
+public class CoreModule : Module
 {
     public override string ModuleName => "Core";
 
@@ -30,9 +26,8 @@ public class CoreModule<TEngine> : Module
     public override void Load()
     {
         IKernel kernel = App.Kernel;
-        TEngine engine = kernel.Get<TEngine>();
+        Engine engine = kernel.Get<Engine>();
 
-        kernel.Bind<Engine>().ToConstant(engine);
         kernel.Bind<GameWindow>().ToConstant(engine.Window);
         kernel.Bind<ContentManager>().ToConstant(engine.Content);
         kernel.Bind<GraphicsDeviceManager>().ToConstant(engine.Graphics);

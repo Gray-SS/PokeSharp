@@ -11,11 +11,14 @@ public readonly struct ResolutionSize : IEquatable<ResolutionSize>
     public bool IsPortrait => Height > Width;
     public bool IsSquare => Width == Height;
 
-    public static readonly ResolutionSize R800x400 = new(800, 400);
-    public static readonly ResolutionSize R1280x720 = new(1280, 720);
-    public static readonly ResolutionSize R1920x1080 = new(1920, 1080);
-    public static readonly ResolutionSize R3840x2160 = new(3840, 2160);
-    public static readonly ResolutionSize R2560x1440 = new(2560, 1440);
+    public static readonly ResolutionSize R800x600   = new(800, 600);
+    public static readonly ResolutionSize R1280x720  = new(1280, 720);    // HD (16:9)
+    public static readonly ResolutionSize R1280x960  = new(1280, 960);    // HD (16:9)
+    public static readonly ResolutionSize R1366x768  = new(1366, 768);    // HD+ (16:9)
+    public static readonly ResolutionSize R1440x900  = new(1440, 900);
+    public static readonly ResolutionSize R1600x900  = new(1600, 900);    // HD+ (16:9)
+    public static readonly ResolutionSize R1920x1080 = new(1920, 1080);   // Full HD (16:9)
+    public static readonly ResolutionSize R2560x1440 = new(2560, 1440);   // Full HD (16:9)
 
     public ResolutionSize(int width, int height)
     {

@@ -11,15 +11,21 @@ public sealed class EngineHookDispatcher : IEngineHookDispatcher
     public EngineHookDispatcher(ILogger logger, IReflectionManager reflectionManager)
     {
         _logger = logger;
-
-        _logger.Debug($"Instantiating engine hooks via '{nameof(IReflectionManager)}'...");
         _hooks = reflectionManager.InstantiateClassesOfType<IEngineHook>();
-        logger.Debug($"Successfully instantiated engine hooks.");
+
+        if (_hooks.Length == 0)
+            _logger.Warn("No engine hooks have been found. Please ensure you've loaded your modules correcty.");
     }
 
     public void Initialize()
     {
+        if (_hooks.Length == 0)
+        {
+            _logger.Warn("No engine hook to initialize.");
+            return;
+        }
 
+        _logger.Info("Initializing engine hooks...");
         foreach (IEngineHook hook in _hooks)
         {
             hook.Initialize();
