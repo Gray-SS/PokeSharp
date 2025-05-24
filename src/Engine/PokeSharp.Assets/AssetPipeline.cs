@@ -38,119 +38,177 @@ public sealed class AssetPipeline
         return _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
     }
 
-    public object Load(string path)
+    public object? Load(string path)
     {
-        _logger.Info($"Loading '{path}'...");
-
-        if (TryGetCachedAsset(path, out object? cachedAsset))
+        try
         {
-            return cachedAsset;
+            _logger.Debug($"Loading asset: '{path}'");
+
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new AssetPipelineException("Asset path cannot be null or empty");
+            }
+
+            string fullPath = Path.GetFullPath(path);
+            _logger.Trace($"Resolved full path: '{fullPath}'");
+
+            if (!File.Exists(fullPath))
+            {
+                throw new AssetPipelineException($"File not found: '{fullPath}'");
+            }
+
+            if (TryGetCachedAsset(fullPath, out object? cachedAsset))
+            {
+                _logger.Trace($"Using cached asset: '{path}'");
+                return cachedAsset;
+            }
+
+            string ext = Path.GetExtension(path);
+            if (string.IsNullOrEmpty(ext))
+            {
+                throw new AssetPipelineException($"File extension required for asset: '{path}'");
+            }
+
+            _logger.Debug($"Processing '{ext}' file: '{path}'");
+
+            var importer = GetAssetImporterFromExtension(ext);
+            var importedAsset = ImportAssetInternal(importer, path);
+
+            var processor = GetDefaultProcessorFromImporter(importer, importedAsset);
+            var loadedAsset = ProcessAssetInternal(processor, importedAsset, path);
+
+            _cachedAssets[fullPath] = loadedAsset;
+            _logger.Debug($"Asset cached with key: {fullPath}");
+            _logger.Info($"Asset loaded successfully: '{path}' -> {loadedAsset.GetType().Name}");
+
+            return loadedAsset;
+        }
+        catch (AssetProcessorException ex)
+        {
+            _logger.Error($"Asset processing failed for '{path}': {ex.Message}");
+        }
+        catch (AssetImporterException ex)
+        {
+            _logger.Error($"Asset import failed for '{path}': {ex.Message}");
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Asset pipeline error for '{path}': {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error loading '{path}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"Stack trace: {ex.StackTrace ?? "Not available"}");
         }
 
-        string ext = Path.GetExtension(path);
-
-        IAssetImporter importer = this.GetAssetImporterFromExtension(ext);
-        object importedAsset = ImportAssetInternal(importer, path);
-
-        IAssetProcessor processor = this.GetDefaultProcessorFromImporter(importer, importedAsset);
-        object loadedAsset = ProcessAssetInternal(processor, importedAsset, path);
-
-        _cachedAssets[path] = loadedAsset;
-        return loadedAsset;
+        return null;
     }
 
-    public T Load<T>(string path) where T : class
+    public T? Load<T>(string path) where T : class
     {
-        object loadedAsset = Load(path);
-        if (loadedAsset is not T asset)
+        try
         {
-            throw new AssetPipelineException($"""
-                The processed asset is of type '{loadedAsset.GetType().Name}', but the pipeline expected '{typeof(T).Name}'.
-                Ensure the processor output type matches the requested asset type.
-            """);
+            var loadedAsset = Load(path);
+            if (loadedAsset == null)
+            {
+                return null;
+            }
+
+            if (loadedAsset is not T asset)
+            {
+                throw new AssetPipelineException($"Type mismatch: expected '{typeof(T).Name}', got '{loadedAsset.GetType().Name}' for asset '{path}'");
+            }
+
+            return asset;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Generic load failed for '{path}': {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error in generic load for '{path}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"Stack trace: {ex.StackTrace ?? "Not available"}");
         }
 
-        return asset;
+        return null;
     }
 
     private IAssetImporter GetAssetImporterFromExtension(string ext)
     {
-        IAssetImporter? importer = _importers.FirstOrDefault(x => x.CanImport(ext));
+        _logger.Trace($"Finding importer for extension: '{ext}'");
+
+        var importer = _importers.FirstOrDefault(x => x.CanImport(ext));
         if (importer is null)
         {
-            throw new AssetPipelineException($"""
-                No importer found for file extension '{ext}'.
-                This asset type may not be supported. Please verify the extension and ensure a matching importer is registered.
-            """);
+            throw new AssetPipelineException($"No importer found for extension '{ext}' - asset type may not be supported");
         }
 
+        _logger.Trace($"Using importer: {importer.GetType().Name}");
         return importer;
     }
 
     private IAssetProcessor GetDefaultProcessorFromImporter(IAssetImporter importer, object rawAsset)
     {
-        IAssetProcessor? processor = _processors.FirstOrDefault(x => importer.ProcessorType == x.GetType());
+        _logger.Trace($"Finding processor '{importer.ProcessorType.Name}' for importer '{importer.GetType().Name}'");
+
+        var processor = _processors.FirstOrDefault(x => importer.ProcessorType == x.GetType());
         if (processor == null)
         {
-            throw new AssetPipelineException($"""
-                The default processor '{importer.ProcessorType.Name}' for importer '{importer.GetType().Name}' was not found for asset of type '{rawAsset.GetType().Name}'.
-                Make sure the module associated with the processor is registered.
-            """);
+            throw new AssetPipelineException($"Processor '{importer.ProcessorType.Name}' not found for importer '{importer.GetType().Name}' - ensure the module is registered");
         }
 
+        _logger.Trace($"Using processor: {processor.GetType().Name} ({rawAsset.GetType().Name} -> {processor.OutputType.Name})");
         return processor;
     }
 
     private object ImportAssetInternal(IAssetImporter importer, string path)
     {
-        object? rawAsset;
         try
         {
-            rawAsset = importer.Import(path);
-        }
-        catch (AssetImporterException)
-        {
-            throw; // Re-throw user-thrown asset-specific exception.
+            _logger.Trace($"Importing with {importer.GetType().Name}");
+
+            var rawAsset = importer.Import(path);
+            if (rawAsset is null)
+            {
+                throw new AssetPipelineException($"Importer '{importer.GetType().Name}' returned null for '{path}' - file may be corrupted or unsupported");
+            }
+
+            _logger.Trace($"Import successful: {rawAsset.GetType().Name}");
+            return rawAsset;
         }
         catch (AssetProcessorException)
         {
-            throw new AssetPipelineException($"""
-                A processor exception was thrown during import by '{importer.GetType().Name}'.
-                This indicates a misuse of exception types. Importers must throw {nameof(AssetImporterException)} instead.
-            """);
+            throw new AssetPipelineException($"Importer '{importer.GetType().Name}' threw processor exception - use {nameof(AssetImporterException)} instead");
+        }
+        catch (AssetPipelineException)
+        {
+            throw;
         }
         catch (EngineException)
         {
-            throw new AssetPipelineException($"""
-                An {nameof(EngineException)} was thrown during asset import from '{path}' using '{importer.GetType().Name}'.
-                Please use the appropriate {nameof(AssetImporterException)} instead, to indicate an importer-level error.
-            """);
+            throw new AssetPipelineException($"Importer '{importer.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetImporterException)} for import errors");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new AssetPipelineException($"""
-                An unexpected error occurred while importing asset from '{path}' using '{importer.GetType().Name}'.
-                Please ensure the file format is valid and that the importer handles it correctly.
-            """, ex);
+            throw;
         }
-
-        if (rawAsset is null)
-        {
-            throw new AssetPipelineException($"""
-                Importer '{importer.GetType().Name}' returned null for asset at '{path}'.
-                This indicates an internal failure. Ensure the file is valid and supported by the importer.
-            """);
-        }
-
-        return rawAsset;
     }
 
     private object ProcessAssetInternal(IAssetProcessor processor, object rawAsset, string path)
     {
-        object? asset;
         try
         {
-            asset = processor.Process(rawAsset);
+            _logger.Trace($"Processing {rawAsset.GetType().Name} with {processor.GetType().Name}");
+
+            var asset = processor.Process(rawAsset);
+            if (asset is null)
+            {
+                throw new AssetPipelineException($"Processor '{processor.GetType().Name}' returned null for '{path}' - processing failed");
+            }
+
+            _logger.Trace($"Processing successful: {rawAsset.GetType().Name} -> {asset.GetType().Name}");
+            return asset;
         }
         catch (AssetProcessorException)
         {
@@ -158,47 +216,26 @@ public sealed class AssetPipeline
         }
         catch (AssetImporterException)
         {
-            throw new AssetPipelineException($"""
-                An import exception was thrown during processing by '{processor.GetType().Name}'.
-                This is likely a misuse of exception types. Processors should throw {nameof(AssetProcessorException)} instead.
-            """);
+            throw new AssetPipelineException($"Processor '{processor.GetType().Name}' threw importer exception - use {nameof(AssetProcessorException)} instead");
         }
         catch (EngineException)
         {
-            throw new AssetPipelineException($"""
-                An {nameof(EngineException)} was thrown while processing asset at '{path}' using '{processor.GetType().Name}'.
-                Processors must throw {nameof(AssetProcessorException)} to indicate asset processing errors.
-            """);
+            throw new AssetPipelineException($"Processor '{processor.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetProcessorException)} for processing errors");
         }
         catch (Exception ex)
         {
-            throw new AssetPipelineException($"""
-                An unexpected error occurred while processing asset at '{path}' using '{processor.GetType().Name}'.
-                Verify the processor logic and that the input asset is valid and correctly formatted.
-            """, ex);
+            throw new AssetPipelineException($"Unexpected error in processor '{processor.GetType().Name}' for '{path}' - verify processor logic and input validity", ex);
         }
-
-        if (asset is null)
-        {
-            throw new AssetPipelineException($"""
-                Processor '{processor.GetType().Name}' returned null for asset at '{path}'.
-                This likely indicates an unhandled error during processing.
-            """);
-        }
-
-        return asset;
     }
 
     private bool TryGetCachedAsset(string path, [NotNullWhen(true)] out object? cachedAsset)
     {
-        cachedAsset = null;
-
-        if (!_cachedAssets.TryGetValue(path, out object? asset))
+        if (_cachedAssets.TryGetValue(path, out cachedAsset))
         {
-            return false;
+            _logger.Trace($"Cache hit: {cachedAsset.GetType().Name}");
+            return true;
         }
 
-        cachedAsset = asset;
-        return true;
+        return false;
     }
 }

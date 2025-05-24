@@ -9,8 +9,6 @@ namespace PokeSharp.Editor;
 
 public sealed class EditorEngine : Engine
 {
-    private SpriteBatch _spriteBatch = null!;
-
     public EditorEngine(EngineConfiguration config) : base(config)
     {
         Window.AllowUserResizing = true;
@@ -25,8 +23,6 @@ public sealed class EditorEngine : Engine
 
     protected override void OnLoad()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-
         base.OnLoad();
     }
 

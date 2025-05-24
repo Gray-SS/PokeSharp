@@ -1,15 +1,18 @@
 using PokeSharp.Assets;
 using PokeSharp.Assets.Exceptions;
+using PokeSharp.Core.Logging;
 using PokeSharp.ROM.Services;
 
 namespace PokeSharp.ROM.Platforms.Gba;
 
 public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
 {
+    private readonly ILogger _logger;
     private readonly IGbaConfigProvider _configProvider;
 
-    public GbaRomProcessor(IGbaConfigProvider configProvider)
+    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger)
     {
+        _logger = logger;
         _configProvider = configProvider;
     }
 
@@ -39,9 +42,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
         var missingFeatures = config.GetMissingFeatures();
         if (missingFeatures.Any())
         {
-            Console.WriteLine(
-                $"[Warning] {romInfo} ROM is partially supported. Missing features: {string.Join(", ", missingFeatures)}."
-            );
+            _logger.Warn($"{romInfo} ROM is partially supported. Missing features: {string.Join(", ", missingFeatures)}");
         }
 
         return new PokemonRom(romInfo, config);
@@ -70,7 +71,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
                 return $"- {x}: Not supported (missing minimal requirements)\n";
             });
 
-            details = $"Some GBA ROMs are supported, but not all features may be available.\n{string.Join(string.Empty, romDescriptions)}.";
+            details = $"Some GBA ROMs are supported, but not all features may be available.\n{string.Join(string.Empty, romDescriptions)}";
         }
 
         return details;

@@ -37,7 +37,7 @@ public sealed class ReflectionManager : IReflectionManager
         var prioritizedInstances = new SortedDictionary<int, List<T>>(
             Comparer<int>.Create((x, y) => y.CompareTo(x)));
 
-        _logger.Info($"Starting instantiation of classes implementing '{typeof(T).Name}'");
+        _logger.Debug($"Starting instantiation of classes implementing '{typeof(T).Name}'");
 
         foreach (var assembly in _assemblies)
         {
@@ -45,7 +45,7 @@ public sealed class ReflectionManager : IReflectionManager
         }
 
         var instances = prioritizedInstances.SelectMany(pair => pair.Value).ToArray();
-        _logger.Info($"Instantiation completed: {instances.Length} instances of '{typeof(T).Name}' created");
+        _logger.Debug($"Instantiation completed: {instances.Length} instances of '{typeof(T).Name}' created");
 
         return instances;
     }

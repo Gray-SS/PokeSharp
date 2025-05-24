@@ -7,9 +7,9 @@
   GameCode: BPRE
   Species:
     Count: 151
-    Names: 0x08245EE0
+    # Names: 0x08245EE0
     NameLength: 11
-    FrontSprites: 0x082350AC
-    BackSprites: 0x0823654C
+    # FrontSprites: 0x082350AC
+    # BackSprites: 0x0823654C
   Entities:
     Graphics: 0x0839FDB0

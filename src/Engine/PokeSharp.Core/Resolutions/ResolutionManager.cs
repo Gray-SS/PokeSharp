@@ -87,7 +87,7 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
 
     public void EnableVirtualResolution(bool enable)
     {
-        _logger.Info($"Virtual resolution has been {(enable ? "Enabled" : "Disabled")}");
+        _logger.Debug($"Virtual resolution has been {(enable ? "enabled" : "disabled")}");
 
         _virtualResEnabled = enable;
 
@@ -99,10 +99,8 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
 
     public void SetResolution(ResolutionSize resolution)
     {
-        if (resolution.Width <= 0 || resolution.Height <= 0)
-            throw new InvalidOperationException("Error setting resolution: Resolution dimension must be bigger than 0");
-
-        ValidateResolution(resolution);
+        if (!IsValidResolution(resolution))
+            return;
 
         _graphics.PreferredBackBufferWidth = resolution.Width;
         _graphics.PreferredBackBufferHeight = resolution.Height;
@@ -114,7 +112,7 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
         if (!_virtualResEnabled)
             _virtualResolution = resolution;
 
-        _logger.Info($"Resolution set to {resolution}");
+        _logger.Debug($"Resolution set to {resolution}");
         UpdateTransformMatrices();
         ResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
@@ -124,26 +122,38 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
         if (!_virtualResEnabled)
             throw new InvalidOperationException("Error setting virtual resolution: Virtual resolution isn't enabled");
 
-        ValidateResolution(resolution);
+        if (!IsValidResolution(resolution))
+            return;
 
         ResolutionSize old = _virtualResolution;
         _virtualResolution = resolution;
 
-        _logger.Info($"Virtual resolution set to {resolution}");
+        _logger.Debug($"Virtual resolution set to {resolution}");
         UpdateTransformMatrices();
         VirtualResolutionChanged?.Invoke(this, new ResolutionChangedArgs(this, resolution, old));
     }
 
-    private static void ValidateResolution(ResolutionSize resolution)
+    private bool IsValidResolution(ResolutionSize resolution)
     {
         if (resolution.Width <= 0 || resolution.Height <= 0)
-            throw new InvalidOperationException($"Invalid resolution {resolution}: Width and height must be greater than 0");
+        {
+            _logger.Warn($"Resolution dimension must be bigger than 0. Width: {resolution.Width}, Height: {resolution.Height}");
+            return false;
+        }
 
         if (resolution.Width < MinResolution.Width || resolution.Height < MinResolution.Height)
-            throw new InvalidOperationException($"Invalid resolution {resolution}: Resolution too small (minimum: {MinResolution.Width}x{MinResolution.Height})");
+        {
+            _logger.Warn($"Invalid resolution {resolution}: Resolution too small (minimum: {MinResolution.Width}x{MinResolution.Height})");
+            return false;
+        }
 
         if (resolution.Width > MaxResolution.Width || resolution.Height > MaxResolution.Height)
-            throw new InvalidOperationException($"Invalid resolution {resolution}: Resolution too large (maximum: {MaxResolution.Width}x{MaxResolution.Height})");
+        {
+            _logger.Warn($"Invalid resolution {resolution}: Resolution too large (maximum: {MaxResolution.Width}x{MaxResolution.Height})");
+            return false;
+        }
+
+        return true;
     }
 
     public Vector2 ScreenToVirtual(Vector2 screenPos)
@@ -161,7 +171,7 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
         _graphics.ToggleFullScreen();
         bool result = _graphics.IsFullScreen;
 
-        _logger.Info($"Fullscreen property has changed: {(result ? "Enabled" : "Disabled")}");
+        _logger.Debug($"Fullscreen property has changed: {(result ? "Enabled" : "Disabled")}");
         return result;
     }
 

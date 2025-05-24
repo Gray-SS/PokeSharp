@@ -32,7 +32,7 @@ public sealed class AssetsViewer : IGuiHook
                         {
                             try
                             {
-                                object asset = _pipeline.Load(result.Path);
+                                _pipeline.Load(result.Path);
                             }
                             catch (Exception ex)
                             {

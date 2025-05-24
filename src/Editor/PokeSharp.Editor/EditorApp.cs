@@ -26,6 +26,6 @@ public sealed class EditorApp : App<EditorEngine>
     {
         base.ConfigureLogging(settings);
 
-        settings.SetLogLevel(LogLevel.Debug);
+        settings.SetLogLevel(LogLevel.Trace);
     }
 }

@@ -40,9 +40,13 @@ public abstract class Engine : Game
     }
 
     /// <summary>
-    /// Cette fonction sert à inject le IEngineHookDispatcher.
+    /// This function is used to inject the IEngineHookDispatcher from the core module.
     /// </summary>
-    /// <param name="dispatcher"></param>
+    /// <remarks>
+    /// Why not retrieve it directly via dependency injection? Because the IEngineHookDispatcher loads IEngineHooks, which are essentially services using MonoGame graphics.
+    /// If we inject it directly, then dependencies such as GraphicsDevice, GameWindow, etc. won't be accessible.
+    /// </remarks>
+    /// <param name="dispatcher">The resolved dispatcher</param>
     internal void InjectDispatcher(IEngineHookDispatcher dispatcher)
     {
         _logger.Debug($"{nameof(IEngineHookDispatcher)} has been successfully injected into '{nameof(Engine)}'");
@@ -51,11 +55,22 @@ public abstract class Engine : Game
 
     #region Engine related API
 
+    /// <summary>
+    /// Used to initialize graphics.
+    /// </summary>
+    /// <remarks>
+    /// This function is called when Monogame graphics are initialized. The <b>engine hook dispatcher</b> is called in this function to <b>initialize</b> all the engine hooks.
+    /// This is done so that child engines can have <b>full control over their initialization</b>.
+    /// However, not calling <see cref="base.Initialize()"/> can render modules non-functional and <b>may lead to exceptions</b>.
+    /// </remarks>
     protected virtual void OnInitialize()
     {
         _hooksDispatcher.Initialize();
     }
 
+    /// <summary>
+    /// Used to load any data specific to the child engine
+    /// </summary>
     protected virtual void OnLoad()
     {
     }
@@ -77,9 +92,7 @@ public abstract class Engine : Game
     protected sealed override void Initialize()
     {
         LoadModules();
-
-        IWindowManager windowManager = _kernel.Get<IWindowManager>();
-        windowManager.Title = $"{App.AppName} - {App.AppVersion}";
+        ConfigureWindowTitle();
 
         _logger.Info("Initializing the game loop...");
         OnInitialize();
@@ -120,6 +133,12 @@ public abstract class Engine : Game
 
     #region Helpers
 
+    private void ConfigureWindowTitle()
+    {
+        IWindowManager windowManager = _kernel.Get<IWindowManager>();
+        windowManager.Title = $"{App.AppName} - {App.AppVersion}";
+    }
+
     private void LoadModules()
     {
         _moduleLoader.LoadModules();
@@ -142,6 +161,8 @@ public abstract class Engine : Game
     #endregion
 
     #region Singleton
+
+    // With the refactor and the 
 
     public static Engine Instance
     {
