@@ -5,7 +5,7 @@ using PokeSharp.ROM.Services;
 
 namespace PokeSharp.ROM.Platforms.Gba;
 
-public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
+public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
 {
     private readonly ILogger _logger;
     private readonly IGbaConfigProvider _configProvider;
@@ -16,7 +16,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
         _configProvider = configProvider;
     }
 
-    public override PokemonRom Process(RomInfo romInfo)
+    public override Rom Process(RomInfo romInfo)
     {
         if (!_configProvider.TryGetConfig(romInfo.GameCode, out GbaConfig? config))
         {
@@ -45,7 +45,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, PokemonRom>
             _logger.Warn($"{romInfo} ROM is partially supported. Missing features: {string.Join(", ", missingFeatures)}");
         }
 
-        return new PokemonRom(romInfo, config);
+        return new Rom(romInfo, config);
     }
 
     private string GetUnsupportedRomDetails()

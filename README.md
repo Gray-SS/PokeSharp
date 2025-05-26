@@ -2,6 +2,8 @@
 
 > This project is a **non-commercial, educational clone** of the original Pokémon games, developed purely to demonstrate how such a game can be implemented from scratch using C#. pls Nintendo don't sue me.
 
+[![wakatime](https://wakatime.com/badge/user/276d4ba3-1480-4b7d-843f-b6639c518cf2/project/961c39b9-e35d-41a0-8eb6-fdb9716a6732.svg)](https://wakatime.com/badge/user/276d4ba3-1480-4b7d-843f-b6639c518cf2/project/961c39b9-e35d-41a0-8eb6-fdb9716a6732)
+
 If you'd like to be kept informed of the project's progress, please feel free to join the newly-created discord: https://discord.gg/8zhqU4EjG2
 
 ## Purpose

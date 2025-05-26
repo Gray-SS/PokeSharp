@@ -1,6 +1,6 @@
 using PokeSharp.Core.Services;
 
-namespace PokeSharp.Editor.UI.Services;
+namespace PokeSharp.Editor.Services;
 
 public sealed class GuiHookDispatcher : IGuiHookDispatcher
 {

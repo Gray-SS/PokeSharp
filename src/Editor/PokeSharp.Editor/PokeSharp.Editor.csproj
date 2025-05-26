@@ -11,12 +11,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\PokeSharp.ROM\PokeSharp.ROM.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Entities\PokeSharp.Entities.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>

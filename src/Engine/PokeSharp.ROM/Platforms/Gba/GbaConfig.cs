@@ -7,7 +7,7 @@ public sealed class GbaConfig
     public string Name { get; set; } = string.Empty;
     public string Language { get; set; } = string.Empty;
     public string GameCode { get; set; } = string.Empty;
-    public GbaSpeciesConfig Species { get; set; } = null!;
+    public GbaPokemonsConfig Pokemons { get; set; } = null!;
     public GbaEntitiesConfig Entities { get; set; } = null!;
 
     public bool SupportsMinimal =>
@@ -17,9 +17,9 @@ public sealed class GbaConfig
         && Version >= 0;
 
     public bool SupportsSpeciesLoading =>
-        Species.Count > 0
-        && Species.FrontSprites != 0
-        && Species.BackSprites != 0;
+        Pokemons.Count > 0
+        && Pokemons.FrontSprites != 0
+        && Pokemons.BackSprites != 0;
 
     public bool SupportsEntityGraphics =>
         Entities.Graphics != 0;
@@ -59,7 +59,7 @@ public sealed class GbaConfig
     }
 }
 
-public sealed class GbaSpeciesConfig
+public sealed class GbaPokemonsConfig
 {
     public int Count { get; set; }
     public int Names { get; set; }

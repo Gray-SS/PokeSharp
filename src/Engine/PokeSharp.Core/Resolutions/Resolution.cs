@@ -1,11 +1,32 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PokeSharp.Core.Resolutions.Events;
 
 namespace PokeSharp.Core.Resolutions;
 
 public static class Resolution
 {
-    private static readonly IResolutionManager _resManager = ServiceLocator.GetService<IResolutionManager>();
+    public static event EventHandler<ResolutionChangedArgs>? ResolutionChanged;
+    public static event EventHandler<ResolutionChangedArgs>? VirtualResolutionChanged;
+
+    private static readonly IResolutionManager _resManager;
+
+    static Resolution()
+    {
+        _resManager = ServiceLocator.GetService<IResolutionManager>();
+        _resManager.ResolutionChanged += OnResolutionChanged;
+        _resManager.VirtualResolutionChanged += OnVirtualResolutionChanged;
+    }
+
+    private static void OnVirtualResolutionChanged(object? sender, ResolutionChangedArgs e)
+    {
+        ResolutionChanged?.Invoke(sender, e);
+    }
+
+    private static void OnResolutionChanged(object? sender, ResolutionChangedArgs e)
+    {
+        VirtualResolutionChanged?.Invoke(sender, e);
+    }
 
     public static Viewport Viewport => _resManager.Viewport;
     public static Viewport VirtualViewport => _resManager.VirtualViewport;

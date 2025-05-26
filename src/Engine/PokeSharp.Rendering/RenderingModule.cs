@@ -9,5 +9,6 @@ public sealed class RenderingModule : Module
 
     public override void Configure(IKernel kernel)
     {
+        kernel.Bind<IRenderingPipeline>().To<RenderingPipeline>().InTransientScope();
     }
 }

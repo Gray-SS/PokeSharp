@@ -1,7 +1,6 @@
 using ImGuiNET;
 using PokeSharp.Core.Logging;
 using PokeSharp.Editor.Miscellaneous;
-using PokeSharp.Editor.UI;
 using NVec2 = System.Numerics.Vector2;
 using NVec4 = System.Numerics.Vector4;
 

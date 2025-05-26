@@ -1,4 +1,4 @@
-namespace PokeSharp.Editor.UI;
+namespace PokeSharp.Editor;
 
 public interface IGuiHook
 {

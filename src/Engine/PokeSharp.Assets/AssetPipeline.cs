@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using PokeSharp.Assets.Exceptions;
+using PokeSharp.Assets.VFS;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Services;
@@ -8,22 +9,30 @@ namespace PokeSharp.Assets;
 
 public sealed class AssetPipeline
 {
+    public string BasePath { get; set; }
+
     public IReadOnlyCollection<object> LoadedAssets => _cachedAssets.Values;
 
     private readonly IAssetImporter[] _importers;
     private readonly IAssetProcessor[] _processors;
+    private readonly IAssetWriter[] _writers;
 
     private readonly ILogger _logger;
+    private readonly IVirtualFileSystem _vfs;
     private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
 
-    public AssetPipeline(IReflectionManager reflectionManager, ILogger logger)
+    public AssetPipeline(IReflectionManager reflectionManager, IVirtualFileSystem vfs, ILogger logger)
     {
+        BasePath = AppContext.BaseDirectory;
+
+        _vfs = vfs;
         _logger = logger;
         _reflectionManager = reflectionManager;
 
         _importers = LoadImporters();
         _processors = LoadProcessors();
+        _writers = LoadWriters();
 
         _cachedAssets = new Dictionary<string, object>();
     }
@@ -38,16 +47,22 @@ public sealed class AssetPipeline
         return _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
     }
 
+    private IAssetWriter[] LoadWriters()
+    {
+        return _reflectionManager.InstantiateClassesOfType<IAssetWriter>();
+    }
+
     public object? Load(string path)
     {
         try
         {
-            _logger.Debug($"Loading asset: '{path}'");
-
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrWhiteSpace(path))
             {
                 throw new AssetPipelineException("Asset path cannot be null or empty");
             }
+
+            path = Path.Combine(BasePath, path);
+            _logger.Debug($"Loading asset: '{path}'");
 
             string fullPath = Path.GetFullPath(path);
             _logger.Trace($"Resolved full path: '{fullPath}'");
@@ -78,9 +93,9 @@ public sealed class AssetPipeline
             var loadedAsset = ProcessAssetInternal(processor, importedAsset, path);
 
             _cachedAssets[fullPath] = loadedAsset;
+
             _logger.Debug($"Asset cached with key: {fullPath}");
             _logger.Info($"Asset loaded successfully: '{path}' -> {loadedAsset.GetType().Name}");
-
             return loadedAsset;
         }
         catch (AssetProcessorException ex)
@@ -93,7 +108,7 @@ public sealed class AssetPipeline
         }
         catch (AssetPipelineException ex)
         {
-            _logger.Error($"Asset pipeline error for '{path}': {ex.Message}");
+            _logger.Error($"Asset loading failed for '{path}': {ex.Message}");
         }
         catch (Exception ex)
         {
@@ -134,6 +149,59 @@ public sealed class AssetPipeline
         return null;
     }
 
+    public bool Save(object asset, string savePath)
+    {
+        try
+        {
+            if (asset == null)
+                throw new AssetPipelineException("Asset cannot be null");
+
+            if (string.IsNullOrWhiteSpace(savePath))
+                throw new AssetPipelineException("Save path cannot be null or empty");
+
+            savePath = Path.Combine(BasePath, savePath);
+            _logger.Info($"Saving asset of type '{asset.GetType().Name}' to '{savePath}'");
+
+            string fullPath = Path.GetFullPath(savePath);
+            _logger.Trace($"Resolved full path: '{fullPath}'");
+
+            if (File.Exists(fullPath))
+                throw new AssetPipelineException($"File already existing at path: '{fullPath}' - skipping to avoid file overriding");
+
+            IAssetWriter writer = GetAssetWriterFromAsset(asset);
+            writer.Write(asset, fullPath);
+
+            _logger.Info($"Asset written successfully: {asset.GetType().Name} -> '{savePath}'");
+            return true;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Asset pipeline error saving '{asset.GetType().Name}' to '{savePath}': {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error saving '{asset.GetType().Name}' to '{savePath}': {ex.Message}");
+            _logger.Debug($"Stack trace: {ex.StackTrace ?? "Not available"}");
+        }
+
+        return false;
+    }
+
+    private IAssetWriter GetAssetWriterFromAsset(object asset)
+    {
+        Type assetType = asset.GetType();
+        _logger.Trace($"Finding writer for asset: '{assetType.Name}'");
+
+        var writer = _writers.FirstOrDefault(x => x.AssetType == assetType);
+        if (writer is null)
+        {
+            throw new AssetPipelineException($"No writer found for asset of type '{assetType.Name}' - asset type may not be supported");
+        }
+
+        _logger.Trace($"Using writer: {writer.GetType().Name}");
+        return writer;
+    }
+
     private IAssetImporter GetAssetImporterFromExtension(string ext)
     {
         _logger.Trace($"Finding importer for extension: '{ext}'");
@@ -150,6 +218,26 @@ public sealed class AssetPipeline
 
     private IAssetProcessor GetDefaultProcessorFromImporter(IAssetImporter importer, object rawAsset)
     {
+        Type processorType;
+        try
+        {
+            processorType = importer.ProcessorType;
+        }
+        catch (NotImplementedException)
+        {
+            throw new AssetImporterException($"The default processor for importer '{importer.GetType().Name}' was not implemented - ensure you're defining a valid processor inside your importer");
+        }
+
+        if (importer.ProcessorType is null)
+        {
+            throw new AssetPipelineException($"The default processor for importer '{importer.GetType().Name}' was set to null - ensure you're using a valid processor type");
+        }
+
+        if (!importer.ProcessorType.IsAssignableTo(typeof(IAssetProcessor)))
+        {
+            throw new AssetPipelineException($"The default processor for importer '{importer.GetType().Name}' isn't assignable to {typeof(IAssetProcessor).Name} - ensure you're using a valid processor type");
+        }
+
         _logger.Trace($"Finding processor '{importer.ProcessorType.Name}' for importer '{importer.GetType().Name}'");
 
         var processor = _processors.FirstOrDefault(x => importer.ProcessorType == x.GetType());
@@ -189,6 +277,10 @@ public sealed class AssetPipeline
         {
             throw new AssetPipelineException($"Importer '{importer.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetImporterException)} for import errors");
         }
+        catch (NotImplementedException)
+        {
+            throw new AssetPipelineException($"Importer '{importer.GetType().Name}' is not implemented - make sure to implement your importer before using it ;)");
+        }
         catch (Exception)
         {
             throw;
@@ -221,6 +313,10 @@ public sealed class AssetPipeline
         catch (EngineException)
         {
             throw new AssetPipelineException($"Processor '{processor.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetProcessorException)} for processing errors");
+        }
+        catch (NotImplementedException)
+        {
+            throw new AssetPipelineException($"Processor '{processor.GetType().Name}' was not implemented - make sure to implement your processor before using it ;)");
         }
         catch (Exception ex)
         {

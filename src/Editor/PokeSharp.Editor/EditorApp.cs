@@ -2,9 +2,11 @@ using PokeSharp.Assets;
 using PokeSharp.Core;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
+using PokeSharp.Entities;
 using PokeSharp.Inputs;
 using PokeSharp.Rendering;
 using PokeSharp.ROM;
+using PokeSharp.Scenes;
 
 namespace PokeSharp.Editor;
 
@@ -19,6 +21,9 @@ public sealed class EditorApp : App<EditorEngine>
         loader.RegisterModule(new AssetsModule());
         loader.RegisterModule(new InputsModule());
         loader.RegisterModule(new RenderingModule());
+        loader.RegisterModule(new ScenesModule());
+        loader.RegisterModule(new EntitiesModule());
+
         loader.RegisterModule(new EditorModule());
     }
 
@@ -26,6 +31,10 @@ public sealed class EditorApp : App<EditorEngine>
     {
         base.ConfigureLogging(settings);
 
+#if DEBUG
         settings.SetLogLevel(LogLevel.Trace);
+#else
+        settings.SetLogLevel(LogLevel.Info);
+#endif
     }
 }

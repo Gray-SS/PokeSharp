@@ -1,4 +1,4 @@
-namespace PokeSharp.Editor.UI.Services;
+namespace PokeSharp.Editor.Services;
 
 public interface IGuiHookDispatcher
 {

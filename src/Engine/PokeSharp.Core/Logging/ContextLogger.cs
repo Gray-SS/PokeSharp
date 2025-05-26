@@ -16,7 +16,7 @@ public sealed class ContextLogger : ILogger
         if (level < _settings.LogLevel)
             return;
 
-        var timestamp = DateTime.UtcNow;
+        var timestamp = DateTime.Now;
         var entry = new LogEntry(timestamp, level, _context, message);
 
         foreach (ILogOutput output in _settings.Outputs)
@@ -27,12 +27,16 @@ public sealed class ContextLogger : ILogger
 
     public void Trace(string message)
     {
+#if TRACE
         Log(LogLevel.Trace, message);
+#endif
     }
 
     public void Debug(string message)
     {
+#if DEBUG
         Log(LogLevel.Debug, message);
+#endif
     }
 
     public void Info(string message)
