@@ -53,8 +53,7 @@ public sealed class MainViewer : IGuiHook
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, NVec2.Zero);
 
-        return ImGuiWindowFlags.MenuBar |
-               ImGuiWindowFlags.NoDocking |
+        return ImGuiWindowFlags.NoDocking |
                ImGuiWindowFlags.NoTitleBar |
                ImGuiWindowFlags.NoCollapse |
                ImGuiWindowFlags.NoResize |

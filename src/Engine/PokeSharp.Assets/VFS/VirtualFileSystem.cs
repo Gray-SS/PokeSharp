@@ -1,113 +1,176 @@
+using PokeSharp.Assets.VFS.Events;
+using PokeSharp.Core.Logging;
+
 namespace PokeSharp.Assets.VFS;
 
 public sealed class VirtualFileSystem : IVirtualFileSystem
 {
-    private readonly Dictionary<string, IVirtualFileSystemProvider> _mountedProviders;
+    private ILogger _logger;
+    private readonly Dictionary<string, VolumeInfo> _mountedVolumes;
+    private readonly Dictionary<string, IVirtualFileSystemProvider> _providers;
 
-    public VirtualFileSystem()
+    public event EventHandler<VolumeInfo>? OnVolumeMounted;
+    public event EventHandler<VolumeInfo>? OnVolumeUnmounted;
+    public event EventHandler<FileSystemChangedArgs>? OnFileChanged;
+
+    public VirtualFileSystem(ILogger logger)
     {
-        _mountedProviders = new Dictionary<string, IVirtualFileSystemProvider>();
+        _logger = logger;
+        _mountedVolumes = new Dictionary<string, VolumeInfo>();
+        _providers = new Dictionary<string, IVirtualFileSystemProvider>();
     }
 
-    public IVirtualFile CreateFile(string virtualPath, bool overwrite = false)
+    public bool Exists(VirtualPath virtualPath)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
-
-        return provider.CreateFile(localPath, overwrite);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.Exists(virtualPath);
     }
 
-    public IVirtualDirectory CreateDirectory(string virtualPath)
+    public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite = false)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
+        VolumeInfo volume = GetVolume(virtualPath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
 
-        return provider.CreateDirectory(localPath);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.CreateFile(virtualPath, overwrite);
     }
 
-    public StreamWriter OpenWrite(string virtualPath)
+    public IVirtualDirectory CreateDirectory(VirtualPath virtualPath)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
+        VolumeInfo volume = GetVolume(virtualPath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
 
-        return provider.OpenWrite(localPath);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.CreateDirectory(virtualPath);
     }
 
-    public StreamReader OpenRead(string virtualPath)
+    public StreamWriter OpenWrite(VirtualPath virtualPath)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
+        VolumeInfo volume = GetVolume(virtualPath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
 
-        return provider.OpenRead(localPath);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.OpenWrite(virtualPath);
     }
 
-    public IVirtualFile? GetFile(string virtualPath)
+    public StreamReader OpenRead(VirtualPath virtualPath)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
+        VolumeInfo volume = GetVolume(virtualPath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Read);
 
-        return provider.GetFile(localPath);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.OpenRead(virtualPath);
     }
 
-    public IVirtualDirectory? GetDirectory(string virtualPath)
+    public IVirtualFile GetFile(VirtualPath virtualPath)
     {
-        (string scheme, string localPath) = ParseVirtualPath(virtualPath);
-        IVirtualFileSystemProvider provider = GetProvider(scheme);
-
-        return provider.GetDirectory(localPath);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.GetFile(virtualPath);
     }
 
-    public IEnumerable<IVirtualDirectory> GetMountedDirectories()
+    public IVirtualDirectory GetDirectory(VirtualPath virtualPath)
     {
-        return _mountedProviders.Values.Select(x => x.RootDir);
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.GetDirectory(virtualPath);
     }
 
-    public void Clear()
+    public IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
     {
-        _mountedProviders.Clear();
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.GetFiles(virtualPath);
     }
 
-    public void Mount(string mountPoint, IVirtualFileSystemProvider provider)
+    public IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
     {
-        string scheme = ExtractScheme(mountPoint);
-        if (_mountedProviders.ContainsKey(scheme))
-            throw new InvalidOperationException($"Scheme '{scheme}' is already used by another provider.");
-
-        _mountedProviders[scheme] = provider;
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.GetDirectories(virtualPath);
     }
 
-    public void Unmount(string mountPoint)
+    public VolumeInfo GetVolume(string scheme)
     {
-        string scheme = ExtractScheme(mountPoint);
-        _mountedProviders.Remove(scheme);
+        _logger.Debug($"Getting volume mounted to scheme '{scheme}'.");
+        if (_mountedVolumes.TryGetValue(scheme, out VolumeInfo? volume))
+            return volume;
+
+        _logger.Error($"No volume found mounted to scheme '{scheme}'");
+        return null!;
     }
 
-    private IVirtualFileSystemProvider GetProvider(string scheme)
+    public IEnumerable<VolumeInfo> GetVolumes()
     {
-        if (!_mountedProviders.TryGetValue(scheme, out IVirtualFileSystemProvider? provider))
-            throw new InvalidOperationException($"No providers mounted for '{scheme}'");
+        return _mountedVolumes.Values;
+    }
+
+    public void MountVolume(VolumeInfo volume, IVirtualFileSystemProvider provider)
+    {
+        ArgumentNullException.ThrowIfNull(volume);
+        ArgumentNullException.ThrowIfNull(provider);
+
+        _logger.Trace($"Mounting volume '{volume.DisplayName}' to scheme '{volume.Scheme}' using provider '{provider.GetType().Name}'");
+        if (_mountedVolumes.ContainsKey(volume.Scheme))
+            throw new InvalidOperationException($"A volume with scheme '{volume.Scheme}' is already mounted.");
+
+        provider.OnFileChanged += HandleOnFileChanged;
+        _logger.Debug($"{nameof(OnFileChanged)} event has been registered.");
+
+        _providers[volume.Scheme] = provider;
+        _mountedVolumes[volume.Scheme] = volume;
+
+        _logger.Info($"Mounted volume '{volume.DisplayName}' to scheme '{volume.Scheme}' successfully.");
+        OnVolumeMounted?.Invoke(this, volume);
+    }
+
+    public void UnmountVolume(VolumeInfo volume)
+    {
+        _logger.Trace($"Unmounting volume '{volume.DisplayName}' from scheme '{volume.Scheme}'");
+        if (_mountedVolumes.Remove(volume.Scheme, out VolumeInfo? removedVolume))
+        {
+            _logger.Debug($"{nameof(OnFileChanged)} event has been unregistered.");
+            var attachedProvider = GetProviderFromVirtualPath(volume.RootPath);
+            attachedProvider.OnFileChanged -= HandleOnFileChanged;
+
+            OnVolumeUnmounted?.Invoke(this, removedVolume);
+        }
+        else _logger.Warn($"No mounted volume has been found at scheme '{volume.Scheme}'");
+    }
+
+    public void UnmountVolume(string scheme)
+    {
+        _logger.Trace($"Unmounting volume from scheme '{scheme}'");
+        if (_mountedVolumes.Remove(scheme, out VolumeInfo? volume))
+        {
+            _logger.Debug($"{nameof(OnFileChanged)} event has been unregistered.");
+            var attachedProvider = GetProviderFromVirtualPath(volume.RootPath);
+            attachedProvider.OnFileChanged -= HandleOnFileChanged;
+
+            OnVolumeUnmounted?.Invoke(this, volume);
+        }
+        else _logger.Warn($"No mounted provider has been found at mount point: '{scheme}'");
+    }
+
+    public void UnmountVolumes()
+    {
+        _logger.Trace($"Unmounting all the mounted volumes");
+        _providers.Clear();
+        _mountedVolumes.Clear();
+    }
+
+    private void HandleOnFileChanged(object? sender, FileSystemChangedArgs e)
+    {
+        OnFileChanged?.Invoke(sender, e);
+    }
+
+    private static void EnsureAccess(VolumeInfo volume, FileSystemAccess access)
+    {
+        if (!volume.HasAccessTo(access))
+            throw new InvalidOperationException($"Cannot perform action to volume '{volume.DisplayName}' mounted to '{volume.Scheme}'. The required access is '{access}'");
+    }
+
+    private IVirtualFileSystemProvider GetProviderFromVirtualPath(VirtualPath virtualPath)
+    {
+        if (!_providers.TryGetValue(virtualPath.Scheme, out IVirtualFileSystemProvider? provider))
+            throw new InvalidOperationException($"No providers mounted for '{virtualPath.Scheme}'");
 
         return provider;
-    }
-
-    private static (string Scheme, string LocalPath) ParseVirtualPath(string path)
-    {
-        string scheme = ExtractScheme(path);
-        string localPath = ExtractLocalPath(scheme.Length, path);
-        return (scheme, localPath);
-    }
-
-    private static string ExtractLocalPath(int schemeLength, ReadOnlySpan<char> path)
-    {
-        return new string(path[(schemeLength + 3)..]);
-    }
-
-    private static string ExtractScheme(ReadOnlySpan<char> path)
-    {
-        var schemeEnd = path.IndexOf("://");
-        if (schemeEnd == -1)
-            throw new ArgumentException($"Invalid virtual path: '{path}'. Missing scheme (e.g. disk://path/to/file, rom://path/to/dir, ect.)");
-
-        return new string(path[..schemeEnd]);
     }
 }

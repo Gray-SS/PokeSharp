@@ -3,14 +3,14 @@ namespace PokeSharp.Assets.VFS;
 public interface IVirtualEntry
 {
     string Name { get; }
-    string VirtualPath { get; }
-
-    IVirtualDirectory? ParentDirectory { get; }
-
-    bool IsReadOnly { get; }
-
-    bool IsFile { get; }
+    bool Exists { get; }
     bool IsDirectory { get; }
+    public VirtualPath Path { get; }
 
     IVirtualFileSystemProvider Provider { get; }
+
+    IVirtualDirectory GetParent();
+    IVirtualEntry Rename(string name);
+    IVirtualEntry Duplicate();
+    bool Delete();
 }

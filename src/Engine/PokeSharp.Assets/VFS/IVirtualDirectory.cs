@@ -1,9 +1,16 @@
 namespace PokeSharp.Assets.VFS;
 
-public interface IVirtualDirectory : IVirtualEntry, IEnumerable<IVirtualEntry>
+public interface IVirtualDirectory : IVirtualEntry
 {
     IVirtualFile CreateFile(string fileName, bool overwrite = false);
     IVirtualDirectory CreateDirectory(string dirName);
 
-    IEnumerable<IVirtualEntry> GetEntries();
+    bool FileExists(string fileName);
+    bool DirectoryExists(string dirName);
+
+    IVirtualFile GetFile(string fileName);
+    IVirtualDirectory GetDirectory(string dirName);
+
+    IEnumerable<IVirtualFile> GetFiles();
+    IEnumerable<IVirtualDirectory> GetDirectories();
 }

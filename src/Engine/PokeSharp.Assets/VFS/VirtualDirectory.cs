@@ -1,54 +1,56 @@
-using System.Collections;
-
 namespace PokeSharp.Assets.VFS;
 
 public sealed class VirtualDirectory : VirtualEntry, IVirtualDirectory
 {
-    public override bool IsFile => false;
-    public override bool IsDirectory => true;
-
-    private readonly Dictionary<string, IVirtualEntry> _entries;
-
-    public VirtualDirectory(IVirtualFileSystemProvider provider, IVirtualDirectory? parentDir, string dirName) : base(provider, parentDir, dirName)
+    public VirtualDirectory(IVirtualFileSystemProvider provider, VirtualPath path) : base(provider, path)
     {
-        _entries = new Dictionary<string, IVirtualEntry>();
     }
 
     public IVirtualFile CreateFile(string fileName, bool overwrite = false)
     {
-        string virtualPath = $"{VirtualPath}/{fileName}";
+        VirtualPath virtualPath = Path.Combine(fileName);
         return Provider.CreateFile(virtualPath, overwrite);
     }
 
     public IVirtualDirectory CreateDirectory(string dirName)
     {
-        string virtualPath = $"{VirtualPath}/{dirName}";
+        VirtualPath virtualPath = Path.Combine($"{dirName}/");
         return Provider.CreateDirectory(virtualPath);
     }
 
-    public IVirtualDirectory GetDirectory(string path)
+    public bool FileExists(string fileName)
     {
-        if (!_entries.TryGetValue(path, out IVirtualEntry? entry))
-            throw new DirectoryNotFoundException($"Directory at path '{path}' wasn't found.");
-
-        if (entry.IsFile)
-            throw new InvalidOperationException($"The path lead to a file. Not a directory.");
-
-        return (IVirtualDirectory)entry;
+        // TODO: Need to actually check if it's a directory or a file that exists, we're just checking if the path exists rn
+        VirtualPath virtualPath = Path.Combine(fileName);
+        return Provider.Exists(virtualPath);
     }
 
-    public IEnumerable<IVirtualEntry> GetEntries()
+    public bool DirectoryExists(string dirName)
     {
-        return _entries.Values;
+        // TODO: Need to actually check if it's a directory or a file that exists, we're just checking if the path exists rn
+        VirtualPath virtualPath = Path.Combine(dirName + "/");
+        return Provider.Exists(virtualPath);
     }
 
-    public IEnumerator<IVirtualEntry> GetEnumerator()
+    public IVirtualDirectory GetDirectory(string dirName)
     {
-        return _entries.Values.GetEnumerator();
+        VirtualPath virtualPath = Path.Combine(dirName + "/");
+        return Provider.GetDirectory(virtualPath);
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
+    public IVirtualFile GetFile(string fileName)
     {
-        return GetEnumerator();
+        VirtualPath virtualPath = Path.Combine(fileName);
+        return Provider.GetFile(virtualPath);
+    }
+
+    public IEnumerable<IVirtualDirectory> GetDirectories()
+    {
+        return Provider.GetDirectories(Path);
+    }
+
+    public IEnumerable<IVirtualFile> GetFiles()
+    {
+        return Provider.GetFiles(Path);
     }
 }

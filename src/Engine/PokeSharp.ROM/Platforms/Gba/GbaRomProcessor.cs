@@ -1,5 +1,6 @@
 using PokeSharp.Assets;
 using PokeSharp.Assets.Exceptions;
+using PokeSharp.Assets.VFS;
 using PokeSharp.Core.Logging;
 using PokeSharp.ROM.Services;
 
@@ -9,9 +10,11 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
 {
     private readonly ILogger _logger;
     private readonly IGbaConfigProvider _configProvider;
+    private readonly IVirtualFileSystem _vfs;
 
-    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger)
+    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger, IVirtualFileSystem vfs)
     {
+        _vfs = vfs;
         _logger = logger;
         _configProvider = configProvider;
     }
@@ -45,7 +48,11 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
             _logger.Warn($"{romInfo} ROM is partially supported. Missing features: {string.Join(", ", missingFeatures)}");
         }
 
-        return new Rom(romInfo, config);
+        var rom = new Rom(romInfo, config, null!);
+        var volume = new VolumeInfo("rom", config.Name, "ROM", FileSystemAccess.Read);
+        _vfs.MountVolume(volume, new GbaFileSystemProvider(rom));
+
+        return rom;
     }
 
     private string GetUnsupportedRomDetails()

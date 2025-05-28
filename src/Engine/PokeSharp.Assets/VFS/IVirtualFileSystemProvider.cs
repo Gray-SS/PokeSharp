@@ -1,21 +1,26 @@
+using PokeSharp.Assets.VFS.Events;
+
 namespace PokeSharp.Assets.VFS;
 
 public interface IVirtualFileSystemProvider
 {
-    /// <summary>
-    /// Mainly used for debugging
-    /// </summary>
-    string Name { get; }
+    event EventHandler<FileSystemChangedArgs>? OnFileChanged;
 
-    bool IsReadOnly { get; }
-    IVirtualDirectory RootDir { get; }
+    bool Exists(VirtualPath virtualPath);
 
-    IVirtualFile? GetFile(string virtualPath);
-    IVirtualDirectory? GetDirectory(string virtualPath);
+    IVirtualFile GetFile(VirtualPath virtualPath);
+    IVirtualDirectory GetDirectory(VirtualPath virtualPath);
 
-    IVirtualFile CreateFile(string virtualPath, bool overwrite);
-    IVirtualDirectory CreateDirectory(string virtualPath);
+    IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath);
+    IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath);
 
-    StreamWriter OpenWrite(string virtualPath);
-    StreamReader OpenRead(string virtualPath);
+    bool DeleteEntry(VirtualPath virtualPath);
+    IVirtualEntry RenameEntry(VirtualPath virtualPath, string name);
+    IVirtualEntry DuplicateEntry(VirtualPath virtualPath);
+
+    IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite);
+    IVirtualDirectory CreateDirectory(VirtualPath virtualPath);
+
+    StreamWriter OpenWrite(VirtualPath virtualPath);
+    StreamReader OpenRead(VirtualPath virtualPath);
 }

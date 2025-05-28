@@ -14,6 +14,9 @@ public abstract class Engine : Game
 {
     public IApp App => ServiceLocator.CurrentApp;
     public GraphicsDeviceManager Graphics { get; }
+    public ILogger Logger => _logger;
+    public IKernel Kernel => _kernel;
+    public IModuleLoader ModuleLoader => _moduleLoader;
 
     private readonly IKernel _kernel;
     private readonly ILogger _logger;

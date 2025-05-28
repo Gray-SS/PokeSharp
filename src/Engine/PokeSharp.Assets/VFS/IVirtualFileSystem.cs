@@ -1,19 +1,31 @@
+using PokeSharp.Assets.VFS.Events;
+
 namespace PokeSharp.Assets.VFS;
 
 public interface IVirtualFileSystem
 {
-    IEnumerable<IVirtualDirectory> GetMountedDirectories();
+    event EventHandler<VolumeInfo>? OnVolumeMounted;
+    event EventHandler<VolumeInfo>? OnVolumeUnmounted;
+    event EventHandler<FileSystemChangedArgs>? OnFileChanged;
 
-    IVirtualFile? GetFile(string virtualPath);
-    IVirtualDirectory? GetDirectory(string virtualPath);
+    VolumeInfo GetVolume(string scheme);
+    IEnumerable<VolumeInfo> GetVolumes();
 
-    IVirtualFile CreateFile(string virtualPath, bool overwrite = false);
-    IVirtualDirectory CreateDirectory(string virtualPath);
+    bool Exists(VirtualPath virtualPath);
 
-    StreamWriter OpenWrite(string virtualPath);
-    StreamReader OpenRead(string virtualPath);
+    IVirtualFile GetFile(VirtualPath virtualPath);
+    IVirtualDirectory GetDirectory(VirtualPath virtualPath);
 
-    void Clear();
-    void Mount(string scheme, IVirtualFileSystemProvider provider);
-    void Unmount(string scheme);
+    IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite = false);
+    IVirtualDirectory CreateDirectory(VirtualPath virtualPath);
+    IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath);
+    IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath);
+
+    StreamWriter OpenWrite(VirtualPath virtualPath);
+    StreamReader OpenRead(VirtualPath virtualPath);
+
+    void MountVolume(VolumeInfo volume, IVirtualFileSystemProvider provider);
+    void UnmountVolume(string scheme);
+    void UnmountVolume(VolumeInfo volume);
+    void UnmountVolumes();
 }

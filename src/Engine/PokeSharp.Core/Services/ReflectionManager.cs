@@ -73,6 +73,7 @@ public sealed class ReflectionManager : IReflectionManager
             {
                 failedCount++;
                 _logger.Error($"Failed to instantiate '{concreteType.Name}' from assembly '{assemblyName}': {ex.Message}");
+                _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
             }
         }
 

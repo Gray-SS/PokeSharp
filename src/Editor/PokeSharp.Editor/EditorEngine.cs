@@ -5,6 +5,7 @@ using PokeSharp.Assets.VFS;
 using PokeSharp.Core;
 using PokeSharp.Core.Resolutions;
 using PokeSharp.Core.Resolutions.Events;
+using PokeSharp.Editor.Services;
 using PokeSharp.Inputs;
 using PokeSharp.Rendering;
 
@@ -15,6 +16,7 @@ public sealed class EditorEngine : Engine
     private RenderTarget2D _renderTarget = null!;
     private IVirtualFileSystem _vfs = null!;
     private EditorGuiRenderer _imGuiRenderer = null!;
+    private IEditorProjectManager _projectManager = null!;
     private IRenderingPipeline _renderingPipeline = null!;
 
     public EditorEngine(EngineConfiguration config) : base(config)
@@ -30,10 +32,17 @@ public sealed class EditorEngine : Engine
         _imGuiRenderer = ServiceLocator.GetService<EditorGuiRenderer>();
         _renderingPipeline = ServiceLocator.GetService<IRenderingPipeline>();
 
-        // _vfs = ServiceLocator.GetService<IVirtualFileSystem>();
-        // _vfs.Mount("fs://", new FileSystemProvider("Content"));
+        _vfs = ServiceLocator.GetService<IVirtualFileSystem>();
+        _projectManager = ServiceLocator.GetService<IEditorProjectManager>();
+        _projectManager.ProjectOpened += OnProjectOpened;
 
         base.OnInitialize();
+    }
+
+    private void OnProjectOpened(object? sender, EditorProject e)
+    {
+        var volume = new VolumeInfo("fs", "Local", "Local", FileSystemAccess.All);
+        _vfs.MountVolume(volume, new FileSystemProvider(e.ContentDirPath));
     }
 
     protected override void OnLoad()
@@ -53,10 +62,10 @@ public sealed class EditorEngine : Engine
 
     protected override void OnUpdate(GameTime gameTime)
     {
-        if (Input.IsKeyPressed(Keys.Escape))
-        {
-            Exit();
-        }
+        // if (Input.IsKeyPressed(Keys.Escape))
+        // {
+        //     Exit();
+        // }
 
         if (Input.IsKeyPressed(Keys.F11))
         {

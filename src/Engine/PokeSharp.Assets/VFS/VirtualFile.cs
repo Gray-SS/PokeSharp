@@ -3,20 +3,17 @@ namespace PokeSharp.Assets.VFS;
 
 public sealed class VirtualFile : VirtualEntry, IVirtualFile
 {
-    public override bool IsFile => true;
-    public override bool IsDirectory => false;
-
-    public VirtualFile(IVirtualFileSystemProvider provider, IVirtualDirectory? parentDir, string entryName) : base(provider, parentDir, entryName)
+    public VirtualFile(IVirtualFileSystemProvider provider, VirtualPath path) : base(provider, path)
     {
     }
 
     public StreamReader OpenRead()
     {
-        return Provider.OpenRead(VirtualPath);
+        return Provider.OpenRead(Path);
     }
 
     public StreamWriter OpenWrite()
     {
-        return Provider.OpenWrite(VirtualPath);
+        return Provider.OpenWrite(Path);
     }
 }

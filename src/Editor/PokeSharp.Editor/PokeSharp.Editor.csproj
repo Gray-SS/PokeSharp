@@ -15,6 +15,13 @@
     <ProjectReference Include="..\..\Engine\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

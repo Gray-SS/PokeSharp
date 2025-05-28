@@ -2,44 +2,37 @@ namespace PokeSharp.Assets.VFS;
 
 public abstract class VirtualEntry : IVirtualEntry
 {
-    public string Name { get; }
-
-    public string VirtualPath { get; }
-
-    public IVirtualDirectory? ParentDirectory { get; }
-
-    public bool IsReadOnly => Provider.IsReadOnly;
-
-    public abstract bool IsFile { get; }
-
-    public abstract bool IsDirectory { get; }
+    public string Name => Path.IsRoot ? "Root" : Path.Name;
+    public bool IsDirectory => Path.IsDirectory;
+    public bool Exists => Provider.Exists(Path);
+    public VirtualPath Path { get; }
 
     public IVirtualFileSystemProvider Provider { get; }
 
-    public VirtualEntry(IVirtualFileSystemProvider provider, IVirtualDirectory? parentDir, string name)
+    public VirtualEntry(IVirtualFileSystemProvider provider, VirtualPath path)
     {
-        Name = name;
+        Path = path;
         Provider = provider;
-        ParentDirectory = parentDir;
-
-        if (parentDir == null)
-        {
-            if (!IsDirectory)
-                throw new InvalidOperationException($"A virtual file cannot be created with a null parent directory: '{name}'");
-
-            VirtualPath = string.Empty;
-        }
-        else
-        {
-            VirtualPath = $"{parentDir.VirtualPath}/{name}";
-            if (IsDirectory)
-                VirtualPath += "/";
-        }
     }
 
-    protected void EnsureWritePermissions()
+    public IVirtualDirectory GetParent()
     {
-        if (IsReadOnly)
-            throw new UnauthorizedAccessException($"You're unauthorized to perform this action. The provider is read-only.");
+        VirtualPath parentPath = Path.GetParent();
+        return new VirtualDirectory(Provider, parentPath);
+    }
+
+    public IVirtualEntry Rename(string name)
+    {
+        return Provider.RenameEntry(Path, name);
+    }
+
+    public bool Delete()
+    {
+        return Provider.DeleteEntry(Path);
+    }
+
+    public IVirtualEntry Duplicate()
+    {
+        return Provider.DuplicateEntry(Path);
     }
 }

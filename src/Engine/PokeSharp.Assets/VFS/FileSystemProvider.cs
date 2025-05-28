@@ -1,12 +1,14 @@
+using PokeSharp.Assets.VFS.Events;
+
 namespace PokeSharp.Assets.VFS;
 
 public sealed class FileSystemProvider : IVirtualFileSystemProvider
 {
-    public string Name => "File System";
     public string RootPath { get; }
-    public bool IsReadOnly => false;
 
-    public IVirtualDirectory RootDir { get; }
+    public event EventHandler<FileSystemChangedArgs>? OnFileChanged;
+
+    private readonly FileSystemWatcher _watcher;
 
     public FileSystemProvider(string rootPath)
     {
@@ -14,99 +16,281 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
             throw new ArgumentException($"No directory was found at path: '{rootPath}'");
 
         RootPath = Path.GetFullPath(rootPath);
-        RootDir = new VirtualDirectory(this, null, GetDirectoryName(rootPath));
+        _watcher = new FileSystemWatcher(rootPath)
+        {
+            IncludeSubdirectories = true,
+            EnableRaisingEvents = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+        };
+
+        _watcher.Changed += HandleOnFileChanged;
+        _watcher.Created += HandleOnFileChanged;
+        _watcher.Deleted += HandleOnFileChanged;
+        _watcher.Renamed += HandleOnFileChanged;
     }
 
-    private string GetPhysicalPath(string virtualPath)
+    private void HandleOnFileChanged(object sender, FileSystemEventArgs e)
     {
-        var normalizedPath = virtualPath.Replace('/', Path.DirectorySeparatorChar);
-        string physicalPath = Path.Combine(RootPath, normalizedPath.TrimStart(Path.DirectorySeparatorChar));
+        var changeType = e.ChangeType switch
+        {
+            WatcherChangeTypes.Created => FileSystemChangedArgs.ChangeType.Created,
+            WatcherChangeTypes.Changed => FileSystemChangedArgs.ChangeType.Modified,
+            WatcherChangeTypes.Renamed => FileSystemChangedArgs.ChangeType.Renamed,
+            WatcherChangeTypes.Deleted => FileSystemChangedArgs.ChangeType.Deleted,
+            _ => throw new NotImplementedException($"The change type '{e.ChangeType}' was not handled.")
+        };
 
-        return physicalPath;
+        string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
+        string virtualPath = Path.GetRelativePath(RootPath, fullPath);
+
+        OnFileChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
     }
 
-    public IVirtualFile? GetFile(string virtualPath)
+    private string GetPhysicalPath(VirtualPath virtualPath)
     {
+        if (virtualPath.IsRoot) return RootPath;
+
+        string path = virtualPath.LocalPath.Replace('/', Path.DirectorySeparatorChar);
+        return Path.Combine(RootPath, path);
+    }
+
+    public bool Exists(VirtualPath path)
+    {
+        string physicalPath = GetPhysicalPath(path);
+        return File.Exists(physicalPath) || Directory.Exists(physicalPath);
+    }
+
+    public IVirtualFile GetFile(VirtualPath virtualPath)
+    {
+        if (virtualPath.IsDirectory)
+            throw new InvalidOperationException($"The provided path doesn't lead to a file: '{virtualPath}'");
+
+        return new VirtualFile(this, virtualPath);
+    }
+
+    public IVirtualDirectory GetDirectory(VirtualPath virtualPath)
+    {
+        if (!virtualPath.IsDirectory)
+            throw new InvalidOperationException($"The provided path doesn't lead to a directory: '{virtualPath}'");
+
+        return new VirtualDirectory(this, virtualPath);
+    }
+
+    public IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
+    {
+        IVirtualDirectory foundDirectory = GetDirectory(virtualPath);
+        if (!foundDirectory.Exists)
+            yield break;
+
         string physicalPath = GetPhysicalPath(virtualPath);
-        if (!File.Exists(physicalPath))
-            return null;
-
-        var parentDirPath = Path.GetDirectoryName(virtualPath);
-        IVirtualDirectory? parent = parentDirPath != null ? GetDirectory(parentDirPath) : null;
-
-        string fileName = Path.GetFileName(physicalPath);
-        return new VirtualFile(this, parent, fileName);
+        foreach (string filePath in Directory.GetFiles(physicalPath))
+        {
+            string fileName = Path.GetFileName(filePath);
+            yield return foundDirectory.GetFile(fileName);
+        }
     }
 
-    public IVirtualDirectory? GetDirectory(string virtualPath)
+    public IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
     {
+        IVirtualDirectory foundDirectory = GetDirectory(virtualPath);
+        if (!foundDirectory.Exists)
+            yield break;
+
         string physicalPath = GetPhysicalPath(virtualPath);
-        if (!Directory.Exists(physicalPath))
-            return null;
-
-        string dirName = GetDirectoryName(physicalPath);
-
-        // TODO: Make sure this works
-        var parentDirPath = Path.GetDirectoryName(virtualPath);
-        IVirtualDirectory? parent = parentDirPath != null ? GetDirectory(parentDirPath) : null;
-
-        return new VirtualDirectory(this, parent, dirName);
+        foreach (string directoryPath in Directory.GetDirectories(physicalPath))
+        {
+            string directoryName = Path.GetFileName(directoryPath);
+            yield return foundDirectory.GetDirectory(directoryName);
+        }
     }
 
-    public IVirtualFile CreateFile(string virtualPath, bool overwrite)
+    public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite)
     {
+        if (virtualPath.IsDirectory)
+            throw new InvalidOperationException($"Cannot create file at directory path: '{virtualPath}'");
+
         string physicalPath = GetPhysicalPath(virtualPath);
-        if (!overwrite && Path.Exists(physicalPath))
-            throw new InvalidOperationException($"The path '{virtualPath}' already contains a file or a folder.");
+
+        if (!overwrite && (File.Exists(physicalPath) || Directory.Exists(physicalPath)))
+            throw new InvalidOperationException($"Entry already exists at path '{virtualPath}' and overwrite is disabled");
+
+        // Ensure parent directory exists
+        string? parentPhysicalPath = Path.GetDirectoryName(physicalPath);
+        if (!string.IsNullOrEmpty(parentPhysicalPath))
+        {
+            Directory.CreateDirectory(parentPhysicalPath);
+        }
 
         using var _ = File.Create(physicalPath);
 
-        var parentDirPath = Path.GetDirectoryName(virtualPath);
-        IVirtualDirectory? parent = parentDirPath != null ? GetDirectory(parentDirPath) : null;
-
-        string fileName = Path.GetFileName(virtualPath);
-        return new VirtualFile(this, parent, fileName);
+        return new VirtualFile(this, virtualPath);
     }
 
-    public IVirtualDirectory CreateDirectory(string virtualPath)
+    public IVirtualDirectory CreateDirectory(VirtualPath virtualPath)
     {
-        string physicalPath = GetPhysicalPath(virtualPath);
-        if (File.Exists(physicalPath))
-            throw new InvalidOperationException($"The path '{virtualPath}' .");
+        if (!virtualPath.IsDirectory)
+            throw new InvalidOperationException($"Cannot create directory at file path: '{virtualPath}'");
 
-        System.Console.WriteLine($"Create directory at: {physicalPath}");
+        string physicalPath = GetPhysicalPath(virtualPath);
+
+        if (File.Exists(physicalPath))
+            throw new InvalidOperationException($"A file already exists at path '{virtualPath}'");
+
         Directory.CreateDirectory(physicalPath);
 
-        var parentDirPath = Path.GetDirectoryName(virtualPath);
-        IVirtualDirectory? parent = parentDirPath != null ? GetDirectory(parentDirPath) : null;
-        System.Console.WriteLine($"Parent dir path: {parentDirPath}");
-
-        string dirName = GetDirectoryName(physicalPath);
-        return new VirtualDirectory(this, parent, dirName);
+        return new VirtualDirectory(this, virtualPath);
     }
 
-    public StreamWriter OpenWrite(string virtualPath)
+    public bool DeleteEntry(VirtualPath virtualPath)
     {
         string physicalPath = GetPhysicalPath(virtualPath);
+
+        if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
+            return false; // Entry doesn't exist, consider it as already deleted
+
+        if (File.Exists(physicalPath))
+        {
+            File.Delete(physicalPath);
+        }
+        else if (Directory.Exists(physicalPath))
+        {
+            Directory.Delete(physicalPath, recursive: true);
+        }
+
+        return true;
+    }
+
+    public IVirtualEntry RenameEntry(VirtualPath virtualPath, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            throw new ArgumentException("New name cannot be null or empty", nameof(newName));
+
+        string physicalPath = GetPhysicalPath(virtualPath);
+
+        if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
+            throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
+
+        VirtualPath parentPath = virtualPath.GetParent();
+        string parentPhysicalPath = GetPhysicalPath(parentPath);
+        string newPhysicalPath = Path.Combine(parentPhysicalPath, newName);
+
+        if (File.Exists(newPhysicalPath) || Directory.Exists(newPhysicalPath))
+            throw new InvalidOperationException($"An entry with name '{newName}' already exists");
+
+        if (File.Exists(physicalPath))
+        {
+            File.Move(physicalPath, newPhysicalPath);
+            VirtualPath newVirtualPath = parentPath.Combine(newName);
+            return new VirtualFile(this, newVirtualPath);
+        }
+        else if (Directory.Exists(physicalPath))
+        {
+            Directory.Move(physicalPath, newPhysicalPath);
+            VirtualPath newVirtualPath = parentPath.Combine(newName + "/");
+            return new VirtualDirectory(this, newVirtualPath);
+        }
+
+        throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
+    }
+
+    public IVirtualEntry DuplicateEntry(VirtualPath virtualPath)
+    {
+        string physicalPath = GetPhysicalPath(virtualPath);
+
+        if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
+            throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
+
+        VirtualPath parentPath = virtualPath.GetParent();
+        string parentPhysicalPath = GetPhysicalPath(parentPath);
+
+        string originalName = virtualPath.IsDirectory
+            ? virtualPath.Name.TrimEnd('/')
+            : virtualPath.Name;
+
+        string duplicatedName = GenerateUniqueName(parentPhysicalPath, originalName);
+        string duplicatePhysicalPath = Path.Combine(parentPhysicalPath, duplicatedName);
+
+        if (File.Exists(physicalPath))
+        {
+            File.Copy(physicalPath, duplicatePhysicalPath);
+            VirtualPath duplicateVirtualPath = parentPath.Combine(duplicatedName);
+            return new VirtualFile(this, duplicateVirtualPath);
+        }
+        else if (Directory.Exists(physicalPath))
+        {
+            CopyDirectoryRecursive(physicalPath, duplicatePhysicalPath);
+            VirtualPath duplicateVirtualPath = parentPath.Combine(duplicatedName + "/");
+            return new VirtualDirectory(this, duplicateVirtualPath);
+        }
+
+        throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
+    }
+
+    public StreamWriter OpenWrite(VirtualPath virtualPath)
+    {
+        if (virtualPath.IsDirectory)
+            throw new InvalidOperationException($"Cannot open directory for writing: '{virtualPath}'");
+
+        string physicalPath = GetPhysicalPath(virtualPath);
+
         if (!File.Exists(physicalPath))
-            throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exists.");
+            throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
 
         FileStream stream = File.OpenWrite(physicalPath);
         return new StreamWriter(stream);
     }
 
-    public StreamReader OpenRead(string virtualPath)
+    public StreamReader OpenRead(VirtualPath virtualPath)
     {
+        if (virtualPath.IsDirectory)
+            throw new InvalidOperationException($"Cannot open directory for reading: '{virtualPath}'");
+
         string physicalPath = GetPhysicalPath(virtualPath);
+
         if (!File.Exists(physicalPath))
-            throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exists.");
+            throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
 
         FileStream stream = File.OpenRead(physicalPath);
         return new StreamReader(stream);
     }
 
-    private static string GetDirectoryName(string physicalPath)
+    private static void CopyDirectoryRecursive(string sourceDir, string destDir)
     {
-        return Path.GetFileName(physicalPath.TrimEnd(Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(destDir);
+
+        // Copy files
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            string destFile = Path.Combine(destDir, Path.GetFileName(file));
+            File.Copy(file, destFile);
+        }
+
+        // Copy subdirectories recursively
+        foreach (var dir in Directory.GetDirectories(sourceDir))
+        {
+            string destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
+            CopyDirectoryRecursive(dir, destSubDir);
+        }
+    }
+
+    private static string GenerateUniqueName(string directory, string baseName)
+    {
+        string nameWithoutExt = Path.GetFileNameWithoutExtension(baseName);
+        string ext = Path.GetExtension(baseName);
+        int count = 1;
+
+        string candidate = baseName;
+        while (File.Exists(Path.Combine(directory, candidate)) ||
+               Directory.Exists(Path.Combine(directory, candidate)))
+        {
+            candidate = $"{nameWithoutExt} ({count++}){ext}";
+        }
+
+        return candidate;
+    }
+
+    public void Dispose()
+    {
+        _watcher?.Dispose();
     }
 }
