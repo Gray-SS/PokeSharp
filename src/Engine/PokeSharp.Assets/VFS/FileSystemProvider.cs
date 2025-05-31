@@ -60,6 +60,18 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         return File.Exists(physicalPath) || Directory.Exists(physicalPath);
     }
 
+    public bool FileExists(VirtualPath path)
+    {
+        string physicalPath = GetPhysicalPath(path);
+        return File.Exists(physicalPath);
+    }
+
+    public bool DirectoryExists(VirtualPath path)
+    {
+        string physicalPath = GetPhysicalPath(path);
+        return Directory.Exists(physicalPath);
+    }
+
     public IVirtualFile GetFile(VirtualPath virtualPath)
     {
         if (virtualPath.IsDirectory)
@@ -139,6 +151,36 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         Directory.CreateDirectory(physicalPath);
 
         return new VirtualDirectory(this, virtualPath);
+    }
+
+    public IVirtualEntry MoveEntry(VirtualPath srcPath, VirtualPath destDirectoryPath)
+    {
+        if (!destDirectoryPath.IsDirectory)
+            throw new InvalidOperationException($"Destination '{destDirectoryPath}' is not a directory.");
+
+        string physicalSrcPath = GetPhysicalPath(srcPath);
+        string physicalDestDirPath = GetPhysicalPath(destDirectoryPath);
+
+        if (srcPath.IsDirectory)
+        {
+            if (!Directory.Exists(physicalSrcPath))
+                throw new DirectoryNotFoundException($"No directory found at '{srcPath}'");
+
+            string targetDir = Path.Combine(physicalDestDirPath, Path.GetFileName(physicalSrcPath.TrimEnd('/')));
+            Directory.Move(physicalSrcPath, targetDir);
+            return new VirtualDirectory(this, destDirectoryPath.Combine(Path.GetFileName(physicalSrcPath.TrimEnd('/')) + '/'));
+        }
+        else
+        {
+            if (!File.Exists(physicalSrcPath))
+                throw new FileNotFoundException($"No file found at '{srcPath}'");
+
+            string targetFile = Path.Combine(physicalDestDirPath, Path.GetFileName(physicalSrcPath));
+            System.Console.WriteLine($"Moving physical '{physicalSrcPath}' to '{physicalDestDirPath}'");
+
+            File.Move(physicalSrcPath, targetFile);
+            return new VirtualFile(this, destDirectoryPath.Combine(Path.GetFileName(physicalSrcPath)));
+        }
     }
 
     public bool DeleteEntry(VirtualPath virtualPath)
@@ -226,7 +268,7 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
     }
 
-    public StreamWriter OpenWrite(VirtualPath virtualPath)
+    public Stream OpenWrite(VirtualPath virtualPath)
     {
         if (virtualPath.IsDirectory)
             throw new InvalidOperationException($"Cannot open directory for writing: '{virtualPath}'");
@@ -236,11 +278,10 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         if (!File.Exists(physicalPath))
             throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
 
-        FileStream stream = File.OpenWrite(physicalPath);
-        return new StreamWriter(stream);
+        return File.OpenWrite(physicalPath);
     }
 
-    public StreamReader OpenRead(VirtualPath virtualPath)
+    public Stream OpenRead(VirtualPath virtualPath)
     {
         if (virtualPath.IsDirectory)
             throw new InvalidOperationException($"Cannot open directory for reading: '{virtualPath}'");
@@ -250,8 +291,19 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         if (!File.Exists(physicalPath))
             throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
 
-        FileStream stream = File.OpenRead(physicalPath);
-        return new StreamReader(stream);
+        return File.OpenRead(physicalPath);
+    }
+
+    public byte[] ReadBytes(VirtualPath virtualPath)
+    {
+        if (virtualPath.IsDirectory)
+            throw new InvalidOperationException($"Cannot read bytes from a directory: '{virtualPath}'");
+
+        string physicalPath = GetPhysicalPath(virtualPath);
+        if (!File.Exists(physicalPath))
+            throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
+
+        return File.ReadAllBytes(physicalPath);
     }
 
     private static void CopyDirectoryRecursive(string sourceDir, string destDir)

@@ -16,7 +16,7 @@ public sealed class RomInfo
 
     public required int Version { get; init; }
 
-    public required ReadOnlyMemory<byte> RawData { get; init; }
+    public required byte[] RawData { get; init; }
 
     public string VersionText => $"v1.{Version}";
 

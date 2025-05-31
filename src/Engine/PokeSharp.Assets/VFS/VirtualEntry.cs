@@ -1,11 +1,13 @@
 namespace PokeSharp.Assets.VFS;
 
-public abstract class VirtualEntry : IVirtualEntry
+public abstract class VirtualEntry : IVirtualEntry, IEquatable<IVirtualEntry>
 {
     public string Name => Path.IsRoot ? "Root" : Path.Name;
-    public bool IsDirectory => Path.IsDirectory;
-    public bool Exists => Provider.Exists(Path);
+    public string NameWithoutExtension => System.IO.Path.GetFileNameWithoutExtension(Name);
+    public long Size { get; }
     public VirtualPath Path { get; }
+    public bool IsDirectory => Path.IsDirectory;
+    public virtual bool Exists => Provider.Exists(Path);
 
     public IVirtualFileSystemProvider Provider { get; }
 
@@ -15,24 +17,56 @@ public abstract class VirtualEntry : IVirtualEntry
         Provider = provider;
     }
 
-    public IVirtualDirectory GetParent()
+    public virtual IVirtualDirectory GetParent()
     {
         VirtualPath parentPath = Path.GetParent();
         return new VirtualDirectory(Provider, parentPath);
     }
 
-    public IVirtualEntry Rename(string name)
+    public virtual IVirtualEntry Rename(string name)
     {
         return Provider.RenameEntry(Path, name);
     }
 
-    public bool Delete()
+    public virtual IVirtualEntry Move(VirtualPath newPath)
+    {
+        return Provider.MoveEntry(Path, newPath);
+    }
+
+    public virtual bool Delete()
     {
         return Provider.DeleteEntry(Path);
     }
 
-    public IVirtualEntry Duplicate()
+    public virtual IVirtualEntry Duplicate()
     {
         return Provider.DuplicateEntry(Path);
+    }
+
+    public bool Equals(IVirtualEntry? other)
+    {
+        return other is IVirtualEntry entry && entry.Path == Path;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is IVirtualEntry entry && Equals(entry);
+    }
+
+    public static bool operator ==(VirtualEntry? left, object? right)
+    {
+        if (left is null) return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(VirtualEntry? left, object? right)
+    {
+        return !(left == right);
+    }
+
+    public override int GetHashCode()
+    {
+        return Path.GetHashCode();
     }
 }

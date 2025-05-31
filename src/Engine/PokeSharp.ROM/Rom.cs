@@ -1,5 +1,4 @@
 using PokeSharp.ROM.Platforms.Gba;
-using PokeSharp.ROM.Services;
 
 namespace PokeSharp.ROM;
 
@@ -7,12 +6,11 @@ public sealed class Rom
 {
     public RomInfo Info { get; }
     public GbaConfig Config { get; }
-    public IRomProvider Provider { get; }
+    public byte[] RawData => Info.RawData;
 
-    public Rom(RomInfo info, GbaConfig config, IRomProvider provider)
+    public Rom(RomInfo info, GbaConfig config)
     {
         Info = info;
         Config = config;
-        Provider = provider;
     }
 }

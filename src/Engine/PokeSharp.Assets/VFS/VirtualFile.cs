@@ -7,12 +7,17 @@ public sealed class VirtualFile : VirtualEntry, IVirtualFile
     {
     }
 
-    public StreamReader OpenRead()
+    public Stream OpenRead()
     {
         return Provider.OpenRead(Path);
     }
 
-    public StreamWriter OpenWrite()
+    public byte[] ReadBytes()
+    {
+        return Provider.ReadBytes(Path);
+    }
+
+    public Stream OpenWrite()
     {
         return Provider.OpenWrite(Path);
     }

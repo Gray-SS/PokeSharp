@@ -33,7 +33,7 @@ public sealed class EditorGuiRenderer : IRenderer
         config.PixelSnapH = true;
 
         string fontPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "inter_medium.ttf");
-        ImFontPtr fontMedium = io.Fonts.AddFontFromFileTTF(fontPath, 20.0f, config);
+        ImFontPtr fontMedium = io.Fonts.AddFontFromFileTTF(fontPath, 18.0f, config);
         _resManager.RegisterFont("medium", fontMedium);
 
         ImFontConfigPtr iconConfig = ImGuiNative.ImFontConfig_ImFontConfig();

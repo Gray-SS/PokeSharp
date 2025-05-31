@@ -1,6 +1,7 @@
 using System.Text;
 using PokeSharp.Assets;
 using PokeSharp.Assets.Exceptions;
+using PokeSharp.Assets.VFS;
 
 namespace PokeSharp.ROM.Platforms.Gba;
 
@@ -8,17 +9,17 @@ public sealed class GbaRomImporter : AssetImporter<RomInfo>
 {
     public override Type ProcessorType => typeof(GbaRomProcessor);
 
-    public override bool CanImport(string ext)
+    public override bool CanImport(VirtualPath path)
     {
-        return ext.Equals(".gba", StringComparison.OrdinalIgnoreCase);
+        return path.Extension.Equals(".gba", StringComparison.OrdinalIgnoreCase);
     }
 
-    public override RomInfo Import(string path)
+    public override RomInfo Import(IVirtualFile file)
     {
-        byte[] rawData = File.ReadAllBytes(path);
+        byte[] rawData = file.ReadBytes();
 
         if (!IsValidGbaRom(rawData))
-            throw new AssetImporterException($"The provided gba '{path}' is not valid. Please make sure it's a valid GBA.");
+            throw new AssetImporterException($"The provided gba at path '{file.Path}' is not valid. Please make sure it's a valid GBA.");
 
         string gameCode = ExtractGameCode(rawData);
         string language = gameCode[3] switch

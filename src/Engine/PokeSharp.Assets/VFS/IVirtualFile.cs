@@ -1,7 +1,8 @@
 namespace PokeSharp.Assets.VFS;
 
-public interface IVirtualFile : IVirtualEntry
+public interface IVirtualFile : IVirtualEntry, IEquatable<IVirtualEntry>
 {
-    StreamReader OpenRead();
-    StreamWriter OpenWrite();
+    Stream OpenRead();
+    Stream OpenWrite();
+    byte[] ReadBytes();
 }

@@ -7,10 +7,11 @@ public sealed class EditorProject
     public const string ProjectExtension = ".pkproj";
 
     public string Name { get; private set; }
-    public string ProjectDirPath { get; private set; }
-    public string ProjectFilePath => Path.Combine(ProjectDirPath, $"{Name.ToLower()}{ProjectExtension}");
-    public string ContentDirPath => Path.Combine(ProjectDirPath, "Content");
-    public string BuildPath => Path.Combine(ProjectDirPath, "Build");
+    public string ProjectRoot { get; private set; }
+    public string ProjectFile => Path.Combine(ProjectRoot, $"{Name.ToLower()}{ProjectExtension}");
+    public string ContentRoot => Path.Combine(ProjectRoot, "Content");
+    public string BuildRoot => Path.Combine(ProjectRoot, "Build");
+    public string LibsRoot => Path.Combine(ProjectRoot, ".libs");
 
     public DateTime CreatedAt { get; private set; }
     public DateTime LastOpened { get; set; }
@@ -18,7 +19,7 @@ public sealed class EditorProject
     public EditorProject(string name, string projectPath)
     {
         Name = name;
-        ProjectDirPath = projectPath;
+        ProjectRoot = projectPath;
         CreatedAt = DateTime.Now;
         LastOpened = DateTime.Now;
     }

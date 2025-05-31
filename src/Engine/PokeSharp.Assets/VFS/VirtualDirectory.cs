@@ -4,6 +4,8 @@ public sealed class VirtualDirectory : VirtualEntry, IVirtualDirectory
 {
     public VirtualDirectory(IVirtualFileSystemProvider provider, VirtualPath path) : base(provider, path)
     {
+        if (!path.IsDirectory)
+            throw new InvalidOperationException("Couldn't create a virtual directory with a non-directory path.");
     }
 
     public IVirtualFile CreateFile(string fileName, bool overwrite = false)

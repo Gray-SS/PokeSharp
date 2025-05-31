@@ -26,6 +26,54 @@ public sealed class VirtualFileSystem : IVirtualFileSystem
         return provider.Exists(virtualPath);
     }
 
+    public bool FileExists(VirtualPath virtualPath)
+    {
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.FileExists(virtualPath);
+    }
+
+    public bool DirectoryExists(VirtualPath virtualPath)
+    {
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.DirectoryExists(virtualPath);
+    }
+
+    public bool DeleteEntry(VirtualPath vpath)
+    {
+        VolumeInfo volume = GetVolume(vpath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
+
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(vpath);
+        return provider.DeleteEntry(vpath);
+    }
+
+    public IVirtualEntry RenameEntry(VirtualPath vpath, string newName)
+    {
+        VolumeInfo volume = GetVolume(vpath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
+
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(vpath);
+        return provider.RenameEntry(vpath, newName);
+    }
+
+    public IVirtualEntry DuplicateEntry(VirtualPath vpath)
+    {
+        VolumeInfo volume = GetVolume(vpath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
+
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(vpath);
+        return provider.DuplicateEntry(vpath);
+    }
+
+    public IVirtualEntry MoveEntry(VirtualPath vpath, VirtualPath newPath)
+    {
+        VolumeInfo volume = GetVolume(vpath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Write);
+
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(vpath);
+        return provider.MoveEntry(vpath, newPath);
+    }
+
     public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite = false)
     {
         VolumeInfo volume = GetVolume(virtualPath.Scheme);
@@ -44,7 +92,7 @@ public sealed class VirtualFileSystem : IVirtualFileSystem
         return provider.CreateDirectory(virtualPath);
     }
 
-    public StreamWriter OpenWrite(VirtualPath virtualPath)
+    public Stream OpenWrite(VirtualPath virtualPath)
     {
         VolumeInfo volume = GetVolume(virtualPath.Scheme);
         EnsureAccess(volume, FileSystemAccess.Write);
@@ -53,13 +101,30 @@ public sealed class VirtualFileSystem : IVirtualFileSystem
         return provider.OpenWrite(virtualPath);
     }
 
-    public StreamReader OpenRead(VirtualPath virtualPath)
+    public Stream OpenRead(VirtualPath virtualPath)
     {
         VolumeInfo volume = GetVolume(virtualPath.Scheme);
         EnsureAccess(volume, FileSystemAccess.Read);
 
         IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
         return provider.OpenRead(virtualPath);
+    }
+
+    public byte[] ReadBytes(VirtualPath virtualPath)
+    {
+        VolumeInfo volume = GetVolume(virtualPath.Scheme);
+        EnsureAccess(volume, FileSystemAccess.Read);
+
+        IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
+        return provider.ReadBytes(virtualPath);
+    }
+
+    public IVirtualEntry GetEntry(VirtualPath virtualPath)
+    {
+        if (virtualPath.IsDirectory)
+            return GetDirectory(virtualPath);
+
+        return GetFile(virtualPath);
     }
 
     public IVirtualFile GetFile(VirtualPath virtualPath)
@@ -84,6 +149,11 @@ public sealed class VirtualFileSystem : IVirtualFileSystem
     {
         IVirtualFileSystemProvider provider = GetProviderFromVirtualPath(virtualPath);
         return provider.GetDirectories(virtualPath);
+    }
+
+    public bool IsVolumeMounted(string scheme)
+    {
+        return _mountedVolumes.ContainsKey(scheme);
     }
 
     public VolumeInfo GetVolume(string scheme)

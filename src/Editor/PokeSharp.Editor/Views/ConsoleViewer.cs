@@ -31,7 +31,9 @@ public sealed class ConsoleViewer : IGuiHook
 
     public void DrawGui()
     {
-        if (ImGui.Begin("Console"))
+        _consolebuffer.Update();
+
+        if (ImGui.Begin("Output"))
         {
             if (ImGui.Button("Clear"))
                 _consolebuffer.Clear();
@@ -78,7 +80,7 @@ public sealed class ConsoleViewer : IGuiHook
             foreach (var entry in filteredEntries)
             {
                 ImGui.PushStyleColor(ImGuiCol.Text, GetColorForLevel(entry.Level));
-                ImGui.TextUnformatted($"[{entry.TimeStamp:HH:mm:ss}] [{entry.Context}::{entry.Level}] {entry.Message}");
+                ImGui.TextWrapped($"[{entry.TimeStamp:HH:mm:ss}] [{entry.Context}::{entry.Level}] {entry.Message}");
                 ImGui.PopStyleColor();
             }
 

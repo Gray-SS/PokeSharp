@@ -5,6 +5,8 @@ namespace PokeSharp.Editor.Services;
 public interface IEditorProjectManager
 {
     bool HasActiveProject { get; }
+
+    [MemberNotNullWhen(true, nameof(HasActiveProject))]
     EditorProject? ActiveProject { get; }
 
     event EventHandler<EditorProject>? ProjectOpened;

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 
 namespace PokeSharp.Assets.VFS;
 
@@ -13,6 +12,11 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// Gets the name of the current virtual path. If it's a file, returns the filename. If it's a directory, returns the directory name.
     /// </summary>
     public string Name => GetName();
+
+    /// <summary>
+    /// Gets the file extension of the current virtual path. If it'a file, returns the extension. If it's a directory, returns empty.
+    /// </summary>
+    public string Extension => GetFileExtension();
 
     /// <summary>
     /// Gets a value indicating whether this virtual path points to a directory.
@@ -50,11 +54,11 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// </summary>
     /// <param name="scheme">The URI scheme (e.g. <c>file</c>).</param>
     /// <param name="path">The virtual path string (can contain slashes, <c>..</c>, etc.).</param>
-    private VirtualPath(string scheme, string path)
+    public VirtualPath(string scheme, string path)
     {
         Scheme = scheme;
         LocalPath = NormalizePath(path);
-        Uri = $"{scheme}://{path}";
+        Uri = $"{Scheme}://{LocalPath}";
         IsDirectory = IsRoot || path.EndsWith('/');
 
         Debug.Assert(LocalPath != null, "Local path was null");
@@ -90,6 +94,17 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
 
         string combined = IsRoot ? subPath : $"{LocalPath.TrimEnd('/')}/{subPath.TrimStart('/')}";
         return new VirtualPath(Scheme, combined);
+    }
+
+    public VirtualPath AddExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension))
+            return this;
+
+        if (!extension.StartsWith('.'))
+            extension += '.';
+
+        return new VirtualPath(Scheme, LocalPath + extension);
     }
 
     /// <summary>
@@ -131,6 +146,14 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         return parts[^1];
     }
 
+    private string GetFileExtension()
+    {
+        if (IsRoot) return string.Empty;
+
+        var ext = LocalPath.Split('.');
+        return ext.Length > 0 ? "." + ext[^1] : string.Empty;
+    }
+
     /// <summary>
     /// Normalizes a virtual path by removing redundant separators, ".", and ".." segments.
     /// </summary>
@@ -141,6 +164,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         if (string.IsNullOrEmpty(path))
             return string.Empty;
 
+        bool isDirectory = path.EndsWith('/');
         path = path.Replace('\\', '/');
 
         var segments = path.Split('/')
@@ -156,7 +180,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
                 stack.Push(segment);
         }
 
-        return string.Join("/", stack.Reverse());
+        return string.Join("/", stack.Reverse()) + (isDirectory ? "/" : string.Empty);
     }
 
     /// <summary>
@@ -170,16 +194,35 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
 
     public bool Equals(VirtualPath? other)
     {
-        return other != null && other.Uri == Uri;
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return string.Equals(Scheme, other.Scheme, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(LocalPath, other.LocalPath, StringComparison.Ordinal);
     }
 
     public override bool Equals(object? obj)
     {
-        return Equals(obj as VirtualPath);
+        return obj is VirtualPath other && Equals(other);
+    }
+
+    public static bool operator ==(VirtualPath? left, VirtualPath? right)
+    {
+        if (left is null) return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(VirtualPath? left, VirtualPath? right)
+    {
+        return !Equals(left, right);
     }
 
     public override int GetHashCode()
     {
-        return Uri.GetHashCode(StringComparison.OrdinalIgnoreCase);
+        return HashCode.Combine(
+            StringComparer.OrdinalIgnoreCase.GetHashCode(Scheme),
+            StringComparer.Ordinal.GetHashCode(LocalPath)
+        );
     }
 }

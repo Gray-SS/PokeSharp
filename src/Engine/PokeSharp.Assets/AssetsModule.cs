@@ -1,4 +1,5 @@
 using Ninject;
+using PokeSharp.Assets.Services;
 using PokeSharp.Assets.VFS;
 using PokeSharp.Core.Modules;
 
@@ -12,9 +13,7 @@ public sealed class AssetsModule : Module
     {
         kernel.Bind<AssetPipeline>().ToSelf().InSingletonScope();
         kernel.Bind<IVirtualFileSystem>().To<VirtualFileSystem>().InSingletonScope();
-    }
-
-    public override void Load()
-    {
+        kernel.Bind<IAssetMetadataSerializer>().To<AssetMetadataSerializer>().InTransientScope();
+        kernel.Bind<IAssetMetadataStore>().To<LibraryMetadataStore>().InSingletonScope();
     }
 }

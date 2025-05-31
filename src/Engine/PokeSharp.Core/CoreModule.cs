@@ -19,6 +19,7 @@ public class CoreModule : Module
         kernel.Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
         kernel.Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();
         kernel.Bind<IResolutionManager>().To<ResolutionManager>().InSingletonScope();
+        kernel.Bind<IDynamicTypeResolver>().To<DynamicTypeResolver>().InSingletonScope();
 
         kernel.Bind<IWindowManager>().To<WindowManager>();
     }

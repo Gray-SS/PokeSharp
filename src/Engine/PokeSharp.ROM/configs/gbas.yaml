@@ -5,9 +5,10 @@
   Language: en
   Version: 0 # 0 for 1.0, 1 for 1.1
   GameCode: BPRE
+  VolumeScheme: pokefirered
   Pokemons:
     Count: 151
-    Names: 0x08245EE0
+    Names: 0x08245EEB
     NameLength: 11
     FrontSprites: 0x082350AC
     BackSprites: 0x0823654C

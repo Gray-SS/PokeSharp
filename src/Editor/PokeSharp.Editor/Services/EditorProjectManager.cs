@@ -39,14 +39,15 @@ public sealed class EditorProjectManager : IEditorProjectManager
             var serializedProject = serializer.Serialize(data);
 
             _logger.Trace($"Creating directories");
-            Directory.CreateDirectory(createdProject.ProjectDirPath);
-            Directory.CreateDirectory(createdProject.ContentDirPath);
+            Directory.CreateDirectory(createdProject.ProjectRoot);
+            Directory.CreateDirectory(createdProject.ContentRoot);
+            Directory.CreateDirectory(createdProject.LibsRoot);
 
             _logger.Trace($"Writing serialized data to '{projectPath}'");
-            using var writer = new StreamWriter(File.Create(createdProject.ProjectFilePath));
+            using var writer = new StreamWriter(File.Create(createdProject.ProjectFile));
             writer.Write(serializedProject);
 
-            _logger.Info($"Project successfully created at '{createdProject.ProjectDirPath}'.");
+            _logger.Info($"Project successfully created at '{createdProject.ProjectRoot}'.");
             return !openOnCreation || OpenProject(createdProject);
         }
         catch (Exception ex)
@@ -130,6 +131,18 @@ public sealed class EditorProjectManager : IEditorProjectManager
             var projectData = deserializer.Deserialize<EditorProjectData>(yaml);
 
             openedProject = EditorProject.FromData(projectPath, projectData);
+            if (!Directory.Exists(openedProject.ContentRoot))
+            {
+                _logger.Warn($"Content root wasn't found, re-creating");
+                Directory.CreateDirectory(openedProject.ContentRoot);
+            }
+
+            if (!Directory.Exists(openedProject.LibsRoot))
+            {
+                _logger.Warn($"Library root wasn't found, re-creating");
+                Directory.CreateDirectory(openedProject.LibsRoot);
+            }
+
             return OpenProject(openedProject);
         }
         catch (Exception ex)
@@ -143,7 +156,7 @@ public sealed class EditorProjectManager : IEditorProjectManager
 
     private bool OpenProject(EditorProject project)
     {
-        if (ActiveProject != null && ActiveProject?.ProjectDirPath == project.ProjectDirPath)
+        if (ActiveProject != null && ActiveProject?.ProjectRoot == project.ProjectRoot)
         {
             _logger.Warn($"Tried to open a project that's already active.");
             return false;
@@ -151,7 +164,7 @@ public sealed class EditorProjectManager : IEditorProjectManager
 
         ActiveProject = project;
         ProjectOpened?.Invoke(this, project);
-        _logger.Info($"Project successfully opened from '{project.ProjectDirPath}'");
+        _logger.Info($"Project successfully opened from '{project.ProjectRoot}'");
         return true;
     }
 }

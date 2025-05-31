@@ -48,9 +48,18 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
             _logger.Warn($"{romInfo} ROM is partially supported. Missing features: {string.Join(", ", missingFeatures)}");
         }
 
-        var rom = new Rom(romInfo, config, null!);
-        var volume = new VolumeInfo("rom", config.Name, "ROM", FileSystemAccess.Read);
-        _vfs.MountVolume(volume, new GbaFileSystemProvider(rom));
+        string scheme = config.VolumeScheme;
+        if (_vfs.IsVolumeMounted(scheme))
+        {
+            _logger.Warn($"Volume at scheme '{scheme}' is already mounted. Unmounting and remounting");
+            _vfs.UnmountVolume(scheme);
+        }
+
+        var volume = new VolumeInfo(scheme, config.Name, "ROM", FileSystemAccess.Read);
+        var rom = new Rom(romInfo, config);
+
+        var vfsBuilder = new GbaVfsBuilder(rom);
+        _vfs.MountVolume(volume, new RomFileSystemProvider(volume.RootPath, vfsBuilder));
 
         return rom;
     }

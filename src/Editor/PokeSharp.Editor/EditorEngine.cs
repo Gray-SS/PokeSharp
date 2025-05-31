@@ -41,8 +41,14 @@ public sealed class EditorEngine : Engine
 
     private void OnProjectOpened(object? sender, EditorProject e)
     {
-        var volume = new VolumeInfo("fs", "Local", "Local", FileSystemAccess.All);
-        _vfs.MountVolume(volume, new FileSystemProvider(e.ContentDirPath));
+        // Unmount every volumes mounted
+        _vfs.UnmountVolumes();
+
+        var localVolume = new VolumeInfo("local", "Local", "local", FileSystemAccess.All);
+        _vfs.MountVolume(localVolume, new FileSystemProvider(e.ContentRoot));
+
+        var libsVolume = new VolumeInfo("libs", "Library", "library", FileSystemAccess.All);
+        _vfs.MountVolume(libsVolume, new FileSystemProvider(e.LibsRoot));
     }
 
     protected override void OnLoad()

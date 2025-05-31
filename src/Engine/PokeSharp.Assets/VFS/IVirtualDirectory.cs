@@ -1,6 +1,6 @@
 namespace PokeSharp.Assets.VFS;
 
-public interface IVirtualDirectory : IVirtualEntry
+public interface IVirtualDirectory : IVirtualEntry, IEquatable<IVirtualEntry>
 {
     IVirtualFile CreateFile(string fileName, bool overwrite = false);
     IVirtualDirectory CreateDirectory(string dirName);

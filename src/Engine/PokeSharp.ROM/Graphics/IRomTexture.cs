@@ -1,0 +1,13 @@
+using System.Drawing;
+
+namespace PokeSharp.ROM.Graphics;
+
+public interface IRomTexture : IIndexedResource
+{
+    int Width { get; }
+    int Height { get; }
+    byte[] PixelsData { get; }
+    IRomPalette Palette { get; }
+
+    Color[] ToRGBA();
+}

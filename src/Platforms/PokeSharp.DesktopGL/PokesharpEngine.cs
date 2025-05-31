@@ -22,8 +22,8 @@ public class PokesharpEngine : Engine
 
         Resolution.SetResolution(ResolutionSize.R1280x720);
 
-        _assetPipeline = ServiceLocator.GetService<AssetPipeline>();
-        var rom = _assetPipeline.Load<Rom>("/home/sklin/Documents/dev/PokeSharp/roms/firered.gba");
+        // _assetPipeline = ServiceLocator.GetService<AssetPipeline>();
+        // var rom = _assetPipeline.Load<Rom>("/home/sklin/Documents/dev/PokeSharp/roms/firered.gba");
 
         
     }

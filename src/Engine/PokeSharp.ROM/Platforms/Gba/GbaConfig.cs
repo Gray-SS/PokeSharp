@@ -3,10 +3,11 @@ namespace PokeSharp.ROM.Platforms.Gba;
 public sealed class GbaConfig
 {
     public int Version { get; set; } = -1;
-    public string VersionText => $"v1.{Version}";
+    public string VersionText => Version == -1 ? string.Empty : $"v1.{Version}";
     public string Name { get; set; } = string.Empty;
     public string Language { get; set; } = string.Empty;
     public string GameCode { get; set; } = string.Empty;
+    public string VolumeScheme { get; set; } = string.Empty;
     public GbaPokemonsConfig Pokemons { get; set; } = null!;
     public GbaEntitiesConfig Entities { get; set; } = null!;
 
@@ -14,6 +15,7 @@ public sealed class GbaConfig
         !string.IsNullOrEmpty(Name)
         && !string.IsNullOrEmpty(Language)
         && !string.IsNullOrEmpty(GameCode)
+        && !string.IsNullOrEmpty(VolumeScheme)
         && Version >= 0;
 
     public bool SupportsSpeciesLoading =>
