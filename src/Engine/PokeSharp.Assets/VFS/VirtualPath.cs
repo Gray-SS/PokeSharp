@@ -3,50 +3,107 @@ using System.Diagnostics;
 namespace PokeSharp.Assets.VFS;
 
 /// <summary>
-/// Represents a virtual file path with a scheme and normalized path, useful for referencing logical assets
-/// in a virtual file system (e.g. <c>file://textures/player.png</c>).
+/// Represents a virtual file path consisting of a scheme and a normalized path,
+/// used to reference logical assets in a virtual file system.
 /// </summary>
+/// <remarks>
+/// A <see cref="VirtualPath"/> can represent either a directory or a file.
+/// Directory paths must end with a trailing '/'. <br/> <br/>
+///
+/// Paths in this form cannot be used directly to perform file system operations.
+/// To interact with the virtual file system (e.g., check existence, delete, rename, etc.),
+/// use <see cref="IVirtualFileSystem"/> or one of the interfaces
+/// <see cref="IVirtualFile"/> / <see cref="IVirtualDirectory"/>.
+/// </remarks>
 public sealed class VirtualPath : IEquatable<VirtualPath>
 {
     /// <summary>
-    /// Gets the name of the current virtual path. If it's a file, returns the filename. If it's a directory, returns the directory name.
+    /// Gets the name of this path.
     /// </summary>
+    /// <remarks>
+    /// If the path represents a file, returns the file name including its extension.
+    /// If the path represents a directory, returns the directory name in the path.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var directoryPath = VirtualPath.Parse("local://Assets/Textures/");
+    /// var filePath = VirtualPath.Parse("local://Assets/Textures/image.png");
+    /// var dirName = directoryPath.Name;   // "Textures"
+    /// var fileName = filePath.Name;       // "image.png"
+    /// </code>
+    /// </example>
     public string Name => GetName();
 
     /// <summary>
-    /// Gets the file extension of the current virtual path. If it'a file, returns the extension. If it's a directory, returns empty.
+    /// Gets the file extension of this path.
     /// </summary>
+    /// <remarks>
+    /// <b>Note:</b> It is assumed that the current path represents a file.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
     public string Extension => GetFileExtension();
 
     /// <summary>
-    /// Gets a value indicating whether this virtual path points to a directory.
+    /// Indicates whether this path represents a directory (ends with a slash).
     /// </summary>
+    /// <remarks>
+    /// This assumes that directories end with a trailing '/' and files do not.
+    /// </remarks>
     public bool IsDirectory { get; }
 
     /// <summary>
-    /// Gets the scheme of the virtual path.
+    /// Indicates whether this path represents a file (does not end with a slash).
     /// </summary>
     /// <remarks>
-    /// Common schemes are: <c>file</c>, <c>http</c>, <c>ftp</c>, etc.
+    /// This assumes that directories end with a trailing '/' and files do not.
     /// </remarks>
+    public bool IsFile { get; }
+
+    // TODO: Move the non-related scheme docs
+    /// <summary>
+    /// Gets the scheme component of this virtual path (e.g. <c>local</c>, <c>pokefirered</c>).
+    /// </summary>
+    /// <remarks>
+    /// The scheme indicates the logical volume or source for the path. <br/><br/>
+    /// <b>Note:</b> In a <i>runtime context</i>, some schemes (like <c>local</c> and <c>libs</c>) are statically available. While in the <i>editor context</i>, since we're working with different environment/project those schemes may only be available when a project is loaded, as they map to project-specific content or metadata directories. <br/> <br/>
+    /// <b>Note for the future:</b> To enable the editor to adopt a more runtime-like approach we could create an editor launcher that opens a project and allows those volumes to be mounted directly at the start of the editor.
+    /// </remarks>
+    /// <example>
+    /// var path = VirtualPath.Parse("local://Assets/Textures/image.png");
+    /// var scheme = path.Scheme; // "local"
+    /// </example>
     public string Scheme { get; }
 
     /// <summary>
-    /// Gets a value indicating whether this virtual path is the root of the scheme.
+    /// Indicates whether this path is a root path (e.g. <c>local://</c>)
     /// </summary>
     /// <remarks>
-    /// For example, <c>file://</c> is a root path; <c>file://image.png</c> is not.
+    /// A root path is defined as one that does not contain a local path component.
     /// </remarks>
+    /// <example>
+    /// <code>
+    /// var texturesPath = VirtualPath.Parse("local://Assets/Textures/");
+    /// var localPath = VirtualPath.Parse("local://");
+    /// var isTexturesPathRoot = texturesPath.IsRoot;   // false
+    /// var isLocalPathRoot = localPath.IsRoot;         // true
+    /// </code>
+    /// </example>
     public bool IsRoot => string.IsNullOrEmpty(LocalPath);
 
     /// <summary>
     /// Gets the normalized virtual path part (excluding the scheme).
     /// </summary>
+    /// <remarks>
+    /// This path is normalized to use forward slashes and does not include the URI scheme (e.g. <c>Assets/Textures/image.png</c>).
+    /// </remarks>
     public string LocalPath { get; }
 
     /// <summary>
-    /// Gets the full URI representation of the virtual path (e.g. <c>file://assets/image.png</c>).
+    /// Gets the full URI representation of this virtual path, including the scheme and local path.
     /// </summary>
+    /// <remarks>
+    /// For example: <c>local://Assets/Textures/image.png</c>.
+    /// </remarks>
     public string Uri { get; }
 
     /// <summary>
@@ -65,14 +122,18 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     }
 
     /// <summary>
-    /// Returns the parent virtual path of this path.
+    /// Returns the parent path of this path.
     /// </summary>
     /// <returns>
-    /// A new <see cref="VirtualPath"/> that is the parent directory, or <c>null</c> if this is the root path.
+    /// A new <see cref="VirtualPath"/> instance that represents the parent directory of this path.
     /// </returns>
+    /// <remarks>
+    /// <b>Note:</b> It is assumed that the current path does not represent a root path.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
     public VirtualPath GetParent()
     {
-        if (IsRoot) return null!;
+        Debug.Assert(!IsRoot);
 
         var parts = LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length <= 1)
@@ -85,10 +146,20 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// <summary>
     /// Combines this path with a relative subpath, producing a new <see cref="VirtualPath"/>.
     /// </summary>
-    /// <param name="subPath">The subpath to append (can be a file or directory).</param>
+    /// <param name="subPath">The relative subpath to append. Can represent a file or a directory.</param>
     /// <returns>A new combined <see cref="VirtualPath"/> instance.</returns>
+    /// <remarks>
+    /// To append a directory, make sure the <paramref name="subPath"/> ends with a '/' character.
+    /// For example: <c>myPath.Combine("Assets/")</c> produces a directory path, while
+    /// <c>myPath.Combine("file.txt")</c> produces a file path.
+    /// <br/> <br/>
+    /// <b>Note:</b> It is assumed that the current path represents a directory.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
     public VirtualPath Combine(string subPath)
     {
+        Debug.Assert(IsDirectory, "Current path must represent a directory to combine a sub path");
+
         if (string.IsNullOrEmpty(subPath))
             return this;
 
@@ -96,8 +167,36 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         return new VirtualPath(Scheme, combined);
     }
 
+    /// <summary>
+    /// Checks if the specified path is a child of this directory.
+    /// </summary>
+    /// <param name="path">The path of the entry to check.</param>
+    /// <returns><c>true</c> if the path is a child of this directory; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// <b>Note:</b> It is assumed that the current path represents a directory and that the specified path is not a root path.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
+    public bool IsParentOf(VirtualPath path)
+    {
+        Debug.Assert(IsDirectory, "Current path must represent a directory to check children.");
+        Debug.Assert(!path.IsRoot, "Specified path must not be a root path.");
+
+        return path.GetParent() == this;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="VirtualPath"/> with the specified file extension.
+    /// </summary>
+    /// <param name="extension">The file extension to append (e.g. <c>.bin</c>, <c>.txt</c>, <c>.png</c>).</param>
+    /// <returns>A new <see cref="VirtualPath"/> instance with the specified file extension.</returns>
+    /// <remarks>
+    /// <b>Note:</b> It is assumed that the current path represents a file.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
     public VirtualPath AddExtension(string extension)
     {
+        Debug.Assert(IsFile, "Current path must represent a file to append an extension to it.");
+
         if (string.IsNullOrEmpty(extension))
             return this;
 
@@ -146,8 +245,17 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         return parts[^1];
     }
 
+    /// <summary>
+    /// Gets the file extension of this path.
+    /// </summary>
+    /// <remarks>
+    /// <b>Note:</b> It is assumed that the current path represents a file.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
     private string GetFileExtension()
     {
+        Debug.Assert(IsFile, "The current path must represent a file to get it's file extension.");
+
         if (IsRoot) return string.Empty;
 
         var ext = LocalPath.Split('.');
