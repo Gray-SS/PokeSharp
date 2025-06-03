@@ -1,26 +1,35 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
+using PokeSharp.Assets.VFS.Services;
+using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
 using PokeSharp.Editor.Serializations;
 
 namespace PokeSharp.Editor.Services;
 
-public sealed class EditorProjectManager : IEditorProjectManager
+public sealed class ProjectManager : IProjectManager
 {
-    public bool HasActiveProject => ActiveProject != null;
-    public EditorProject? ActiveProject { get; private set; }
+    private const string LibsPath = ".libs";
+    private const string ContentPath = "Content";
 
-    public event EventHandler<EditorProject>? ProjectOpened;
+    public bool HasActiveProject => ActiveProject != null;
+    public Project? ActiveProject { get; private set; }
+
+    public event EventHandler<Project>? ProjectOpened;
 
     private readonly ILogger _logger;
+    private readonly IVirtualVolumeManager _volumeManager;
 
-    public EditorProjectManager(ILogger logger)
+    public ProjectManager(ILogger logger, IVirtualVolumeManager volumeManager)
     {
         _logger = logger;
+        _volumeManager = volumeManager;
     }
 
-    public bool TryCreateProject(string projectName, string directoryPath, bool openOnCreation, [NotNullWhen(true)] out EditorProject? createdProject)
+    public bool TryCreateProject(string projectName, string directoryPath, bool openOnCreation, [NotNullWhen(true)] out Project? project)
     {
-        createdProject = null;
+        project = null;
         try
         {
             _logger.Trace($"Creating project '{projectName}' at path '{directoryPath}'");
@@ -29,26 +38,37 @@ public sealed class EditorProjectManager : IEditorProjectManager
                 _logger.Warn($"Unable to create the project at path '{directoryPath}' - The path must lead to an existing directory.");
                 return false;
             }
+            _logger.Trace($"Creating directories");
 
             string projectPath = Path.Combine(directoryPath, projectName);
-            createdProject = new EditorProject(projectName, projectPath);
-            EditorProjectData data = createdProject.GetData();
+            string libsPath = Path.Combine(projectPath, LibsPath);
+            string contentPath = Path.Combine(projectPath, ContentPath);
+
+            Directory.CreateDirectory(projectPath);
+            Directory.CreateDirectory(libsPath);
+            Directory.CreateDirectory(contentPath);
+
+            _volumeManager.UnmountAll();
+
+            var libsVolume = new PhysicalVolume("library", "libs", "Library", libsPath);
+            _volumeManager.MountVolume(libsVolume);
+
+            var contentVolume = new PhysicalVolume("assets", "local", "Assets", contentPath);
+            _volumeManager.MountVolume(contentVolume);
+
+            project = new Project(projectName, projectPath, libsVolume, contentVolume);
+            ProjectData data = project.GetData();
 
             _logger.Trace($"Serializing newly created project");
             var serializer = new YamlDotNet.Serialization.SerializerBuilder().Build();
             var serializedProject = serializer.Serialize(data);
 
-            _logger.Trace($"Creating directories");
-            Directory.CreateDirectory(createdProject.ProjectRoot);
-            Directory.CreateDirectory(createdProject.ContentRoot);
-            Directory.CreateDirectory(createdProject.LibsRoot);
-
             _logger.Trace($"Writing serialized data to '{projectPath}'");
-            using var writer = new StreamWriter(File.Create(createdProject.ProjectFile));
+            using var writer = new StreamWriter(File.Create(project.ProjectFile));
             writer.Write(serializedProject);
 
-            _logger.Info($"Project successfully created at '{createdProject.ProjectRoot}'.");
-            return !openOnCreation || OpenProject(createdProject);
+            _logger.Info($"Project successfully created at '{project.ProjectRoot}'.");
+            return !openOnCreation || OpenProject(project);
         }
         catch (Exception ex)
         {
@@ -66,13 +86,13 @@ public sealed class EditorProjectManager : IEditorProjectManager
             _logger.Trace($"Deleting project at path '{projectFile}'");
             if (!File.Exists(projectFile))
             {
-                _logger.Warn($"Unable to delete the project at path '{projectFile}' - The path must lead to an existing project file with extension '{EditorProject.ProjectExtension}'.");
+                _logger.Warn($"Unable to delete the project at path '{projectFile}' - The path must lead to an existing project file with extension '{Project.ProjectExtension}'.");
                 return false;
             }
 
-            if (Path.GetExtension(projectFile) != EditorProject.ProjectExtension)
+            if (Path.GetExtension(projectFile) != Project.ProjectExtension)
             {
-                _logger.Warn($"Unable to delete the project at path '{projectFile}' - The file didn't have the required extension '{EditorProject.ProjectExtension}'.");
+                _logger.Warn($"Unable to delete the project at path '{projectFile}' - The file didn't have the required extension '{Project.ProjectExtension}'.");
                 return false;
             }
 
@@ -98,21 +118,21 @@ public sealed class EditorProjectManager : IEditorProjectManager
         return false;
     }
 
-    public bool TryOpenProject(string fileProjectPath, [NotNullWhen(true)] out EditorProject? openedProject)
+    public bool TryOpenProject(string fileProjectPath, [NotNullWhen(true)] out Project? projet)
     {
-        openedProject = null;
+        projet = null;
         try
         {
             _logger.Trace($"Opening project at path '{fileProjectPath}'");
             if (!File.Exists(fileProjectPath))
             {
-                _logger.Warn($"Unable to open the project at path '{fileProjectPath}' - The path must lead to an existing project file with extension '{EditorProject.ProjectExtension}'.");
+                _logger.Warn($"Unable to open the project at path '{fileProjectPath}' - The path must lead to an existing project file with extension '{Project.ProjectExtension}'.");
                 return false;
             }
 
-            if (Path.GetExtension(fileProjectPath) != EditorProject.ProjectExtension)
+            if (Path.GetExtension(fileProjectPath) != Project.ProjectExtension)
             {
-                _logger.Warn($"Unable to open the project at path '{fileProjectPath}' - The file didn't have the required extension '{EditorProject.ProjectExtension}'.");
+                _logger.Warn($"Unable to open the project at path '{fileProjectPath}' - The file didn't have the required extension '{Project.ProjectExtension}'.");
                 return false;
             }
 
@@ -128,22 +148,33 @@ public sealed class EditorProjectManager : IEditorProjectManager
 
             _logger.Trace($"Deserializing project data");
             var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
-            var projectData = deserializer.Deserialize<EditorProjectData>(yaml);
+            var projectData = deserializer.Deserialize<ProjectData>(yaml);
 
-            openedProject = EditorProject.FromData(projectPath, projectData);
-            if (!Directory.Exists(openedProject.ContentRoot))
+            string libsPath = Path.Combine(projectPath, LibsPath);
+            string contentPath = Path.Combine(projectPath, ContentPath);
+
+            if (!Directory.Exists(contentPath))
             {
-                _logger.Warn($"Content root wasn't found, re-creating");
-                Directory.CreateDirectory(openedProject.ContentRoot);
+                _logger.Warn($"Content root path wasn't found, re-creating");
+                Directory.CreateDirectory(contentPath);
             }
 
-            if (!Directory.Exists(openedProject.LibsRoot))
+            if (!Directory.Exists(libsPath))
             {
-                _logger.Warn($"Library root wasn't found, re-creating");
-                Directory.CreateDirectory(openedProject.LibsRoot);
+                _logger.Warn($"Library root path wasn't found, re-creating");
+                Directory.CreateDirectory(libsPath);
             }
 
-            return OpenProject(openedProject);
+            _volumeManager.UnmountAll();
+
+            var libsVolume = new PhysicalVolume("library", "libs", "Library", libsPath);
+            _volumeManager.MountVolume(libsVolume);
+
+            var contentVolume = new PhysicalVolume("local", "local", "Assets", contentPath);
+            _volumeManager.MountVolume(contentVolume);
+
+            projet = new Project(projectData.Name, projectPath, libsVolume, contentVolume);
+            return OpenProject(projet);
         }
         catch (Exception ex)
         {
@@ -154,7 +185,7 @@ public sealed class EditorProjectManager : IEditorProjectManager
         return false;
     }
 
-    private bool OpenProject(EditorProject project)
+    private bool OpenProject(Project project)
     {
         if (ActiveProject != null && ActiveProject?.ProjectRoot == project.ProjectRoot)
         {

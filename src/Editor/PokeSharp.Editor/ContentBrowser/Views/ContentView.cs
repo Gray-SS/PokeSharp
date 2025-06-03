@@ -5,20 +5,22 @@ using Microsoft.Xna.Framework.Graphics;
 using NativeFileDialogSharp;
 using PokeSharp.Assets;
 using PokeSharp.Assets.VFS;
-using PokeSharp.Assets.VFS.Events;
+using PokeSharp.Assets.VFS.Services;
+using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
+using PokeSharp.Core.Threadings;
+using PokeSharp.Editor.ContentBrowser.Services;
 using PokeSharp.Editor.Helpers;
 using PokeSharp.Editor.Services;
 
 using NVec2 = System.Numerics.Vector2;
 
-namespace PokeSharp.Editor.Views;
+namespace PokeSharp.Editor.ContentBrowser.Views;
 
 // TODO: Implement undo and redo actions
-public sealed class ContentViewer : IGuiHook
+public sealed class ContentView : IGuiHook
 {
     private bool _isDragging;
-    private IVirtualDirectory _currentDirectory = null!;
 
     private bool _focusNewEntry;
     private string _newEntryName = string.Empty;
@@ -37,80 +39,45 @@ public sealed class ContentViewer : IGuiHook
 
     #endregion // Renaming entry fields
 
-    private bool _isDirty;
     private readonly ILogger _logger;
-    private readonly AssetPipeline _pipeline;
+    private readonly AssetPipeline _assetPipeline;
     private readonly IVirtualFileSystem _vfs;
-    private readonly IContentNavigator _navigator;
     private readonly ISelectionManager _selectionManager;
-    private readonly IEditorProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
+    private readonly IContentCacheService _cacheService;
+    private readonly IContentNavigator _navigator;
 
-    private VolumeInfo _libVolume = null!;
+    private static readonly ImGuiTreeNodeFlags _defaultTreeNodeFlags = ImGuiTreeNodeFlags.OpenOnArrow |
+                                                                       ImGuiTreeNodeFlags.SpanAvailWidth;
 
     private readonly Dictionary<string, nint> _icons;
-    private readonly List<IVirtualFile> _files;
-    private readonly List<IVirtualDirectory> _directories;
 
-    public ContentViewer(
+    public ContentView(
         AssetPipeline pipeline,
         GraphicsDevice graphicsDevice,
         IVirtualFileSystem vfs,
-        IContentNavigator navigator,
         IGuiResourceManager textureManager,
-        IEditorProjectManager projectManager,
+        IProjectManager projectManager,
         ISelectionManager selectionManager,
+        IContentNavigator navigator,
+        IContentCacheService cacheService,
         ILogger logger)
     {
+        _vfs = vfs;
         _logger = logger;
         _projectManager = projectManager;
         _selectionManager = selectionManager;
-        _pipeline = pipeline;
-        _files = new List<IVirtualFile>();
-        _directories = new List<IVirtualDirectory>();
-
+        _cacheService = cacheService;
+        _assetPipeline = pipeline;
         _navigator = navigator;
-        _navigator.CurrentPathChanged += OnCurrentPathChanged;
 
-        _vfs = vfs;
-        _vfs.OnFileChanged += OnFileChanged;
-        _vfs.OnVolumeMounted += OnVolumeMounted;
-
-        // TODO: When the pipeline will be linked to the virtual file system
-        //       we will be able to load the texture from the asset pipeline instead of using Texture2D.FromStream
+        // TODO: Mount a volume specific to the editor resources and load them with the asset pipeline
         _icons = new Dictionary<string, nint>()
         {
             ["folder"] = LoadAndRegisterTexture(textureManager, graphicsDevice, AppContext.BaseDirectory, "Resources", "folder.png"),
             ["file"] = LoadAndRegisterTexture(textureManager, graphicsDevice, AppContext.BaseDirectory, "Resources", "file.png"),
             ["hard-drive"] = LoadAndRegisterTexture(textureManager, graphicsDevice, AppContext.BaseDirectory, "Resources", "hard-drive.png"),
         };
-    }
-
-    private void OnVolumeMounted(object? sender, VolumeInfo e)
-    {
-        if (e.VolumeType != "library")
-        {
-            _navigator.NavigateTo(VirtualPath.Parse($"{e.Scheme}://"));
-            _currentDirectory = _navigator.GetCurrentDirectory();
-        }
-        else
-        {
-            _libVolume = e;
-        }
-
-        Invalidate();
-    }
-
-    private void OnCurrentPathChanged(object? sender, VirtualPath e)
-    {
-        _logger.Debug($"Current path changed '{e.LocalPath}'");
-        _currentDirectory = _navigator.GetCurrentDirectory();
-        Invalidate();
-    }
-
-    private void OnFileChanged(object? sender, FileSystemChangedArgs e)
-    {
-        _logger.Debug($"File change detected '{e.Type}' - {e.FullVirtualPath}");
-        Invalidate();
     }
 
     private static nint LoadAndRegisterTexture(IGuiResourceManager textureManager, GraphicsDevice device, params string[] paths)
@@ -123,18 +90,12 @@ public sealed class ContentViewer : IGuiHook
 
     public void DrawGui()
     {
-        if (_isDirty)
-        {
-            UpdateFilesAndDirectories();
-            _isDirty = false;
-        }
-
         if (ImGui.Begin("Content Browser"))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, 26f);
-            DrawNavigationBar();
 
-            DrawSidebar();
+            DrawNavigationBar();
+            DrawProjectHierarchy();
 
             ImGui.SameLine();
 
@@ -166,6 +127,12 @@ public sealed class ContentViewer : IGuiHook
                 _selectionManager.ClearSelection();
             }
 
+            if (ImGui.IsKeyPressed(ImGuiKey.I) && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
+                ImportFromDisk();
+
+            if (ImGui.IsKeyPressed(ImGuiKey.R) && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
+                _cacheService.Invalidate(ContentScope.CurrentDirectory);
+
             if (_isCreatingEntry || _isRenamingEntry)
             {
                 if (ImGui.IsKeyPressed(ImGuiKey.Escape))
@@ -176,9 +143,6 @@ public sealed class ContentViewer : IGuiHook
             }
             else if (_selectionManager.IsSelecting)
             {
-                if (ImGui.IsKeyPressed(ImGuiKey.I) && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
-                    ImportFromDisk();
-
                 if (ImGui.IsKeyPressed(ImGuiKey.Escape))
                 {
                     _selectionManager.ClearSelection();
@@ -189,22 +153,40 @@ public sealed class ContentViewer : IGuiHook
                     BeginRenamingEntry(entry);
                 }
 
+                if (_selectionManager.IsSingleSelect && _selectionManager.SelectedObject is IVirtualDirectory dir)
+                {
+                    if (ImGui.IsKeyPressed(ImGuiKey.Enter))
+                    {
+                        _navigator.NavigateTo(dir.Path);
+                    }
+                }
+
                 if (ImGui.IsKeyPressed(ImGuiKey.D) && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
                 {
                     foreach (IVirtualEntry item in _selectionManager.SelectedObjects.Cast<IVirtualEntry>())
-                        item.Duplicate();
+                    {
+                        bool isReadOnly = item.Volume.IsReadOnly;
+                        if (isReadOnly) continue;
+
+                        _assetPipeline.TryDuplicate(item.Path);
+                    }
 
                     _selectionManager.ClearSelection();
-                    Invalidate();
+                    _cacheService.Invalidate(ContentScope.CurrentDirectory);
                 }
 
                 if (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace))
                 {
                     foreach (IVirtualEntry item in _selectionManager.SelectedObjects.Cast<IVirtualEntry>())
-                        item.Delete();
+                    {
+                        bool isReadOnly = item.Volume.IsReadOnly;
+                        if (isReadOnly) continue;
+
+                        _assetPipeline.TryDelete(item.Path);
+                    }
 
                     _selectionManager.ClearSelection();
-                    Invalidate();
+                    _cacheService.Invalidate(ContentScope.CurrentDirectory);
                 }
             }
         }
@@ -218,20 +200,15 @@ public sealed class ContentViewer : IGuiHook
         }
     }
 
-    private void DrawSidebar()
+    private void DrawProjectHierarchy()
     {
         float availX = ImGui.GetContentRegionAvail().X;
         float childWidth = availX * 0.2f;
 
-        ImGui.SetNextWindowSize(new NVec2(), ImGuiCond.Appearing);
-        ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.ToVector4().ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Color(30, 30, 30).ToVector4().ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.Header, new Color(40, 40, 40).ToVector4().ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new Color(40, 40, 40).ToVector4().ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, new Color(60, 60, 60).ToVector4().ToNumerics());
-        if (ImGui.BeginChild("##file_system_tree", new NVec2(childWidth, 0), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeX))
+        ImGui.SetNextWindowSize(NVec2.Zero, ImGuiCond.Appearing);
+        if (ImGui.BeginChild("##project_hierarchy", new NVec2(childWidth, 0), ImGuiChildFlags.Border | ImGuiChildFlags.ResizeX))
         {
-            DrawAssets();
+            DrawProjectHierarchyTreeNodes();
 
             ImGui.Dummy(new(0, 5));
             ImGui.Separator();
@@ -243,67 +220,69 @@ public sealed class ContentViewer : IGuiHook
                 ImGui.TreePop();
             }
 
-            HandleShortcuts();
 
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
-            ImGui.PopStyleColor();
             ImGui.EndChild();
         }
     }
 
-    private void DrawAssets()
+    private void DrawProjectHierarchyTreeNodes()
     {
-        if (ImGui.TreeNodeEx($"{FontAwesomeIcons.Cube}  Assets", ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.SpanAvailWidth))
+        if (!Project.IsActive) return;
+
+        DrawAssetsTreeNode();
+        DrawLibraryTreeNode();
+    }
+
+    private void DrawLibraryTreeNode()
+    {
+        IVirtualVolume libsVolume = Project.Active.LibsVolume;
+        if (libsVolume != null)
         {
-            var volumes = _vfs.GetVolumes().Where(x => x.VolumeType != "library");
+            bool libVolumeOpened = ImGui.TreeNodeEx($"{FontAwesomeIcons.Gear}  {libsVolume.DisplayName}", ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.OpenOnArrow);
+            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                _navigator.NavigateTo(libsVolume.RootPath);
+
+            if (libVolumeOpened)
+            {
+                DrawAssetDirectory(libsVolume.RootDirectory);
+                ImGui.TreePop();
+            }
+        }
+    }
+
+    private void DrawAssetsTreeNode()
+    {
+        IVirtualVolume libsVolume = Project.Active.LibsVolume;
+        if (ImGui.TreeNodeEx($"{FontAwesomeIcons.Cube}  Assets", ImGuiTreeNodeFlags.DefaultOpen | _defaultTreeNodeFlags))
+        {
+            var volumes = _cacheService.Volumes.Where(x => x != libsVolume);
 
             if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && volumes.Any())
                 _navigator.NavigateTo(volumes.First().RootPath);
 
-            foreach (VolumeInfo volume in volumes)
+            foreach (IVirtualVolume volume in volumes)
             {
-                string icon = volume.VolumeType switch
+                string icon = volume.Id switch
                 {
                     "local" => FontAwesomeIcons.House,
                     "ROM" => FontAwesomeIcons.Lock,
-                    _ => FontAwesomeIcons.Question
+                    _ => FontAwesomeIcons.PuzzlePiece
                 };
 
                 var flags = volume == volumes.First() ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
-                bool opened = ImGui.TreeNodeEx($"{icon}  {volume.DisplayName}", flags | ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.OpenOnArrow);
+                bool opened = ImGui.TreeNodeEx($"{icon}  {volume.DisplayName}", flags | _defaultTreeNodeFlags);
 
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                     _navigator.NavigateTo(volume.RootPath);
 
                 if (opened)
                 {
-                    IVirtualDirectory dir = _vfs.GetDirectory(volume.RootPath);
-                    DrawAssetDirectory(dir);
-
-                    // _navigator.NavigateTo(dir.Path);
+                    DrawAssetDirectory(volume.RootDirectory);
                     ImGui.TreePop();
                 }
             }
 
             ImGui.TreePop();
-        }
-
-        if (_libVolume != null)
-        {
-            bool LibVolumeOpened = ImGui.TreeNodeEx($"{FontAwesomeIcons.Gear}  {_libVolume.DisplayName}", ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.OpenOnArrow);
-            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-                _navigator.NavigateTo(_libVolume.RootPath);
-
-            if (LibVolumeOpened)
-            {
-                IVirtualDirectory dir = _vfs.GetDirectory(_libVolume.RootPath);
-                DrawAssetDirectory(dir);
-
-                // _navigator.NavigateTo(dir.Path);
-                ImGui.TreePop();
-            }
         }
     }
 
@@ -311,18 +290,23 @@ public sealed class ContentViewer : IGuiHook
     {
         ImGui.PushID(directory.Path.Uri);
 
-        bool isSelected = _selectionManager.SelectedObjects.Contains(directory);
-        bool opened = ImGui.TreeNodeEx($"{FontAwesomeIcons.Folder}  {directory.Name}", ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.OpenOnArrow | (isSelected ? ImGuiTreeNodeFlags.Selected : ImGuiTreeNodeFlags.None) | (directory.Path.IsRoot ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None));
-        if (ImGui.BeginDragDropSource())
+        bool opened = false;
+        if (!directory.IsRoot)
         {
-            ImGuiHelper.SetDragDropPayload("MOVE_ENTRY", directory);
-            ImGui.EndDragDropSource();
+            bool isSelected = _selectionManager.SelectedObjects.Contains(directory);
+            opened = ImGui.TreeNodeEx($"{FontAwesomeIcons.Folder}  {directory.Name}", ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.OpenOnArrow | (isSelected ? ImGuiTreeNodeFlags.Selected : ImGuiTreeNodeFlags.None) | (directory.Path.IsRoot ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None));
+
+            if (ImGui.BeginDragDropSource())
+            {
+                ImGuiHelper.SetDragDropPayload("MOVE_ENTRY", directory);
+                ImGui.EndDragDropSource();
+            }
         }
 
         if (ImGui.BeginDragDropTarget())
         {
             if (ImGuiHelper.AcceptDragDropPayload("MOVE_ENTRY", out IVirtualEntry? toMoveEntry))
-                toMoveEntry.Move(directory.Path);
+                _assetPipeline.TryMove(toMoveEntry.Path, directory.Path);
 
             ImGui.EndDragDropTarget();
         }
@@ -337,11 +321,12 @@ public sealed class ContentViewer : IGuiHook
             }
             else if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
-                _selectionManager.SelectObject(directory);
+                bool additive = ImGui.IsKeyDown(ImGuiKey.ModCtrl);
+                _selectionManager.SelectObject(directory, additive);
             }
         }
 
-        if (opened)
+        if (directory.IsRoot || opened)
         {
             foreach (IVirtualDirectory childDir in directory.GetDirectories())
                 DrawAssetDirectory(childDir);
@@ -356,28 +341,35 @@ public sealed class ContentViewer : IGuiHook
                 bool selected = _selectionManager.SelectedObjects.Contains(childFile);
                 if (ImGui.Selectable($"{childFile.Name}", selected))
                 {
-                    _selectionManager.SelectObject(childFile);
+                    bool additive = ImGui.IsKeyDown(ImGuiKey.ModCtrl);
+                    _selectionManager.SelectObject(childFile, additive);
                 }
 
                 if (ImGui.BeginDragDropSource())
                 {
                     ImGuiHelper.SetDragDropPayload("MOVE_ENTRY", childFile);
+
+                    ImGui.Text(childFile.Name);
                     ImGui.EndDragDropSource();
                 }
 
                 DrawItemContextMenu(childFile);
 
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+                {
                     _navigator.NavigateTo(directory.Path);
+                }
 
                 ImGui.PopID();
             }
 
-            ImGui.TreePop();
+            if (!directory.IsRoot)
+                ImGui.TreePop();
         }
 
         ImGui.PopID();
     }
+
 
     private void DrawNavigationBar()
     {
@@ -386,20 +378,33 @@ public sealed class ContentViewer : IGuiHook
         if (!isEnabled)
             return;
 
+        bool isReadOnly = _navigator.CurrentDirectory.Volume.IsReadOnly;
         if (ImGui.BeginChild("##navbar", new NVec2(0, 40), ImGuiChildFlags.Border))
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, new Color(40, 40, 40).ToVector4().ToNumerics());
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Color(50, 50, 50).ToVector4().ToNumerics());
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Color(60, 60, 60).ToVector4().ToNumerics());
+            Color textColor = !isReadOnly ? Color.White : new Color(180, 180, 180);
+            Color buttonColor = !isReadOnly ? new Color(40, 40, 40) : new Color(30, 30, 30);
+            Color buttonHoveredColor = !isReadOnly ? new Color(50, 50, 50) : buttonColor;
+            Color buttonActiveColor = !isReadOnly ? new Color(60, 60, 60) : buttonColor;
+
+            ImGui.PushStyleColor(ImGuiCol.Text, textColor.ToVector4().ToNumerics());
+            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor.ToVector4().ToNumerics());
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonHoveredColor.ToVector4().ToNumerics());
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, buttonActiveColor.ToVector4().ToNumerics());
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 5);
-            if (ImGui.Button($"{FontAwesomeIcons.Plus} New"))
+
+            if (ImGui.Button($"{FontAwesomeIcons.Plus} New") && !isReadOnly)
             {
                 ImGui.OpenPopup("AddPopup");
             }
 
             if (ImGui.BeginItemTooltip())
             {
-                ImGui.TextColored(Color.Orange.ToVector4().ToNumerics(), $"{FontAwesomeIcons.TriangleExclamation}  Currently not implemented");
+                if (isReadOnly)
+                {
+                    ImGui.TextColored(Color.Orange.ToVector4().ToNumerics(), $"{FontAwesomeIcons.TriangleExclamation}  Your current volume is read-only. Please navigate to a not read-only volume to create a new asset");
+                }
+                else ImGui.TextColored(Color.Orange.ToVector4().ToNumerics(), $"{FontAwesomeIcons.TriangleExclamation}  Currently not implemented");
+
                 ImGui.EndTooltip();
             }
 
@@ -410,7 +415,11 @@ public sealed class ContentViewer : IGuiHook
 
             if (ImGui.BeginItemTooltip())
             {
-                ImGui.Text("Import an asset from the disk (Ctrl+O)");
+                if (isReadOnly)
+                {
+                    ImGui.TextColored(Color.Orange.ToVector4().ToNumerics(), $"{FontAwesomeIcons.TriangleExclamation}  Your current volume is read-only. Please navigate to a not read-only volume to import an asset");
+                }
+                else ImGui.Text("Import an asset from the disk (Ctrl+I)");
                 ImGui.EndTooltip();
             }
 
@@ -426,6 +435,7 @@ public sealed class ContentViewer : IGuiHook
                 ImGui.EndTooltip();
             }
 
+            ImGui.PopStyleColor();
             ImGui.PopStyleColor();
             ImGui.PopStyleColor();
             ImGui.PopStyleColor();
@@ -450,7 +460,7 @@ public sealed class ContentViewer : IGuiHook
 
     private void DrawFoldersBreadcrumb()
     {
-        if (_currentDirectory == null)
+        if (_navigator.CurrentDirectory == null)
             return;
 
         List<string> segments = [string.Empty];
@@ -460,7 +470,7 @@ public sealed class ContentViewer : IGuiHook
         for (int i = 0; i < segments.Count; i++)
         {
             string segment = segments[i];
-            if (segment == string.Empty) current = VirtualPath.Root(_navigator.CurrentPath.Scheme);
+            if (segment == string.Empty) current = VirtualPath.BuildRoot(_navigator.CurrentPath.Scheme);
             else current = current.Combine(segment + "/");
 
             string displayName = current.IsRoot ? "Root" : segment;
@@ -480,7 +490,7 @@ public sealed class ContentViewer : IGuiHook
             if (ImGui.BeginDragDropTarget())
             {
                 if (ImGuiHelper.AcceptDragDropPayload("MOVE_ENTRY", out IVirtualEntry? toMoveEntry))
-                    toMoveEntry.Move(current);
+                    _assetPipeline.TryMove(toMoveEntry.Path, current);
 
                 ImGui.EndDragDropTarget();
             }
@@ -564,25 +574,22 @@ public sealed class ContentViewer : IGuiHook
 
     private void DrawWindowContextMenu()
     {
-        // TODO: Need a way to handle read only access
-        bool isReadOnly = false;
+        bool isReadOnly = _navigator.CurrentDirectory.Volume.IsReadOnly;
         if (ImGui.BeginPopupContextWindow("##window_context_menu", ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverItems))
         {
-            if (ImGui.BeginMenu("New"))
+            if (ImGui.BeginMenu("New", !isReadOnly))
             {
                 if (ImGui.MenuItem("Directory", !isReadOnly))
                 {
                     BeginCreatingEntry("New Directory", isDirectory: true);
-                    Invalidate();
                 }
 
                 if (ImGui.MenuItem("File", !isReadOnly))
                 {
                     BeginCreatingEntry("New File", isDirectory: false);
-                    Invalidate();
                 }
 
-                if (ImGui.BeginMenu("Asset"))
+                if (ImGui.BeginMenu("Asset", !isReadOnly))
                 {
 
                     ImGui.EndMenu();
@@ -593,9 +600,9 @@ public sealed class ContentViewer : IGuiHook
 
             ImGui.Separator();
 
-            if (ImGui.MenuItem("Refresh"))
+            if (ImGui.MenuItem("Refresh", "Ctrl+R", false, true))
             {
-                Invalidate();
+                _cacheService.Refresh(ContentScope.CurrentDirectory);
                 ImGui.End();
             }
 
@@ -605,7 +612,7 @@ public sealed class ContentViewer : IGuiHook
                 ImGui.End();
             }
 
-            if (ImGui.MenuItem("Import from disk"))
+            if (ImGui.MenuItem("Import from disk", "Ctrl+I", false, !isReadOnly))
             {
                 ImportFromDisk();
                 ImGui.End();
@@ -614,7 +621,7 @@ public sealed class ContentViewer : IGuiHook
             ImGui.Separator();
             if (ImGui.MenuItem("Reimport all"))
             {
-                _pipeline.ReimportAll();
+                _assetPipeline.ReimportAll();
             }
 
             ImGui.EndPopup();
@@ -623,15 +630,19 @@ public sealed class ContentViewer : IGuiHook
 
     private void DrawItemContextMenu(IVirtualEntry item)
     {
-        // TODO: Need a way to handle read only access
-        bool isReadOnly = false;
+        bool isReadOnly = item.Volume.IsReadOnly;
         bool isDirectory = item.IsDirectory;
 
         if (ImGui.BeginPopupContextItem("##item_context_menu", ImGuiPopupFlags.MouseButtonRight))
         {
-            if (ImGui.MenuItem("Open", isDirectory))
+            if (isDirectory)
             {
-                _navigator.NavigateTo(item.Path);
+                if (ImGui.MenuItem("Open", "Enter"))
+                {
+                    _navigator.NavigateTo(item.Path);
+                }
+
+                ImGui.Separator();
             }
 
             if (ImGui.MenuItem("Rename", "F2", false, !isReadOnly))
@@ -641,14 +652,14 @@ public sealed class ContentViewer : IGuiHook
 
             if (ImGui.MenuItem("Delete", "Delete", false, !isReadOnly))
             {
-                item.Delete();
-                Invalidate();
+                _assetPipeline.TryDelete(item.Path);
+                _cacheService.Invalidate(ContentScope.CurrentDirectory);
             }
 
             if (ImGui.MenuItem("Duplicate", "Ctrl+D", false, !isReadOnly))
             {
-                item.Duplicate();
-                Invalidate();
+                _assetPipeline.TryDuplicate(item.Path);
+                _cacheService.Invalidate(ContentScope.CurrentDirectory);
             }
 
             if (ImGui.MenuItem("Copy Path"))
@@ -662,7 +673,7 @@ public sealed class ContentViewer : IGuiHook
 
             if (ImGui.MenuItem("Reimport all"))
             {
-                _pipeline.ReimportAll();
+                _assetPipeline.ReimportAll();
             }
 
             ImGui.EndPopup();
@@ -688,7 +699,7 @@ public sealed class ContentViewer : IGuiHook
             ImGui.NextColumn();
         }
 
-        foreach (IVirtualDirectory directory in _directories)
+        foreach (IVirtualDirectory directory in _cacheService.Directories)
         {
             DrawVirtualEntry(directory, thumbnailSize, padding, selecting, selectionRect);
         }
@@ -699,7 +710,7 @@ public sealed class ContentViewer : IGuiHook
             ImGui.NextColumn();
         }
 
-        foreach (IVirtualFile file in _files)
+        foreach (IVirtualFile file in _cacheService.Files)
         {
             DrawVirtualEntry(file, thumbnailSize, padding, selecting, selectionRect);
         }
@@ -710,7 +721,8 @@ public sealed class ContentViewer : IGuiHook
         ImGui.PushID(entry.Path.Uri);
         NVec2 itemPos = ImGui.GetCursorScreenPos();
 
-        if (_isRenamingEntry && _renamedEntryPath == entry.Path)
+        bool isReadOnly = entry.Volume.IsReadOnly;
+        if (!isReadOnly && _isRenamingEntry && _renamedEntryPath == entry.Path)
         {
             DrawRenamingEntry(thumbnailSize, padding);
         }
@@ -736,8 +748,6 @@ public sealed class ContentViewer : IGuiHook
 
     private void DrawEntry(IVirtualEntry entry, float thumbnailSize, float padding)
     {
-        // ImGui.SetCursorPos(ImGui.GetCursorPos() + new NVec2(padding * 0.5f));
-
         bool isDirectory = entry.IsDirectory;
 
         DrawEntryIcon(entry, isDirectory ? "folder" : "file", thumbnailSize, padding);
@@ -800,15 +810,16 @@ public sealed class ContentViewer : IGuiHook
         if (validated)
         {
             // TODO: Add some feedback if the directory or the file already exists
-            if (_isCreatingDirectory && !_currentDirectory.DirectoryExists(_newEntryName))
+            var currentDirectory = _navigator.CurrentDirectory;
+            if (_isCreatingDirectory && !currentDirectory.DirectoryExists(_newEntryName))
             {
-                _currentDirectory.CreateDirectory(_newEntryName);
-                Invalidate();
+                currentDirectory.CreateDirectory(_newEntryName);
+                _cacheService.Invalidate(ContentScope.CurrentDirectory);
             }
-            else if (!_isCreatingDirectory && !_currentDirectory.DirectoryExists(_newEntryName))
+            else if (!_isCreatingDirectory && !currentDirectory.DirectoryExists(_newEntryName))
             {
-                _currentDirectory.CreateFile(_newEntryName);
-                Invalidate();
+                currentDirectory.CreateFile(_newEntryName);
+                _cacheService.Invalidate(ContentScope.CurrentDirectory);
             }
 
             _isCreatingEntry = false;
@@ -824,7 +835,7 @@ public sealed class ContentViewer : IGuiHook
     private void DrawRenamingEntry(float thumbnailSize, float padding)
     {
         ImGui.SetCursorPos(ImGui.GetCursorPos() + new NVec2(padding * 0.5f));
-        ImGui.Image(_icons[_renamedEntryPath!.IsDirectory ? "folder" : "file"], new NVec2(thumbnailSize));
+        ImGui.Image(_icons[_renamedEntryPath!.IsDirectory ? "folder" : "file"], new NVec2(thumbnailSize - padding * 0.5f));
         ImGui.SetCursorPos(ImGui.GetCursorPos() + new NVec2(padding * 0.5f));
 
         ImGui.PushID("rename_entry_input");
@@ -841,15 +852,12 @@ public sealed class ContentViewer : IGuiHook
 
         if (validated)
         {
-            IVirtualEntry entry = _renamedEntryPath.IsDirectory ?
-                _currentDirectory.GetDirectory(_renamedEntryPath!.Name) :
-                _currentDirectory.GetFile(_renamedEntryPath!.Name);
-
+            IVirtualEntry entry = _vfs.GetEntry(_renamedEntryPath);
             if (entry.Exists)
             {
                 try
                 {
-                    entry.Rename(_newEntryName);
+                    _assetPipeline.TryRename(entry.Path, _newEntryName);
                 }
                 catch (Exception ex)
                 {
@@ -859,7 +867,7 @@ public sealed class ContentViewer : IGuiHook
             else _logger.Warn($"The renamed entry at path '{_renamedEntryPath}' was not found.");
 
             _isRenamingEntry = false;
-            Invalidate();
+            _cacheService.Invalidate(ContentScope.CurrentDirectory);
         }
         else if (canceled)
         {
@@ -871,19 +879,20 @@ public sealed class ContentViewer : IGuiHook
 
     private void DrawEntryIcon(IVirtualEntry entry, string icon, float thumbnailSize, float padding)
     {
+        bool isReadOnly = entry.Volume.IsReadOnly;
         bool isSelected = _selectionManager.SelectedObjects.Contains(entry);
         Color bgColor = isSelected ? new Color(50, 50, 50) : new Color(30, 30, 30);
         Color hoveredColor = isSelected ? new Color(60, 60, 60) : new Color(40, 40, 40);
         Color activeColor = isSelected ? new Color(70, 70, 70) : new Color(50, 50, 50);
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NVec2(padding, padding) * 0.5f);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NVec2(padding * 0.5f));
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 20f);
         ImGui.PushStyleColor(ImGuiCol.Button, bgColor.ToVector4().ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, hoveredColor.ToVector4().ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, activeColor.ToVector4().ToNumerics());
 
         ImGui.ImageButton($"##{entry.Name}", _icons[icon], new NVec2(thumbnailSize - padding * 0.5f));
-        if (ImGui.BeginDragDropSource())
+        if (!isReadOnly && ImGui.BeginDragDropSource())
         {
             _isDragging = true;
             ImGuiHelper.SetDragDropPayload("MOVE_ENTRY", entry);
@@ -891,10 +900,10 @@ public sealed class ContentViewer : IGuiHook
             ImGui.EndDragDropSource();
         }
 
-        if (entry.IsDirectory && ImGui.BeginDragDropTarget())
+        if (!isReadOnly && entry.IsDirectory && ImGui.BeginDragDropTarget())
         {
             if (ImGuiHelper.AcceptDragDropPayload("MOVE_ENTRY", out IVirtualEntry? toMoveEntry))
-                toMoveEntry.Move(entry.Path);
+                _assetPipeline.TryMove(toMoveEntry.Path, entry.Path);
 
             ImGui.EndDragDropTarget();
         }
@@ -923,6 +932,9 @@ public sealed class ContentViewer : IGuiHook
 
     private void BeginRenamingEntry(IVirtualEntry entry)
     {
+        if (entry.Volume.IsReadOnly)
+            return;
+
         _isRenamingEntry = true;
         _focusNewEntry = true;
         _newEntryName = entry.Name;
@@ -932,49 +944,28 @@ public sealed class ContentViewer : IGuiHook
         _navigator.NavigateTo(entry.Path.GetParent());
     }
 
-    private void Invalidate()
-    {
-        _isDirty = true;
-    }
-
     private void ImportFromDisk()
     {
-        if (!_projectManager.HasActiveProject)
+        var currentDirectory = _navigator.CurrentDirectory;
+        if (!_projectManager.HasActiveProject || currentDirectory == null || currentDirectory.Volume.IsReadOnly)
             return;
 
-        var result = Dialog.FileOpen();
-        if (result.IsOk)
+        Task.Run(() =>
         {
-            string projectRoot = _projectManager.ActiveProject!.ContentRoot;
-            string fileName = Path.GetFileName(result.Path);
-            string destination = Path.Combine(projectRoot, fileName);
+            var result = Dialog.FileOpen();
+            if (result.IsOk)
+            {
+                string projectRoot = _projectManager.ActiveProject!.AssetsRoot;
+                string fileName = Path.GetFileName(result.Path);
+                string destination = Path.Combine(projectRoot, currentDirectory.Path.LocalPath, fileName);
 
-            File.Copy(result.Path, destination, overwrite: true);
+                File.Copy(result.Path, destination, overwrite: true);
 
-            var relative = Path.GetRelativePath(projectRoot, destination);
-            var vpath = VirtualPath.Parse($"local://{relative}");
-            _pipeline.TryImport(vpath);
+                var relative = Path.GetRelativePath(projectRoot, destination);
+                var vpath = VirtualPath.Parse($"local://{relative}");
 
-            _navigator.NavigateTo(vpath.GetParent());
-        }
-    }
-
-    private void UpdateFilesAndDirectories()
-    {
-        _logger.Debug("Updating file directories");
-        _files.Clear();
-        _directories.Clear();
-
-        _files.AddRange(_currentDirectory.GetFiles());
-        _directories.AddRange(_currentDirectory.GetDirectories());
-
-        foreach (var item in _selectionManager.SelectedObjects)
-        {
-            if (item is IVirtualEntry entry)
-                _selectionManager.UnselectObject(entry);
-        }
-
-        if (!_currentDirectory.Exists)
-            _navigator.NavigateTo(VirtualPath.Root(_currentDirectory.Path.Scheme));
+                ThreadDispatcher.RunOnMainThread(() => _assetPipeline.TryImport(vpath));
+            }
+        });
     }
 }

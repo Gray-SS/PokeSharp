@@ -52,25 +52,23 @@ public static class ImGuiHelper
             state = new SelectionState();
         }
 
-        // Commencer la sélection SEULEMENT si on a pas bougé pendant un petit délai
         if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !state.WasCompleted)
         {
             state.StartPosition = io.MousePos;
             state.StartPositionWindow = ImGui.GetMousePos();
-            state.StartTime = ImGui.GetTime(); // Nouveau : temps de début
-            state.IsWaiting = true; // Nouveau : état d'attente
+            state.StartTime = ImGui.GetTime();
+            state.IsWaiting = true;
             state.IsActive = false;
             _selectionStates[id] = state;
         }
 
-        // Attendre un peu avant d'activer (ou attendre un mouvement minimum)
         if (state.IsWaiting && ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
             double currentTime = ImGui.GetTime();
             Vector2 currentPos = io.MousePos;
             float distance = Vector2.Distance(state.StartPosition, currentPos);
 
-            // Activer si : délai écoulé (200ms) OU mouvement > 5 pixels
+
             if (currentTime - state.StartTime > 0.2f || distance > 5.0f)
             {
                 state.IsActive = true;
@@ -79,7 +77,6 @@ public static class ImGuiHelper
             }
         }
 
-        // Annuler si on relâche pendant l'attente
         if (state.IsWaiting && ImGui.IsMouseReleased(ImGuiMouseButton.Left))
         {
             state.IsWaiting = false;
@@ -87,7 +84,6 @@ public static class ImGuiHelper
             _selectionStates[id] = state;
             return false;
         }
-
 
         if (state.IsActive && ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {

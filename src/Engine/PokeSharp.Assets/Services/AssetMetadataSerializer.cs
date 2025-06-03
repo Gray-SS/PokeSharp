@@ -18,7 +18,7 @@ public sealed class AssetMetadataSerializer : IAssetMetadataSerializer
         using var writer = new BinaryWriter(stream);
 
         writer.Write(metadata.Id.ToString());
-        writer.Write(metadata.AssetType);
+        writer.Write(metadata.AssetType.AssemblyQualifiedName!);
         writer.Write(metadata.HasResource);
 
         if (metadata.HasResource)
@@ -45,8 +45,8 @@ public sealed class AssetMetadataSerializer : IAssetMetadataSerializer
         using var reader = new BinaryReader(stream);
 
         var id = Guid.Parse(reader.ReadString());
-        var assetType = reader.ReadString();
-        var metadata = new AssetMetadata(id, assetType);
+        var metadata = new AssetMetadata(id);
+        metadata.AssetType = _typeResolver.ResolveType(reader.ReadString())!;
 
         var hasResource = reader.ReadBoolean();
         if (hasResource)

@@ -11,12 +11,11 @@ public sealed class FileSystemChangedArgs : EventArgs
     }
 
     public ChangeType Type { get; }
+    public VirtualPath VirtualPath { get; }
 
-    public string FullVirtualPath { get; }
-
-    public FileSystemChangedArgs(ChangeType type, string virtualPath)
+    public FileSystemChangedArgs(ChangeType type, VirtualPath virtualPath)
     {
         Type = type;
-        FullVirtualPath = virtualPath;
+        VirtualPath = virtualPath;
     }
 }

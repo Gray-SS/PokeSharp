@@ -10,14 +10,14 @@ namespace PokeSharp.Editor.Views;
 [Priority(999)]
 public sealed class MainViewer : IGuiHook
 {
-    private readonly IEditorProjectManager _projectManager;
+    private readonly IProjectManager _projectManager;
 
     private string _projectName = string.Empty;
     private string _projectPath = string.Empty;
     private string? _formError = null;
     private bool _showCreateProjectPopup = false;
 
-    public MainViewer(IEditorProjectManager projectManager)
+    public MainViewer(IProjectManager projectManager)
     {
         _projectManager = projectManager;
 

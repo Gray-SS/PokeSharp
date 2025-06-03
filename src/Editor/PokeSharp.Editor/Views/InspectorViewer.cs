@@ -10,6 +10,7 @@ namespace PokeSharp.Editor.Views;
 public sealed class InspectorViewer : IGuiHook
 {
     private bool _canInspect;
+    private AssetMetadata? _assetMetadata;
     private readonly AssetPipeline _assetPipeline;
     private readonly ISelectionManager _selectionService;
 
@@ -27,6 +28,14 @@ public sealed class InspectorViewer : IGuiHook
         _canInspect = e.IsSingleSelect;
         if (!_canInspect) return;
 
+        _assetMetadata = null;
+        if (e.SelectedObject is IVirtualFile file)
+        {
+            if (!_assetPipeline.HasMetadata(file.Path))
+                return;
+
+            _assetMetadata = _assetPipeline.GetMetadata(file.Path);
+        }
     }
 
     public void DrawGui()
@@ -109,16 +118,16 @@ public sealed class InspectorViewer : IGuiHook
         object selectedObj = _selectionService.SelectedObject!;
         DrawInspectorHeader(selectedObj);
 
-        ImGui.Separator();
+        // ImGui.Separator();
 
-        DrawGeneralProperties(selectedObj);
+        // DrawGeneralProperties(selectedObj);
 
-        ImGui.Separator();
+        // ImGui.Separator();
 
-        DrawSpecificContent(selectedObj);
+        // DrawSpecificContent(selectedObj);
 
-        ImGui.Separator();
-        DrawContextualActions(selectedObj);
+        // ImGui.Separator();
+        // DrawContextualActions(selectedObj);
     }
 
     private void DrawInspectorHeader(object selectedObj)
@@ -136,19 +145,35 @@ public sealed class InspectorViewer : IGuiHook
 
             string uri = file.Path.Uri;
             ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.7f, 0.7f, 0.7f, 1.0f));
-            ImGui.InputText("Path", ref uri, 256, ImGuiInputTextFlags.ReadOnly);
+            ImGui.Text("Path:");
+            ImGui.SameLine(0, 20);
+            ImGui.InputText("##Path", ref uri, 256, ImGuiInputTextFlags.ReadOnly);
 
-            if (_assetPipeline.HasMetadata(file.Path))
+            if (_assetMetadata != null)
             {
-                AssetMetadata metadata = _assetPipeline.GetMetadata(file.Path);
-                if (metadata.HasResource)
-                {
-                    string? importerType = metadata.Importer!.GetType().Name;
-                    ImGui.InputText("Importer", ref importerType, 256, ImGuiInputTextFlags.ReadOnly);
+                ImGui.Dummy(new(0, 10));
+                ImGui.Separator();
+                ImGui.Dummy(new(0, 10));
 
-                    string? processorType = metadata.Processor!.GetType().Name;
-                    ImGui.InputText("Processor", ref processorType, 256, ImGuiInputTextFlags.ReadOnly);
+                string assetTypeName = _assetMetadata.AssetType.Name;
+                ImGui.Text("Asset Type:");
+                ImGui.SameLine(0, 20);
+                ImGui.InputText("##Asset", ref assetTypeName, 256, ImGuiInputTextFlags.ReadOnly);
+
+                if (_assetMetadata.HasResource)
+                {
+                    string? importerType = _assetMetadata.Importer!.GetType().Name;
+                    ImGui.Text("Importer Type:");
+                    ImGui.SameLine(0, 20);
+                    ImGui.InputText("##Importer", ref importerType, 256, ImGuiInputTextFlags.ReadOnly);
+
+                    string? processorType = _assetMetadata.Processor!.GetType().Name;
+                    ImGui.Text("Processor Type:");
+                    ImGui.SameLine(0, 20);
+                    ImGui.InputText("##Processor", ref processorType, 256, ImGuiInputTextFlags.ReadOnly);
                 }
+
+                ImGui.Dummy(new(0, 10));
             }
 
             ImGui.PopStyleColor();
@@ -157,6 +182,8 @@ public sealed class InspectorViewer : IGuiHook
 
     private void DrawGeneralProperties(object selectedObj)
     {
+        ImGui.Dummy(new(0, 10));
+
         if (ImGui.CollapsingHeader("Properties", ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Indent();

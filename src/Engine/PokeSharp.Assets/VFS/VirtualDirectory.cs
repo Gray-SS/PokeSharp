@@ -1,58 +1,69 @@
+using System.Diagnostics;
+using PokeSharp.Assets.VFS.Extensions;
+using PokeSharp.Assets.VFS.Volumes;
+
 namespace PokeSharp.Assets.VFS;
 
 public sealed class VirtualDirectory : VirtualEntry, IVirtualDirectory
 {
-    public VirtualDirectory(IVirtualFileSystemProvider provider, VirtualPath path) : base(provider, path)
+    public bool IsRoot => Path.IsRoot;
+
+    public VirtualDirectory(IVirtualVolume volume, VirtualPath path) : base(volume, path)
     {
-        if (!path.IsDirectory)
-            throw new InvalidOperationException("Couldn't create a virtual directory with a non-directory path.");
+        Debug.Assert(path.IsDirectory, "Provided path must represent a directory");
     }
 
     public IVirtualFile CreateFile(string fileName, bool overwrite = false)
     {
         VirtualPath virtualPath = Path.Combine(fileName);
-        return Provider.CreateFile(virtualPath, overwrite);
+        return Volume.AsWriteable().CreateFile(virtualPath, overwrite);
     }
 
     public IVirtualDirectory CreateDirectory(string dirName)
     {
         VirtualPath virtualPath = Path.Combine($"{dirName}/");
-        return Provider.CreateDirectory(virtualPath);
+        return Volume.AsWriteable().CreateDirectory(virtualPath);
+    }
+
+    public bool EntryExists(string entryName)
+    {
+        VirtualPath virtualPath = Path.Combine(entryName);
+        return Volume.AsFetchable().EntryExists(virtualPath);
     }
 
     public bool FileExists(string fileName)
     {
-        // TODO: Need to actually check if it's a directory or a file that exists, we're just checking if the path exists rn
         VirtualPath virtualPath = Path.Combine(fileName);
-        return Provider.Exists(virtualPath);
+        return Volume.AsFetchable().FileExists(virtualPath);
     }
 
     public bool DirectoryExists(string dirName)
     {
-        // TODO: Need to actually check if it's a directory or a file that exists, we're just checking if the path exists rn
         VirtualPath virtualPath = Path.Combine(dirName + "/");
-        return Provider.Exists(virtualPath);
+        return Volume.AsFetchable().DirectoryExists(virtualPath);
     }
 
     public IVirtualDirectory GetDirectory(string dirName)
     {
         VirtualPath virtualPath = Path.Combine(dirName + "/");
-        return Provider.GetDirectory(virtualPath);
+        return Volume.AsFetchable().GetDirectory(virtualPath);
     }
 
     public IVirtualFile GetFile(string fileName)
     {
+        Debug.Assert(!fileName.EndsWith('/'), "The fileName must not end with a trailing '/'");
+
         VirtualPath virtualPath = Path.Combine(fileName);
-        return Provider.GetFile(virtualPath);
+        return Volume.AsFetchable().GetFile(virtualPath);
     }
 
     public IEnumerable<IVirtualDirectory> GetDirectories()
     {
-        return Provider.GetDirectories(Path);
+        return Volume.AsFetchable().GetDirectories(Path);
     }
 
     public IEnumerable<IVirtualFile> GetFiles()
     {
-        return Provider.GetFiles(Path);
+        return Volume.AsFetchable().GetFiles(Path);
     }
 }

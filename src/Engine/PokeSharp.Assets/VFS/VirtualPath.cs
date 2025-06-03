@@ -57,7 +57,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// <remarks>
     /// This assumes that directories end with a trailing '/' and files do not.
     /// </remarks>
-    public bool IsFile { get; }
+    public bool IsFile => !IsDirectory;
 
     // TODO: Move the non-related scheme docs
     /// <summary>
@@ -116,7 +116,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         Scheme = scheme;
         LocalPath = NormalizePath(path);
         Uri = $"{Scheme}://{LocalPath}";
-        IsDirectory = IsRoot || path.EndsWith('/');
+        IsDirectory = IsRoot || LocalPath.EndsWith('/');
 
         Debug.Assert(LocalPath != null, "Local path was null");
     }
@@ -137,7 +137,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
 
         var parts = LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length <= 1)
-            return Root(Scheme);
+            return BuildRoot(Scheme);
 
         string parentPath = string.Join('/', parts, 0, parts.Length - 1) + '/';
         return new VirtualPath(Scheme, parentPath);
@@ -168,20 +168,73 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     }
 
     /// <summary>
-    /// Checks if the specified path is a child of this directory.
+    /// Determines if the specified path is a sub path of this directory, no matter the depth.
     /// </summary>
-    /// <param name="path">The path of the entry to check.</param>
-    /// <returns><c>true</c> if the path is a child of this directory; otherwise, <c>false</c>.</returns>
+    /// <param name="path">The path of the entry to determine.</param>
+    /// <returns><c>true</c> if the path is a sub path of this directory; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// <b>Note:</b> It is assumed that the current path represents a directory and that the specified path is not a root path.
+    /// Also, this method <b>does not check</b> if the specified path <b>exists</b> in the file system.
+    /// It only performs a syntactic checks based on the URI structure. Use <see cref="IVirtualDirectory.EntryExists(string)"/> or <see cref="Services.IVirtualFileSystem"/> to determine existence of a path.
+    /// <br/><br/>
+    /// <b>Note:</b> It is assumed that the current path represents a directory.
     /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
     /// </remarks>
-    public bool IsParentOf(VirtualPath path)
+    public bool IsSubPath(VirtualPath path)
     {
-        Debug.Assert(IsDirectory, "Current path must represent a directory to check children.");
-        Debug.Assert(!path.IsRoot, "Specified path must not be a root path.");
+        Debug.Assert(IsDirectory, "Current path must represent a directory to determine children.");
 
-        return path.GetParent() == this;
+        if (Uri == path.Uri) return false;
+        if (path.Scheme != Scheme) return false;
+        if (IsRoot && !path.IsRoot) return true;
+
+        var thisSegments = Uri.Trim('/').Split('/');
+        var childSegments = path.Uri.Trim('/').Split('/');
+
+        if (thisSegments.Length >= childSegments.Length)
+            return false;
+
+        for (int i = 0; i < thisSegments.Length; i++)
+        {
+            if (!string.Equals(thisSegments[i], childSegments[i], StringComparison.Ordinal))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Determines if the specified path is a <b>direct</b> sub path of this directory.
+    /// </summary>
+    /// <param name="path">The path of the entry to determine.</param>
+    /// <returns><c>true</c> if the path is a direct sub path of this directory; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method <b>does not check</b> if the specified path <b>exists</b> in the file system.
+    /// It only performs a syntactic checks based on the URI structure. Use <see cref="IVirtualDirectory.EntryExists(string)"/> or <see cref="Services.IVirtualFileSystem"/> to determine existence of a path.
+    /// <br/><br/>
+    /// <b>Note:</b> It is assumed that the current path represents a directory.
+    /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
+    /// </remarks>
+    public bool IsDirectSubPath(VirtualPath path)
+    {
+        Debug.Assert(IsDirectory, "Current path must represent a directory to determine children.");
+
+        if (Uri == path.Uri) return false;
+        if (path.Scheme != Scheme) return false;
+        if (IsRoot && !path.IsRoot) return true;
+
+        var thisSegments = Uri.Trim('/').Split('/');
+        var childSegments = path.Uri.Trim('/').Split('/');
+
+        if (thisSegments.Length + 1 != childSegments.Length)
+            return false;
+
+        for (int i = 0; i < thisSegments.Length; i++)
+        {
+            if (!string.Equals(thisSegments[i], childSegments[i], StringComparison.Ordinal))
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -211,7 +264,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// </summary>
     /// <param name="scheme">The URI scheme (e.g. <c>file</c>).</param>
     /// <returns>A <see cref="VirtualPath"/> representing the root path for the scheme.</returns>
-    public static VirtualPath Root(string scheme)
+    public static VirtualPath BuildRoot(string scheme)
     {
         return new VirtualPath(scheme, string.Empty);
     }
@@ -256,10 +309,15 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     {
         Debug.Assert(IsFile, "The current path must represent a file to get it's file extension.");
 
-        if (IsRoot) return string.Empty;
+        int lastSlash = LocalPath.LastIndexOf('/');
+        int lastDot = LocalPath.LastIndexOf('.');
 
-        var ext = LocalPath.Split('.');
-        return ext.Length > 0 ? "." + ext[^1] : string.Empty;
+        if (lastDot > lastSlash)
+        {
+            return LocalPath[lastDot..];
+        }
+
+        return string.Empty;
     }
 
     /// <summary>

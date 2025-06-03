@@ -1,24 +1,22 @@
+using System.Diagnostics;
+using PokeSharp.Assets.VFS.Extensions;
+using PokeSharp.Assets.VFS.Volumes;
 
 namespace PokeSharp.Assets.VFS;
 
 public sealed class VirtualFile : VirtualEntry, IVirtualFile
 {
-    public VirtualFile(IVirtualFileSystemProvider provider, VirtualPath path) : base(provider, path)
+    public VirtualFile(IVirtualVolume volume, VirtualPath path) : base(volume, path)
     {
+        Debug.Assert(path.IsFile, $"Provided path doesn't represents a file: {path}");
     }
 
     public Stream OpenRead()
-    {
-        return Provider.OpenRead(Path);
-    }
+        => Volume.AsReadable().OpenRead(Path);
 
     public byte[] ReadBytes()
-    {
-        return Provider.ReadBytes(Path);
-    }
+        => Volume.AsReadable().ReadBytes(Path);
 
     public Stream OpenWrite()
-    {
-        return Provider.OpenWrite(Path);
-    }
+        => Volume.AsWriteable().OpenWrite(Path);
 }

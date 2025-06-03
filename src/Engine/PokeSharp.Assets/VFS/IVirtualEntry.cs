@@ -1,3 +1,5 @@
+using PokeSharp.Assets.VFS.Volumes;
+
 namespace PokeSharp.Assets.VFS;
 
 public interface IVirtualEntry : IEquatable<IVirtualEntry>
@@ -9,7 +11,7 @@ public interface IVirtualEntry : IEquatable<IVirtualEntry>
     bool IsDirectory { get; }
     public VirtualPath Path { get; }
 
-    IVirtualFileSystemProvider Provider { get; }
+    IVirtualVolume Volume { get; }
 
     IVirtualDirectory GetParent();
     IVirtualEntry Rename(string name);

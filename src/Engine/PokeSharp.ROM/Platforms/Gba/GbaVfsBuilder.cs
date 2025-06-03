@@ -39,15 +39,15 @@ public sealed class GbaVfsBuilder : RomVfsBuilder
 
         for (int i = 0; i < config.Count; i++)
         {
-            _logger.Info($"[{i + 1}/{config.Count}] Extracting pokémon name");
+            _logger.Trace($"[{i + 1}/{config.Count}] Extracting pokémon name");
             int address = namesPointer.PhysicalAddress + i * config.NameLength;
 
             ReadOnlySpan<byte> text = Reader.ReadSpan(address, config.NameLength);
             string name = GbaTextDecoder.Decode(text);
-            _logger.Info($"[{i + 1}/{config.Count}] Pokémon name decoded as '{name}'");
+            _logger.Trace($"[{i + 1}/{config.Count}] Pokémon name decoded as '{name}'");
 
             RomFile pokemonNameFile = root.AddFile($"{name}.txt", Encoding.UTF8.GetBytes(name));
-            _logger.Info($"[{i + 1}/{config.Count}] Storing name at '{pokemonNameFile.Path}'");
+            _logger.Trace($"[{i + 1}/{config.Count}] Storing name at '{pokemonNameFile.Path}'");
         }
     }
 }

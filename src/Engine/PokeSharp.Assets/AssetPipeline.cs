@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using PokeSharp.Assets.Exceptions;
 using PokeSharp.Assets.Services;
 using PokeSharp.Assets.VFS;
+using PokeSharp.Assets.VFS.Services;
+using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Services;
@@ -16,9 +18,9 @@ public sealed class AssetPipeline
     private readonly IAssetProcessor[] _processors;
     private readonly IAssetWriter[] _writers;
 
-    private bool _isReimportingAll;
     private readonly ILogger _logger;
     private readonly IVirtualFileSystem _vfs;
+    private readonly IVirtualVolumeManager _volumeManager;
     private readonly IAssetMetadataStore _metadataStore;
     private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
@@ -26,10 +28,13 @@ public sealed class AssetPipeline
     public AssetPipeline(
         IReflectionManager reflectionManager,
         IAssetMetadataStore metadataStore,
+        IVirtualVolumeManager volumeManager,
         IVirtualFileSystem vfs,
         ILogger logger)
     {
         _vfs = vfs;
+        _volumeManager = volumeManager;
+
         _logger = logger;
         _metadataStore = metadataStore;
         _reflectionManager = reflectionManager;
@@ -43,19 +48,17 @@ public sealed class AssetPipeline
 
     public void ReimportAll()
     {
-        if (_isReimportingAll) return;
-
-        _isReimportingAll = true;
         _metadataStore.DeleteAll();
-        foreach (VolumeInfo volume in _vfs.GetVolumes())
+
+        var volumes = _volumeManager.GetVolumes().ToArray();
+        foreach (IVirtualVolume volume in volumes)
         {
-            if (volume.VolumeType == "library")
+            if (volume.Id == "library")
                 continue;
 
             IVirtualDirectory directory = _vfs.GetDirectory(volume.RootPath);
             ImportRecursive(directory);
         }
-        _isReimportingAll = false;
     }
 
     private void ImportRecursive(IVirtualDirectory directory)
@@ -106,6 +109,8 @@ public sealed class AssetPipeline
             object imported = ImportAssetInternal(metadata.Importer!, file);
             object processed = ProcessAssetInternal(metadata.Processor!, imported, assetPath);
 
+            // ReimportAll();
+
             _logger.Debug($"Asset imported: {assetPath}, {_metadataStore.GetMetadataPath(assetPath)}");
             return true;
         }
@@ -134,6 +139,146 @@ public sealed class AssetPipeline
         return false;
     }
 
+    public bool TryMove(VirtualPath srcPath, VirtualPath destPath)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(srcPath);
+
+            _logger.Debug($"Trying to move '{srcPath}' to '{destPath}'");
+
+            IVirtualEntry entry = _vfs.GetEntry(srcPath);
+            if (!entry.Exists)
+                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+
+            entry.Move(destPath);
+            ReimportAll();
+
+            _logger.Debug($"Moved '{srcPath}' to '{destPath}' successfully");
+            return true;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: {ex.Message}");
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: The parameter '{ex.ParamName}' was null");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while moving '{srcPath}' to '{destPath}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        }
+
+        return false;
+    }
+
+    public bool TryDelete(VirtualPath srcPath)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(srcPath);
+
+            _logger.Debug($"Trying to delete '{srcPath}'");
+
+            IVirtualEntry entry = _vfs.GetEntry(srcPath);
+            if (!entry.Exists)
+                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+
+            entry.Delete();
+            ReimportAll();
+
+            _logger.Debug($"Deleted '{srcPath}' successfully");
+            return true;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Moving '{srcPath}' failed: {ex.Message}");
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.Error($"Moving '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while deleting '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        }
+
+        return false;
+    }
+
+    public bool TryDuplicate(VirtualPath srcPath)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(srcPath);
+
+            _logger.Debug($"Trying to duplicate '{srcPath}'");
+
+            IVirtualEntry entry = _vfs.GetEntry(srcPath);
+            if (!entry.Exists)
+                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+
+            entry.Duplicate();
+            ReimportAll();
+
+            _logger.Debug($"Duplicated '{srcPath}' successfully");
+            return true;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Duplicated '{srcPath}' failed: {ex.Message}");
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.Error($"Duplicated '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while duplicating '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        }
+
+        return false;
+    }
+
+    public bool TryRename(VirtualPath srcPath, string name)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(srcPath);
+
+            _logger.Debug($"Trying to rename '{srcPath}' to '{name}'");
+
+            IVirtualEntry entry = _vfs.GetEntry(srcPath);
+            if (!entry.Exists)
+                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+
+            entry.Rename(name);
+            ReimportAll();
+
+            _logger.Debug($"Renaming '{srcPath}' successfully");
+            return true;
+        }
+        catch (AssetPipelineException ex)
+        {
+            _logger.Error($"Renaming '{srcPath}' failed: {ex.Message}");
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.Error($"Renaming '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while renaming '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        }
+
+        return false;
+    }
+
     public bool HasMetadata(VirtualPath vpath)
     {
         try
@@ -154,10 +299,13 @@ public sealed class AssetPipeline
         Guid id = Guid.NewGuid();
 
         // TODO: Find a way to get the asset type
-        var metadata = new AssetMetadata(id, string.Empty);
+        var metadata = new AssetMetadata(id);
         metadata.Importer = GetAssetImporter(assetPath);
         metadata.Processor = GetDefaultProcessorFromImporter(metadata.Importer); // Is processor really needed ?
         metadata.ResourcePath = assetPath;
+        metadata.AssetType = metadata.Processor.OutputType;
+
+        _logger.Trace($"Metadata created for asset of type '{metadata.AssetType.Name}'");
 
         _metadataStore.Save(assetPath, metadata);
         return metadata;
@@ -242,7 +390,6 @@ public sealed class AssetPipeline
         _logger.Trace($"Using processor: {processor.GetType().Name} ({processor.InputType.Name} -> {processor.OutputType.Name})");
         return processor;
     }
-
 
     private object ImportAssetInternal(IAssetImporter importer, IVirtualFile file)
     {

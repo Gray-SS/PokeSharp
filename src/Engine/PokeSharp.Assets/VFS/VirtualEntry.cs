@@ -1,3 +1,6 @@
+using PokeSharp.Assets.VFS.Extensions;
+using PokeSharp.Assets.VFS.Volumes;
+
 namespace PokeSharp.Assets.VFS;
 
 public abstract class VirtualEntry : IVirtualEntry, IEquatable<IVirtualEntry>
@@ -7,41 +10,33 @@ public abstract class VirtualEntry : IVirtualEntry, IEquatable<IVirtualEntry>
     public long Size { get; }
     public VirtualPath Path { get; }
     public bool IsDirectory => Path.IsDirectory;
-    public virtual bool Exists => Provider.Exists(Path);
+    public virtual bool Exists => Volume.AsFetchable().EntryExists(Path);
 
-    public IVirtualFileSystemProvider Provider { get; }
+    public IVirtualVolume Volume { get; }
 
-    public VirtualEntry(IVirtualFileSystemProvider provider, VirtualPath path)
+    public VirtualEntry(IVirtualVolume volume, VirtualPath path)
     {
         Path = path;
-        Provider = provider;
+        Volume = volume;
     }
 
     public virtual IVirtualDirectory GetParent()
     {
         VirtualPath parentPath = Path.GetParent();
-        return new VirtualDirectory(Provider, parentPath);
+        return new VirtualDirectory(Volume, parentPath);
     }
 
     public virtual IVirtualEntry Rename(string name)
-    {
-        return Provider.RenameEntry(Path, name);
-    }
+        => Volume.AsWriteable().RenameEntry(Path, name);
 
-    public virtual IVirtualEntry Move(VirtualPath newPath)
-    {
-        return Provider.MoveEntry(Path, newPath);
-    }
+    public virtual IVirtualEntry Move(VirtualPath destPath)
+        => Volume.AsWriteable().MoveEntry(Path, destPath);
 
     public virtual bool Delete()
-    {
-        return Provider.DeleteEntry(Path);
-    }
+        => Volume.AsWriteable().DeleteEntry(Path);
 
     public virtual IVirtualEntry Duplicate()
-    {
-        return Provider.DuplicateEntry(Path);
-    }
+        => Volume.AsWriteable().DuplicateEntry(Path);
 
     public bool Equals(IVirtualEntry? other)
     {

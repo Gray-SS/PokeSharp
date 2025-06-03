@@ -1,6 +1,6 @@
 using PokeSharp.Assets;
 using PokeSharp.Assets.Exceptions;
-using PokeSharp.Assets.VFS;
+using PokeSharp.Assets.VFS.Services;
 using PokeSharp.Core.Logging;
 using PokeSharp.ROM.Services;
 
@@ -10,11 +10,11 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
 {
     private readonly ILogger _logger;
     private readonly IGbaConfigProvider _configProvider;
-    private readonly IVirtualFileSystem _vfs;
+    private readonly IVirtualVolumeManager _volumeManager;
 
-    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger, IVirtualFileSystem vfs)
+    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger, IVirtualVolumeManager volumeManager)
     {
-        _vfs = vfs;
+        _volumeManager = volumeManager;
         _logger = logger;
         _configProvider = configProvider;
     }
@@ -49,18 +49,17 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
         }
 
         string scheme = config.VolumeScheme;
-        if (_vfs.IsVolumeMounted(scheme))
+        if (_volumeManager.IsVolumeMountedForScheme(scheme))
         {
             _logger.Warn($"Volume at scheme '{scheme}' is already mounted. Unmounting and remounting");
-            _vfs.UnmountVolume(scheme);
+            _volumeManager.UnmountVolume(scheme);
         }
 
-        var volume = new VolumeInfo(scheme, config.Name, "ROM", FileSystemAccess.Read);
         var rom = new Rom(romInfo, config);
-
         var vfsBuilder = new GbaVfsBuilder(rom);
-        _vfs.MountVolume(volume, new RomFileSystemProvider(volume.RootPath, vfsBuilder));
+        var volume = new RomVolume("ROM", scheme, config.Name, vfsBuilder);
 
+        _volumeManager.MountVolume(volume);
         return rom;
     }
 

@@ -6,6 +6,7 @@ using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
 using Ninject;
 using PokeSharp.Core.Windowing;
+using PokeSharp.Core.Threadings;
 
 namespace PokeSharp.Core;
 
@@ -118,6 +119,8 @@ public abstract class Engine : Game
 
     protected sealed override void Update(GameTime gameTime)
     {
+        ThreadDispatcher.Update();
+
         OnUpdate(gameTime);
     }
 

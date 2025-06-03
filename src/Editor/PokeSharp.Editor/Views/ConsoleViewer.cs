@@ -6,6 +6,7 @@ using NVec4 = System.Numerics.Vector4;
 
 namespace PokeSharp.Editor.Views;
 
+//TODO: Improve this, it lags when many logs are received.
 public sealed class ConsoleViewer : IGuiHook
 {
     private bool _autoScroll = true;

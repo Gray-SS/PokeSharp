@@ -1,34 +1,32 @@
 using PokeSharp.Assets.VFS;
 using PokeSharp.Assets.VFS.Events;
+using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
 using PokeSharp.ROM.Services;
 
 namespace PokeSharp.ROM;
 
-public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
+public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
 {
-    public event EventHandler<FileSystemChangedArgs>? OnFileChanged;
-
     private readonly ILogger _logger;
 
     private readonly Dictionary<VirtualPath, RomFile> _files;
     private readonly Dictionary<VirtualPath, RomDirectory> _directories;
 
-    public RomFileSystemProvider(VirtualPath rootPath, RomVfsBuilder vfsBuilder)
+    public RomVolume(string id, string scheme, string displayName, RomVfsBuilder vfsBuilder) : base(id, scheme, displayName)
     {
-        ArgumentNullException.ThrowIfNull(rootPath);
         ArgumentNullException.ThrowIfNull(vfsBuilder);
 
-        _logger = LoggerFactory.GetLogger(typeof(RomFileSystemProvider));
+        _logger = LoggerFactory.GetLogger(typeof(RomVolume));
         _files = new Dictionary<VirtualPath, RomFile>();
         _directories = new Dictionary<VirtualPath, RomDirectory>();
 
-        BuildVirtualFileSystem(vfsBuilder, rootPath);
+        BuildVirtualFileSystem(vfsBuilder);
     }
 
-    private void BuildVirtualFileSystem(RomVfsBuilder builder, VirtualPath rootPath)
+    private void BuildVirtualFileSystem(RomVfsBuilder builder)
     {
-        var root = new RomDirectory(rootPath);
+        var root = new RomDirectory(RootPath);
         builder.Build(root);
 
         RegisterDirectoryRecursive(root);
@@ -51,7 +49,7 @@ public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
         }
     }
 
-    public IVirtualDirectory GetDirectory(VirtualPath virtualPath)
+    public override IVirtualDirectory GetDirectory(VirtualPath virtualPath)
     {
         if (!virtualPath.IsDirectory)
             throw new ArgumentException($"Getting directory failed - the virtual path doesn't lead to a directory: {virtualPath}");
@@ -59,7 +57,7 @@ public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
         return new VirtualDirectory(this, virtualPath);
     }
 
-    public IVirtualFile GetFile(VirtualPath virtualPath)
+    public override IVirtualFile GetFile(VirtualPath virtualPath)
     {
         if (virtualPath.IsDirectory)
             throw new ArgumentException($"Getting file failed - the virtual path doesn't lead to a file: {virtualPath}");
@@ -67,7 +65,7 @@ public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
         return new VirtualFile(this, virtualPath);
     }
 
-    public IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
+    public override IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
     {
         if (!_directories.TryGetValue(virtualPath, out RomDirectory? directory))
             yield break;
@@ -78,7 +76,7 @@ public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
         }
     }
 
-    public IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
+    public override IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
     {
         if (!_directories.TryGetValue(virtualPath, out RomDirectory? directory))
             yield break;
@@ -104,53 +102,18 @@ public sealed class RomFileSystemProvider : IVirtualFileSystemProvider
         return file.Data.ToArray();
     }
 
-    public IVirtualDirectory CreateDirectory(VirtualPath virtualPath)
-    {
-        throw new NotSupportedException();
-    }
-
-    public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite)
-    {
-        throw new NotSupportedException();
-    }
-
-    public Stream OpenWrite(VirtualPath virtualPath)
-    {
-        throw new NotSupportedException();
-    }
-
-    public IVirtualEntry MoveEntry(VirtualPath srcPath, VirtualPath destPath)
-    {
-        throw new NotSupportedException();
-    }
-
-    public IVirtualEntry RenameEntry(VirtualPath virtualPath, string name)
-    {
-        throw new NotSupportedException();
-    }
-
-    public IVirtualEntry DuplicateEntry(VirtualPath virtualPath)
-    {
-        throw new NotSupportedException();
-    }
-
-    public bool Exists(VirtualPath virtualPath)
+    public override bool EntryExists(VirtualPath virtualPath)
     {
         return FileExists(virtualPath) || DirectoryExists(virtualPath);
     }
 
-    public bool FileExists(VirtualPath virtualPath)
+    public override bool FileExists(VirtualPath virtualPath)
     {
         return _files.ContainsKey(virtualPath);
     }
 
-    public bool DirectoryExists(VirtualPath virtualPath)
+    public override bool DirectoryExists(VirtualPath virtualPath)
     {
         return _directories.ContainsKey(virtualPath);
-    }
-
-    public bool DeleteEntry(VirtualPath virtualPath)
-    {
-        throw new NotImplementedException();
     }
 }

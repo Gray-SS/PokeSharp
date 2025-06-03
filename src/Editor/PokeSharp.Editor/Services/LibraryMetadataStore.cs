@@ -1,26 +1,40 @@
 using PokeSharp.Assets.VFS;
+using PokeSharp.Assets.VFS.Services;
+using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
+using PokeSharp.Editor.Services;
 
 namespace PokeSharp.Assets.Services;
 
 public sealed class LibraryMetadataStore : IAssetMetadataStore
 {
+    private const string LibsScheme = "libs";
+
     private readonly ILogger _logger;
     private readonly VirtualPath _libsRoot;
     private readonly IVirtualFileSystem _vfs;
+    private readonly IProjectManager _projectManager;
+    private readonly IVirtualVolumeManager _volumeManager;
     private readonly IAssetMetadataSerializer _serializer;
 
-    public LibraryMetadataStore(ILogger logger, IVirtualFileSystem vfs, IAssetMetadataSerializer serializer)
+    public LibraryMetadataStore(
+        ILogger logger,
+        IVirtualFileSystem vfs,
+        IProjectManager projectManager,
+        IVirtualVolumeManager volumeManager,
+        IAssetMetadataSerializer serializer)
     {
         _vfs = vfs;
         _logger = logger;
         _serializer = serializer;
+        _volumeManager = volumeManager;
+        _projectManager = projectManager;
         _libsRoot = VirtualPath.Parse("libs://");
     }
 
     public bool Exists(VirtualPath assetPath)
     {
-        return _vfs.Exists(GetMetadataPath(assetPath));
+        return _vfs.FileExists(GetMetadataPath(assetPath));
     }
 
     public IVirtualFile GetMetadataFile(VirtualPath assetPath)
@@ -47,21 +61,20 @@ public sealed class LibraryMetadataStore : IAssetMetadataStore
     public void Save(VirtualPath assetPath, AssetMetadata metadata)
     {
         VirtualPath metadataPath = GetMetadataPath(assetPath);
-        IVirtualFile file = _vfs.CreateFile(metadataPath);
+        IVirtualFile file = _vfs.CreateFile(metadataPath, true);
         _serializer.Serialize(file, metadata);
     }
 
     public void DeleteAll()
     {
-        if (!_vfs.IsVolumeMounted(_libsRoot.Scheme))
+        if (!_projectManager.HasActiveProject)
             return;
 
-        IVirtualDirectory directory = _vfs.GetDirectory(_libsRoot);
-
-        foreach (var child in directory.GetDirectories())
+        IVirtualVolume? volume = _projectManager.ActiveProject!.LibsVolume;
+        foreach (var child in volume.RootDirectory.GetDirectories())
             child.Delete();
 
-        foreach (var child in directory.GetFiles())
+        foreach (var child in volume.RootDirectory.GetFiles())
             child.Delete();
     }
 }

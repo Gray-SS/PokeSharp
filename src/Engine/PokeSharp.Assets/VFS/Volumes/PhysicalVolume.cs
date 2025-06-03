@@ -1,22 +1,22 @@
 using PokeSharp.Assets.VFS.Events;
 
-namespace PokeSharp.Assets.VFS;
+namespace PokeSharp.Assets.VFS.Volumes;
 
-public sealed class FileSystemProvider : IVirtualFileSystemProvider
+public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritableVolume, IWatchableVolume
 {
-    public string RootPath { get; }
+    public string PhysicalPath { get; }
 
-    public event EventHandler<FileSystemChangedArgs>? OnFileChanged;
+    public event EventHandler<FileSystemChangedArgs>? OnFileSystemChanged;
 
     private readonly FileSystemWatcher _watcher;
 
-    public FileSystemProvider(string rootPath)
+    public PhysicalVolume(string id, string scheme, string displayName, string physicalPath) : base(id, scheme, displayName)
     {
-        if (!Directory.Exists(rootPath))
-            throw new ArgumentException($"No directory was found at path: '{rootPath}'");
+        if (!Directory.Exists(physicalPath))
+            throw new ArgumentException($"Unable to create physical volume - Physical path '{physicalPath}' doesn't exists or is not a directory");
 
-        RootPath = Path.GetFullPath(rootPath);
-        _watcher = new FileSystemWatcher(rootPath)
+        PhysicalPath = Path.GetFullPath(physicalPath);
+        _watcher = new FileSystemWatcher(PhysicalPath)
         {
             IncludeSubdirectories = true,
             EnableRaisingEvents = true,
@@ -41,38 +41,38 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         };
 
         string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
-        string virtualPath = Path.GetRelativePath(RootPath, fullPath);
+        VirtualPath virtualPath = RootPath.Combine(Path.GetRelativePath(PhysicalPath, fullPath));
 
-        OnFileChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
+        OnFileSystemChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
     }
 
     private string GetPhysicalPath(VirtualPath virtualPath)
     {
-        if (virtualPath.IsRoot) return RootPath;
+        if (virtualPath.IsRoot) return PhysicalPath;
 
         string path = virtualPath.LocalPath.Replace('/', Path.DirectorySeparatorChar);
-        return Path.Combine(RootPath, path);
+        return Path.Combine(PhysicalPath, path);
     }
 
-    public bool Exists(VirtualPath path)
+    public override bool EntryExists(VirtualPath path)
     {
         string physicalPath = GetPhysicalPath(path);
         return File.Exists(physicalPath) || Directory.Exists(physicalPath);
     }
 
-    public bool FileExists(VirtualPath path)
+    public override bool FileExists(VirtualPath path)
     {
         string physicalPath = GetPhysicalPath(path);
         return File.Exists(physicalPath);
     }
 
-    public bool DirectoryExists(VirtualPath path)
+    public override bool DirectoryExists(VirtualPath path)
     {
         string physicalPath = GetPhysicalPath(path);
         return Directory.Exists(physicalPath);
     }
 
-    public IVirtualFile GetFile(VirtualPath virtualPath)
+    public override IVirtualFile GetFile(VirtualPath virtualPath)
     {
         if (virtualPath.IsDirectory)
             throw new InvalidOperationException($"The provided path doesn't lead to a file: '{virtualPath}'");
@@ -80,7 +80,7 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         return new VirtualFile(this, virtualPath);
     }
 
-    public IVirtualDirectory GetDirectory(VirtualPath virtualPath)
+    public override IVirtualDirectory GetDirectory(VirtualPath virtualPath)
     {
         if (!virtualPath.IsDirectory)
             throw new InvalidOperationException($"The provided path doesn't lead to a directory: '{virtualPath}'");
@@ -88,7 +88,7 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         return new VirtualDirectory(this, virtualPath);
     }
 
-    public IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
+    public override IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath)
     {
         IVirtualDirectory foundDirectory = GetDirectory(virtualPath);
         if (!foundDirectory.Exists)
@@ -102,7 +102,7 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
         }
     }
 
-    public IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
+    public override IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath)
     {
         IVirtualDirectory foundDirectory = GetDirectory(virtualPath);
         if (!foundDirectory.Exists)
@@ -279,6 +279,11 @@ public sealed class FileSystemProvider : IVirtualFileSystemProvider
             throw new FileNotFoundException($"File at virtual path '{virtualPath}' doesn't exist");
 
         return File.OpenWrite(physicalPath);
+    }
+
+    public StreamWriter OpenWriter(VirtualPath virtualPath)
+    {
+        return new StreamWriter(OpenWrite(virtualPath));
     }
 
     public Stream OpenRead(VirtualPath virtualPath)

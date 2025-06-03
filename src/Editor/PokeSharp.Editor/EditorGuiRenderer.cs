@@ -26,7 +26,7 @@ public sealed class EditorGuiRenderer : IRenderer
         ImGuiIOPtr io = ImGui.GetIO();
 
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+        // io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
         ImFontConfigPtr config = ImGuiNative.ImFontConfig_ImFontConfig();
         config.MergeMode = false;

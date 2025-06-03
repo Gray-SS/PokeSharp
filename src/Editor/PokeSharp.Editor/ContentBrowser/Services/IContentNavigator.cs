@@ -1,10 +1,11 @@
 using PokeSharp.Assets.VFS;
 
-namespace PokeSharp.Editor.Services;
+namespace PokeSharp.Editor.ContentBrowser.Services;
 
 public interface IContentNavigator
 {
-    VirtualPath CurrentPath { get; }
+    VirtualPath CurrentPath { get; set; }
+    IVirtualDirectory CurrentDirectory { get; }
 
     // TODO: Create a specific event args for this
     event EventHandler<VirtualPath>? CurrentPathChanged;

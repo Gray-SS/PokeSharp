@@ -1,28 +1,39 @@
 using Ninject;
+using PokeSharp.Core.Logging;
 
 namespace PokeSharp.Core.Services;
 
 public sealed class DynamicTypeResolver : IDynamicTypeResolver
 {
     private readonly IKernel _kernel;
+    private readonly ILogger _logger;
     private readonly Dictionary<string, Type> _resolvedTypes;
 
-    public DynamicTypeResolver(IKernel kernel)
+    public DynamicTypeResolver(IKernel kernel, ILogger logger)
     {
         _kernel = kernel;
+        _logger = logger;
         _resolvedTypes = new Dictionary<string, Type>();
     }
 
     public Type ResolveType(string assemblyQualifiedTypeName)
     {
+        _logger.Trace($"Dynamicly resolving type '{assemblyQualifiedTypeName}'");
         if (_resolvedTypes.TryGetValue(assemblyQualifiedTypeName, out Type? cachedType))
+        {
+            _logger.Trace($"Cache hit");
+            _logger.Trace($"Type '{assemblyQualifiedTypeName}' has been resolved dynamicly to '{cachedType.Name}'");
             return cachedType;
+        }
 
         Type? type = Type.GetType(assemblyQualifiedTypeName);
         if (type == null)
-            throw new InvalidOperationException($"Couldn't find any type with assembly qualified name '{assemblyQualifiedTypeName}'. Please make sure all your modules are loaded before using this interface.");
+            throw new InvalidOperationException($"Couldn't find any type with assembly qualified name '{assemblyQualifiedTypeName}'. Please make sure all your modules are loaded before using {nameof(DynamicTypeResolver)}.");
 
+        _logger.Trace($"Type has been resolved dynamicly to '{type.Name}'");
         _resolvedTypes.Add(assemblyQualifiedTypeName, type);
+
+        _logger.Trace($"Type cached with key '{assemblyQualifiedTypeName}'");
         return type;
     }
 
