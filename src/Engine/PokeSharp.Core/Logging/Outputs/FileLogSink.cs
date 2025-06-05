@@ -1,6 +1,12 @@
-namespace PokeSharp.Core.Logging;
+namespace PokeSharp.Core.Logging.Outputs;
 
-public sealed class FileLogOutput : ILogOutput, IDisposable
+/// <summary>
+/// Writes log entries to a file in a specified directory, with one file per day (rolling by date).
+/// </summary>
+/// <remarks>
+/// The constructor takes a folder path (e.g. <c>"Logs"</c>). Each day’s entries go into a file named <c>YYYY_MM_DD.txt</c>.
+/// </remarks>
+public sealed class FileLogSink : ILogSink, IDisposable
 {
     public string Name => "File";
 
@@ -9,7 +15,7 @@ public sealed class FileLogOutput : ILogOutput, IDisposable
     private DateTime _currentDate;
     private StreamWriter _writer = null!;
 
-    public FileLogOutput(string targetDirectory)
+    public FileLogSink(string targetDirectory)
     {
         _logDirectory = targetDirectory;
         _currentDate = DateTime.UtcNow.Date;
@@ -18,7 +24,7 @@ public sealed class FileLogOutput : ILogOutput, IDisposable
         OpenLogFile();
     }
 
-    public void Log(in LogEntry entry)
+    public void Log(LogEntry entry)
     {
         var date = DateTime.UtcNow.Date;
         if (date != _currentDate)

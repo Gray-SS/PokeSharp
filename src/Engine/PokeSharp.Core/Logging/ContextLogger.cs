@@ -1,7 +1,19 @@
+using System.Runtime.CompilerServices;
+
 namespace PokeSharp.Core.Logging;
 
-public sealed class ContextLogger : ILogger
+/// <summary>
+/// Provides a logger that is bound to a specific context (typically a <see cref="Type"/>), enabling more granular and structured logging.
+/// </summary>
+/// <remarks>
+/// <b>Note:</b> This is the default implementation of <see cref="Logger"/>, and is typically injected into your services via <see cref="LoggerFactory.GetLogger(Type)"/>.
+/// <br/>
+/// If dependency injection is not available in your context, you can manually obtain a logger instance using <see cref="LoggerFactory.GetLogger(Type)"/>.
+/// </remarks>
+public sealed class ContextLogger : Logger
 {
+    private static readonly object _lock = new();
+
     private readonly string _context;
     private readonly LoggerSettings _settings;
 
@@ -11,51 +23,25 @@ public sealed class ContextLogger : ILogger
         _settings = settings;
     }
 
-    public void Log(LogLevel level, string message)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void Log(LogLevel level,
+                             string message,
+                             [CallerFilePath] string? callerFilePath = null,
+                             [CallerMemberName] string? callerMemberName = null)
     {
         if (level < _settings.LogLevel)
             return;
 
         var timestamp = DateTime.Now;
-        var entry = new LogEntry(timestamp, level, _context, message);
+        var currentThreadId = Environment.CurrentManagedThreadId;
+        var entry = new LogEntry(timestamp, level, _context, message, currentThreadId, callerFilePath, callerMemberName);
 
-        foreach (ILogOutput output in _settings.Outputs)
+        lock (_lock)
         {
-            output.Log(in entry);
+            foreach (ILogSink output in _settings.Outputs)
+            {
+                output.Log(entry);
+            }
         }
-    }
-
-    public void Trace(string message)
-    {
-#if TRACE
-        Log(LogLevel.Trace, message);
-#endif
-    }
-
-    public void Debug(string message)
-    {
-#if DEBUG
-        Log(LogLevel.Debug, message);
-#endif
-    }
-
-    public void Info(string message)
-    {
-        Log(LogLevel.Info, message);
-    }
-
-    public void Warn(string message)
-    {
-        Log(LogLevel.Warn, message);
-    }
-
-    public void Error(string message)
-    {
-        Log(LogLevel.Error, message);
-    }
-
-    public void Fatal(string message)
-    {
-        Log(LogLevel.Fatal, message);
     }
 }
