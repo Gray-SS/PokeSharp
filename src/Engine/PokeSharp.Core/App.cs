@@ -2,6 +2,7 @@ using Ninject;
 using Ninject.Infrastructure;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Logging;
+using PokeSharp.Core.Logging.Outputs;
 using PokeSharp.Core.Modules;
 using PokeSharp.Core.Services;
 
@@ -27,7 +28,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
     public IKernel Kernel => _kernel;
 
     private IKernel _kernel = null!;
-    private ILogger _logger = null!;
+    private Logger _logger = null!;
 
     public void Run()
     {
@@ -66,7 +67,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
         kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
-        kernel.Bind<ILogger>().ToProvider<LoggerProvider>();
+        kernel.Bind<Logger>().ToProvider<LoggerProvider>();
 
         return kernel;
     }
@@ -81,7 +82,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
 
     protected virtual void ConfigureLogging(LoggerSettings settings)
     {
-        settings.AddOutput(new FileLogOutput(targetDirectory: "logs"));
+        settings.AddOutput(new FileLogSink(targetDirectory: "logs"));
     }
 
     private void ConfigureModules()
@@ -104,7 +105,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         _logger.Info("Logger settings:");
         _logger.Info($"\tMinimum log level: {settings.LogLevel}");
         _logger.Info("\tOutputs:");
-        foreach (ILogOutput output in settings.Outputs)
+        foreach (ILogSink output in settings.Outputs)
         {
             _logger.Info($"\t- {output.GetType().Name}:{output.Name}");
         }

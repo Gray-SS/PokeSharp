@@ -8,17 +8,13 @@ namespace PokeSharp.Rendering.Assets;
 public sealed class SpriteImporter : AssetImporter<RawSprite>
 {
     public override Type ProcessorType => typeof(SpriteProcessor);
+    public override string SupportedExtensions => ".png,.jpeg,.jpg";
 
     private readonly GraphicsDevice _graphicsDevice;
 
     public SpriteImporter(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
-    }
-
-    public override bool CanImport(VirtualPath path)
-    {
-        return path.Extension is ".png" or ".jpeg" or ".jpg";
     }
 
     public override RawSprite Import(IVirtualFile file)

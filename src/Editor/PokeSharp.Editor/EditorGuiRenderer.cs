@@ -8,11 +8,11 @@ namespace PokeSharp.Editor;
 
 public sealed class EditorGuiRenderer : IRenderer
 {
-    private readonly IGuiHookDispatcher _dispatcher;
+    private readonly IEditorViewManager _dispatcher;
     private readonly IGuiResourceManager _resManager;
     private readonly ImGuiRenderer _imGuiRenderer;
 
-    public EditorGuiRenderer(ImGuiRenderer renderer, IGuiResourceManager resManager, IGuiHookDispatcher dispatcher)
+    public EditorGuiRenderer(ImGuiRenderer renderer, IGuiResourceManager resManager, IEditorViewManager dispatcher)
     {
         _dispatcher = dispatcher;
         _imGuiRenderer = renderer;

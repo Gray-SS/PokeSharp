@@ -40,14 +40,14 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
     private ResolutionSize _resolution;
     private ResolutionSize _virtualResolution;
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IWindowManager _window;
     private readonly GraphicsDeviceManager _graphics;
 
     public static readonly ResolutionSize MinResolution = new(320, 240);
     public static readonly ResolutionSize MaxResolution = new(7680, 4320);
 
-    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics, ILogger logger)
+    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics, Logger logger)
     {
         _logger = logger;
         _window = window;

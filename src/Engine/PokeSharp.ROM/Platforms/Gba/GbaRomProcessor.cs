@@ -8,11 +8,11 @@ namespace PokeSharp.ROM.Platforms.Gba;
 
 public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
 {
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IGbaConfigProvider _configProvider;
     private readonly IVirtualVolumeManager _volumeManager;
 
-    public GbaRomProcessor(IGbaConfigProvider configProvider, ILogger logger, IVirtualVolumeManager volumeManager)
+    public GbaRomProcessor(IGbaConfigProvider configProvider, Logger logger, IVirtualVolumeManager volumeManager)
     {
         _volumeManager = volumeManager;
         _logger = logger;

@@ -12,11 +12,11 @@ public sealed class VirtualVolumeManager : IVirtualVolumeManager
     public event EventHandler<VirtualVolumeEventArgs>? OnVolumeUnmounted;
     public event EventHandler<FileSystemChangedArgs>? OnFileSystemChanged;
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly Dictionary<string, IVirtualVolume> _mountedVolumes;
     private bool disposedValue;
 
-    public VirtualVolumeManager(ILogger logger)
+    public VirtualVolumeManager(Logger logger)
     {
         _logger = logger;
         _mountedVolumes = new Dictionary<string, IVirtualVolume>();

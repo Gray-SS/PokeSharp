@@ -24,12 +24,12 @@ public sealed class ContentCacheService : IContentCacheService, IEngineHook
     private readonly List<IVirtualVolume> _cachedVolumes;
     private readonly List<IVirtualDirectory> _cachedDirectories;
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IContentNavigator _navigator;
     private readonly IVirtualVolumeManager _volumesManager;
 
     public ContentCacheService(
-        ILogger logger,
+        Logger logger,
         IContentNavigator navigator,
         IVirtualVolumeManager volumesManager)
     {
@@ -53,6 +53,13 @@ public sealed class ContentCacheService : IContentCacheService, IEngineHook
     {
         VirtualPath entryChangedPath = e.VirtualPath;
         _logger.Trace($"File system change received '{entryChangedPath}'");
+
+        // TODO: Need a clean way of getting the state of the editor.
+        if (_navigator.CurrentPath == null)
+        {
+            _logger.Warn("The navigator current path is null.");
+            return;
+        }
 
         VirtualPath currentPath = _navigator.CurrentPath;
         bool isChild = entryChangedPath.IsDirectory && entryChangedPath.IsSubPath(currentPath);

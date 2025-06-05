@@ -15,12 +15,12 @@ public abstract class Engine : Game
 {
     public IApp App => ServiceLocator.CurrentApp;
     public GraphicsDeviceManager Graphics { get; }
-    public ILogger Logger => _logger;
+    public Logger Logger => _logger;
     public IKernel Kernel => _kernel;
     public IModuleLoader ModuleLoader => _moduleLoader;
 
     private readonly IKernel _kernel;
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IModuleLoader _moduleLoader;
     private IEngineHookDispatcher _hooksDispatcher = null!;
 
@@ -119,7 +119,7 @@ public abstract class Engine : Game
 
     protected sealed override void Update(GameTime gameTime)
     {
-        ThreadDispatcher.Update();
+        ThreadHelper.Update();
 
         OnUpdate(gameTime);
     }

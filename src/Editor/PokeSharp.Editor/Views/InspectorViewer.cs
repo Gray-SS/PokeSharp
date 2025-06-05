@@ -1,23 +1,32 @@
 using System.Numerics;
 using FontAwesome;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using PokeSharp.Assets;
+using PokeSharp.Assets.Services;
 using PokeSharp.Assets.VFS;
+using PokeSharp.Core.Logging;
 using PokeSharp.Editor.Services;
+
+using NVec4 = System.Numerics.Vector4;
 
 namespace PokeSharp.Editor.Views;
 
-public sealed class InspectorViewer : IGuiHook
+public sealed class InspectorViewer : IEditorView
 {
     private bool _canInspect;
+    private Logger _logger;
     private AssetMetadata? _assetMetadata;
-    private readonly AssetPipeline _assetPipeline;
+    private readonly IAssetMetadataStore _metadataStore;
     private readonly ISelectionManager _selectionService;
 
-
-    public InspectorViewer(ISelectionManager selectionService, AssetPipeline assetPipeline)
+    public InspectorViewer(
+        Logger logger,
+        ISelectionManager selectionService,
+        IAssetMetadataStore metadataStore)
     {
-        _assetPipeline = assetPipeline;
+        _logger = logger;
+        _metadataStore = metadataStore;
 
         _selectionService = selectionService;
         _selectionService.SelectionUpdated += OnSelectionChanged;
@@ -31,10 +40,11 @@ public sealed class InspectorViewer : IGuiHook
         _assetMetadata = null;
         if (e.SelectedObject is IVirtualFile file)
         {
-            if (!_assetPipeline.HasMetadata(file.Path))
+            if (!_metadataStore.Exists(file.Path))
                 return;
 
-            _assetMetadata = _assetPipeline.GetMetadata(file.Path);
+            _logger.Trace($"Selection changed, loading asset metadata for '{file.Path}'");
+            _assetMetadata = _metadataStore.Load(file.Path);
         }
     }
 
@@ -65,7 +75,7 @@ public sealed class InspectorViewer : IGuiHook
 
     private void DrawNoSelectionState()
     {
-        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.6f, 0.6f, 0.6f, 1.0f));
+        ImGui.PushStyleColor(ImGuiCol.Text, new NVec4(0.6f, 0.6f, 0.6f, 1.0f));
         ImGui.Text("No object currently selected");
         ImGui.Separator();
         ImGui.Text("Select an item to inspect its properties.");
@@ -144,33 +154,47 @@ public sealed class InspectorViewer : IGuiHook
             ImGui.Dummy(new(0, 10));
 
             string uri = file.Path.Uri;
-            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.7f, 0.7f, 0.7f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.Text, new NVec4(0.7f, 0.7f, 0.7f, 1.0f));
             ImGui.Text("Path:");
             ImGui.SameLine(0, 20);
             ImGui.InputText("##Path", ref uri, 256, ImGuiInputTextFlags.ReadOnly);
 
             if (_assetMetadata != null)
             {
+                ImGui.Text("Id");
+                ImGui.SameLine(0, 20);
+                ImGui.Text(_assetMetadata.Id.ToString());
+
                 ImGui.Dummy(new(0, 10));
                 ImGui.Separator();
                 ImGui.Dummy(new(0, 10));
 
-                string assetTypeName = _assetMetadata.AssetType.Name;
-                ImGui.Text("Asset Type:");
+                ImGui.Text("State");
                 ImGui.SameLine(0, 20);
-                ImGui.InputText("##Asset", ref assetTypeName, 256, ImGuiInputTextFlags.ReadOnly);
-
-                if (_assetMetadata.HasResource)
+                ImGui.Text(_assetMetadata.IsValid ? "Valid" : "Invalid");
+                if (_assetMetadata.IsValid)
                 {
-                    string? importerType = _assetMetadata.Importer!.GetType().Name;
-                    ImGui.Text("Importer Type:");
-                    ImGui.SameLine(0, 20);
-                    ImGui.InputText("##Importer", ref importerType, 256, ImGuiInputTextFlags.ReadOnly);
+                    if (_assetMetadata.AssetType != null)
+                    {
+                        string assetTypeName = _assetMetadata.AssetType.Name;
+                        ImGui.Text("Asset Type:");
+                        ImGui.SameLine(0, 20);
+                        ImGui.InputText("##Asset", ref assetTypeName, 256, ImGuiInputTextFlags.ReadOnly);
+                    }
 
-                    string? processorType = _assetMetadata.Processor!.GetType().Name;
-                    ImGui.Text("Processor Type:");
-                    ImGui.SameLine(0, 20);
-                    ImGui.InputText("##Processor", ref processorType, 256, ImGuiInputTextFlags.ReadOnly);
+                    if (_assetMetadata.Importer != null)
+                    {
+                        string importerType = _assetMetadata.Importer!.GetType().Name;
+                        ImGui.Text("Importer Type:");
+                        ImGui.SameLine(0, 20);
+                        ImGui.InputText("##Importer", ref importerType, 256, ImGuiInputTextFlags.ReadOnly);
+                    }
+                }
+                else
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, Color.Orange.ToVector4().ToNumerics());
+                    ImGui.TextWrapped(_assetMetadata.ErrorMessage);
+                    ImGui.PopStyleColor();
                 }
 
                 ImGui.Dummy(new(0, 10));

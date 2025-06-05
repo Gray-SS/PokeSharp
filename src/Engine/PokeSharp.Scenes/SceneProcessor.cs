@@ -9,9 +9,9 @@ namespace PokeSharp.Scenes;
 
 public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
 {
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
 
-    public SceneProcessor(ILogger logger)
+    public SceneProcessor(Logger logger)
     {
         _logger = logger;
     }

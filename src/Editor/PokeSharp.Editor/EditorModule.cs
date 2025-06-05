@@ -4,9 +4,9 @@ using Ninject.Syntax;
 using PokeSharp.Assets.Services;
 using PokeSharp.Core;
 using PokeSharp.Core.Logging;
+using PokeSharp.Core.Logging.Outputs;
 using PokeSharp.Core.Modules;
 using PokeSharp.Editor.ContentBrowser.Services;
-using PokeSharp.Editor.Miscellaneous;
 using PokeSharp.Editor.Services;
 
 namespace PokeSharp.Editor;
@@ -17,11 +17,11 @@ public sealed class EditorModule : Module
 
     public override void Configure(IKernel kernel)
     {
-        kernel.Bind<EditorConsoleBuffer>().ToSelf().InSingletonScope();
+        kernel.Bind<MemoryLogSink>().ToSelf().InSingletonScope();
         kernel.Bind<IProjectManager>().To<ProjectManager>().InSingletonScope();
         kernel.Bind<IGuiResourceManager>().To<GuiResourceManager>().InSingletonScope();
         kernel.Bind<EditorGuiRenderer>().ToSelf().InSingletonScope();
-        kernel.Bind<IGuiHookDispatcher>().To<GuiHookDispatcher>().InSingletonScope();
+        kernel.Bind<IEditorViewManager>().To<EditorViewManager>().InSingletonScope();
         kernel.Bind<ISelectionManager>().To<SelectionManager>().InSingletonScope();
         kernel.Bind<IAssetMetadataStore>().To<LibraryMetadataStore>().InSingletonScope();
 
@@ -31,8 +31,8 @@ public sealed class EditorModule : Module
 
     public override void ConfigureLogging(LoggerSettings settings, IResolutionRoot container)
     {
-        EditorConsoleBuffer buffer = container.Get<EditorConsoleBuffer>();
-        settings.AddOutput(buffer);
+        MemoryLogSink memorySink = container.Get<MemoryLogSink>();
+        settings.AddOutput(memorySink);
     }
 
     public override void Load()

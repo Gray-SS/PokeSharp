@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using PokeSharp.Assets.Exceptions;
 using PokeSharp.Assets.Services;
 using PokeSharp.Assets.VFS;
@@ -18,7 +17,7 @@ public sealed class AssetPipeline
     private readonly IAssetProcessor[] _processors;
     private readonly IAssetWriter[] _writers;
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IVirtualFileSystem _vfs;
     private readonly IVirtualVolumeManager _volumeManager;
     private readonly IAssetMetadataStore _metadataStore;
@@ -30,7 +29,7 @@ public sealed class AssetPipeline
         IAssetMetadataStore metadataStore,
         IVirtualVolumeManager volumeManager,
         IVirtualFileSystem vfs,
-        ILogger logger)
+        Logger logger)
     {
         _vfs = vfs;
         _volumeManager = volumeManager;
@@ -70,7 +69,7 @@ public sealed class AssetPipeline
 
         foreach (IVirtualFile child in directory.GetFiles())
         {
-            TryImport(child.Path);
+            Import(child.Path);
         }
     }
 
@@ -89,54 +88,117 @@ public sealed class AssetPipeline
         return _reflectionManager.InstantiateClassesOfType<IAssetWriter>();
     }
 
-    public bool TryImport(VirtualPath assetPath)
+    public void Import(VirtualPath assetPath)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(assetPath);
 
-            _logger.Debug($"Importing asset: '{assetPath}'");
+            _logger.Debug($"Importing '{assetPath}'");
 
             IVirtualFile file = _vfs.GetFile(assetPath);
             if (!file.Exists)
                 throw new AssetPipelineException($"File not found: '{assetPath}'");
 
-            string ext = assetPath.Extension;
-            if (string.IsNullOrEmpty(ext))
-                throw new AssetPipelineException($"File extension required for asset: '{assetPath}'");
+            AssetMetadata metadata;
+            if (!_metadataStore.Exists(assetPath))
+            {
+                _logger.Debug("No asset metadata found. Creating new asset metadata");
 
-            AssetMetadata metadata = GetOrCreateMetadata(assetPath);
-            object imported = ImportAssetInternal(metadata.Importer!, file);
-            object processed = ProcessAssetInternal(metadata.Processor!, imported, assetPath);
+                Guid assetId = Guid.NewGuid();
+                metadata = new AssetMetadata
+                {
+                    Id = assetId,
+                    ResourcePath = assetPath
+                };
 
-            // ReimportAll();
+                _logger.Trace($"Asset metadata instantiated ({assetId})");
 
-            _logger.Debug($"Asset imported: {assetPath}, {_metadataStore.GetMetadataPath(assetPath)}");
-            return true;
-        }
-        catch (AssetProcessorException ex)
-        {
-            _logger.Error($"Asset processing failed for '{assetPath}': {ex.Message}");
-        }
-        catch (AssetImporterException ex)
-        {
-            _logger.Error($"Asset import failed for '{assetPath}': {ex.Message}");
-        }
-        catch (AssetPipelineException ex)
-        {
-            _logger.Error($"Asset loading failed for '{assetPath}': {ex.Message}");
+                if (string.IsNullOrEmpty(assetPath.Extension))
+                {
+                    _logger.Warn("No importer can be assigned to an extension-less file.");
+                    metadata.ErrorMessage = "No importer can be assigned to an extension-less file.";
+
+                    _metadataStore.Save(assetPath, metadata);
+                    return;
+                }
+
+                string extension = assetPath.Extension;
+                IAssetImporter? foundImporter = _importers.FirstOrDefault(x => x.SupportedExtensions.Split(',').Any(ext => string.Equals(extension, ext, StringComparison.OrdinalIgnoreCase)));
+                if (foundImporter == null)
+                {
+                    _logger.Warn($"No importer found for file extension '{extension}'");
+                    metadata.ErrorMessage = $"No importer found for file extension '{extension}'";
+
+                    _metadataStore.Save(assetPath, metadata);
+                    return;
+                }
+
+                IAssetProcessor? foundProcessor = _processors.FirstOrDefault(x => foundImporter.ProcessorType == x.GetType());
+                if (foundProcessor == null)
+                {
+                    _logger.Warn($"No processor paired with importer' {foundImporter.GetType().Name}' was found");
+                    metadata.ErrorMessage = $"No processor paired with importer' {foundImporter.GetType().Name}' was found";
+
+                    _metadataStore.Save(assetPath, metadata);
+                    return;
+                }
+
+                metadata.Importer = foundImporter;
+                metadata.AssetType = foundProcessor.OutputType;
+            }
+            else
+            {
+                _logger.Debug($"Metadata found for asset '{assetPath}'. Loading metadata");
+                metadata = _metadataStore.Load(assetPath);
+            }
+
+            IAssetImporter importer = metadata.Importer;
+
+            object? rawAsset;
+            try
+            {
+                rawAsset = importer.Import(file);
+                if (rawAsset == null)
+                {
+                    _logger.Warn($"Importer '{importer.GetType().Name}' returned null for '{assetPath}' - file may be corrupted or unsupported");
+                    metadata.ErrorMessage = "Something went wrong in the import process. Check the logs for more details.";
+
+                    _metadataStore.Save(assetPath, metadata);
+                    return;
+                }
+            }
+            catch (AssetImporterException ex)
+            {
+                _metadataStore.Save(assetPath, metadata);
+
+                _logger.Warn($"Import failed for '{assetPath}'. {ex.Message}");
+                metadata.ErrorMessage = $"Import failed: {ex.Message}";
+                return;
+            }
+            catch (Exception ex)
+            {
+                _metadataStore.Save(assetPath, metadata);
+
+                _logger.Error($"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}");
+                _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+                metadata.ErrorMessage = $"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}";
+                return;
+            }
+
+            Type rawAssetType = rawAsset.GetType();
+            _metadataStore.Save(assetPath, metadata);
+            _logger.Debug($"Import successful: {rawAssetType.Name}");
         }
         catch (ArgumentNullException ex)
         {
-            _logger.Error($"Asset import failed - The parameter '{ex.ParamName}' was null");
+            _logger.Error($"Asset import failed - Parameter '{ex.ParamName}' is null");
         }
         catch (Exception ex)
         {
             _logger.Error($"Unexpected error while importing '{assetPath}': {ex.GetType().Name} - {ex.Message}");
             _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
         }
-
-        return false;
     }
 
     public bool TryMove(VirtualPath srcPath, VirtualPath destPath)
@@ -279,51 +341,6 @@ public sealed class AssetPipeline
         return false;
     }
 
-    public bool HasMetadata(VirtualPath vpath)
-    {
-        try
-        {
-            return _metadataStore.Exists(vpath);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while checking if asset at path '{vpath}' has metadata: {ex.GetType().Name}: {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
-
-        return false;
-    }
-
-    public AssetMetadata CreateMetadata(VirtualPath assetPath)
-    {
-        Guid id = Guid.NewGuid();
-
-        // TODO: Find a way to get the asset type
-        var metadata = new AssetMetadata(id);
-        metadata.Importer = GetAssetImporter(assetPath);
-        metadata.Processor = GetDefaultProcessorFromImporter(metadata.Importer); // Is processor really needed ?
-        metadata.ResourcePath = assetPath;
-        metadata.AssetType = metadata.Processor.OutputType;
-
-        _logger.Trace($"Metadata created for asset of type '{metadata.AssetType.Name}'");
-
-        _metadataStore.Save(assetPath, metadata);
-        return metadata;
-    }
-
-    public AssetMetadata GetMetadata(VirtualPath assetPath)
-    {
-        return _metadataStore.Load(assetPath);
-    }
-
-    public AssetMetadata GetOrCreateMetadata(VirtualPath assetPath)
-    {
-        if (_metadataStore.Exists(assetPath))
-            return _metadataStore.Load(assetPath);
-
-        return CreateMetadata(assetPath);
-    }
-
     private IAssetWriter GetAssetWriterFromAsset(object asset)
     {
         Type assetType = asset.GetType();
@@ -337,134 +354,5 @@ public sealed class AssetPipeline
 
         _logger.Trace($"Using writer: {writer.GetType().Name}");
         return writer;
-    }
-
-    private IAssetImporter GetAssetImporter(VirtualPath path)
-    {
-        _logger.Trace($"Finding importer for extension: '{path.Extension}'");
-
-        var importer = _importers.FirstOrDefault(x => x.CanImport(path));
-        if (importer is null)
-        {
-            throw new AssetPipelineException($"No importer found for extension '{path.Extension}' - asset type may not be supported");
-        }
-
-        _logger.Trace($"Using importer: {importer.GetType().Name}");
-        return importer;
-    }
-
-    private IAssetProcessor GetDefaultProcessorFromImporter(IAssetImporter importer)
-    {
-        Type? processorType;
-        try
-        {
-            processorType = importer.ProcessorType;
-        }
-        catch (NotImplementedException)
-        {
-            throw new AssetImporterException(
-                $"The default processor for importer '{importer.GetType().Name}' was not implemented - ensure you're defining a valid processor inside your importer");
-        }
-
-        if (processorType is null)
-        {
-            throw new AssetPipelineException(
-                $"The default processor for importer '{importer.GetType().Name}' was set to null - ensure you're using a valid processor type");
-        }
-
-        if (!processorType.IsAssignableTo(typeof(IAssetProcessor)))
-        {
-            throw new AssetPipelineException(
-                $"The default processor for importer '{importer.GetType().Name}' isn't assignable to {nameof(IAssetProcessor)} - ensure you're using a valid processor type");
-        }
-
-        _logger.Trace($"Finding processor '{processorType.Name}' for importer '{importer.GetType().Name}'");
-
-        var processor = _processors.FirstOrDefault(x => x.GetType() == processorType);
-        if (processor is null)
-        {
-            throw new AssetPipelineException(
-                $"Processor '{processorType.Name}' not found for importer '{importer.GetType().Name}' - Available processors are:\n {string.Join("-", _processors.Select(x => x.GetType().Name))}");
-        }
-
-        _logger.Trace($"Using processor: {processor.GetType().Name} ({processor.InputType.Name} -> {processor.OutputType.Name})");
-        return processor;
-    }
-
-    private object ImportAssetInternal(IAssetImporter importer, IVirtualFile file)
-    {
-        try
-        {
-            _logger.Trace($"Importing with {importer.GetType().Name}");
-
-            var rawAsset = importer.Import(file);
-            if (rawAsset is null)
-            {
-                throw new AssetPipelineException($"Importer '{importer.GetType().Name}' returned null for '{file}' - file may be corrupted or unsupported");
-            }
-
-            _logger.Trace($"Import successful: {rawAsset.GetType().Name}");
-            return rawAsset;
-        }
-        catch (AssetProcessorException)
-        {
-            throw new AssetPipelineException($"Importer '{importer.GetType().Name}' threw processor exception - use {nameof(AssetImporterException)} instead");
-        }
-        catch (AssetPipelineException)
-        {
-            throw;
-        }
-        catch (EngineException)
-        {
-            throw new AssetPipelineException($"Importer '{importer.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetImporterException)} for import errors");
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    private object ProcessAssetInternal(IAssetProcessor processor, object rawAsset, VirtualPath path)
-    {
-        try
-        {
-            _logger.Trace($"Processing {rawAsset.GetType().Name} with {processor.GetType().Name}");
-
-            var asset = processor.Process(rawAsset);
-            if (asset is null)
-            {
-                throw new AssetPipelineException($"Processor '{processor.GetType().Name}' returned null for '{path}' - processing failed");
-            }
-
-            _logger.Trace($"Processing successful: {rawAsset.GetType().Name} -> {asset.GetType().Name}");
-            return asset;
-        }
-        catch (AssetProcessorException)
-        {
-            throw;
-        }
-        catch (AssetImporterException)
-        {
-            throw new AssetPipelineException($"Processor '{processor.GetType().Name}' threw importer exception - use {nameof(AssetProcessorException)} instead");
-        }
-        catch (EngineException)
-        {
-            throw new AssetPipelineException($"Processor '{processor.GetType().Name}' threw {nameof(EngineException)} - use {nameof(AssetProcessorException)} for processing errors");
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    private bool TryGetCachedAsset(string path, [NotNullWhen(true)] out object? cachedAsset)
-    {
-        if (_cachedAssets.TryGetValue(path, out cachedAsset))
-        {
-            _logger.Trace($"Cache hit: {cachedAsset.GetType().Name}");
-            return true;
-        }
-
-        return false;
     }
 }

@@ -1,6 +1,7 @@
 using PokeSharp.Assets;
 using PokeSharp.Core;
 using PokeSharp.Core.Logging;
+using PokeSharp.Core.Logging.Outputs;
 using PokeSharp.Core.Modules;
 using PokeSharp.Entities;
 using PokeSharp.Inputs;
@@ -31,10 +32,7 @@ public sealed class EditorApp : App<EditorEngine>
     {
         base.ConfigureLogging(settings);
 
-#if DEBUG
-        settings.SetLogLevel(LogLevel.Trace);
-#else
-        settings.SetLogLevel(LogLevel.Info);
-#endif
+        settings.LogLevel = LogLevel.Trace;
+        settings.AddOutput(new ConsoleLogSink());
     }
 }

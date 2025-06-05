@@ -8,11 +8,7 @@ namespace PokeSharp.ROM.Platforms.Gba;
 public sealed class GbaRomImporter : AssetImporter<RomInfo>
 {
     public override Type ProcessorType => typeof(GbaRomProcessor);
-
-    public override bool CanImport(VirtualPath path)
-    {
-        return path.Extension.Equals(".gba", StringComparison.OrdinalIgnoreCase);
-    }
+    public override string SupportedExtensions => ".gba";
 
     public override RomInfo Import(IVirtualFile file)
     {

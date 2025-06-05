@@ -8,7 +8,7 @@ namespace PokeSharp.ROM;
 
 public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
 {
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
 
     private readonly Dictionary<VirtualPath, RomFile> _files;
     private readonly Dictionary<VirtualPath, RomDirectory> _directories;

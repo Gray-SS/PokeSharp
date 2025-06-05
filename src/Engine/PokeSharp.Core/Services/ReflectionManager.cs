@@ -8,10 +8,10 @@ namespace PokeSharp.Core.Services;
 public sealed class ReflectionManager : IReflectionManager
 {
     private readonly IKernel _kernel;
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly HashSet<Assembly> _assemblies;
 
-    public ReflectionManager(IKernel kernel, ILogger logger)
+    public ReflectionManager(IKernel kernel, Logger logger)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -5,10 +5,10 @@ namespace PokeSharp.Core.Services;
 
 public sealed class EngineHookDispatcher : IEngineHookDispatcher
 {
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IEngineHook[] _hooks;
 
-    public EngineHookDispatcher(ILogger logger, IReflectionManager reflectionManager)
+    public EngineHookDispatcher(Logger logger, IReflectionManager reflectionManager)
     {
         _logger = logger;
         _hooks = reflectionManager.InstantiateClassesOfType<IEngineHook>();

@@ -16,12 +16,12 @@ public sealed class ModuleLoader : IModuleLoader
 
     private State _state;
     private readonly IKernel _kernel;
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly List<IModuleInternal> _modules = new();
 
     public event EventHandler<ModuleStateChangedArgs>? ModuleStateChanged;
 
-    public ModuleLoader(IKernel kernel, ILogger logger)
+    public ModuleLoader(IKernel kernel, Logger logger)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
