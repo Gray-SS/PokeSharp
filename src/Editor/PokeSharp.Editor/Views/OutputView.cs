@@ -1,43 +1,61 @@
 using ImGuiNET;
 using PokeSharp.Core.Logging;
-using PokeSharp.Editor.Miscellaneous;
+using PokeSharp.Core.Logging.Outputs;
 using NVec2 = System.Numerics.Vector2;
 using NVec4 = System.Numerics.Vector4;
 
 namespace PokeSharp.Editor.Views;
 
-//TODO: Improve this, it lags when many logs are received.
-public sealed class ConsoleViewer : IGuiHook
+public sealed class OutputView : IEditorView
 {
     private bool _autoScroll = true;
     private string _inputBuffer = string.Empty;
-    private readonly EditorConsoleBuffer _consolebuffer;
-    private readonly ILogger _logger;
+    private readonly MemoryLogSink _consoleBuffer;
+    private readonly Logger _logger;
 
     private readonly string[] _levelNames;
     private readonly bool[] _levelShowFlags;
-
     private string _contextFilter = string.Empty;
 
-    public ConsoleViewer(EditorConsoleBuffer consoleBuffer, ILogger logger)
+    private bool _mustRecompute = true;
+    private readonly List<LogEntry> _filteredEntries = new();
+
+    public OutputView(MemoryLogSink consoleBuffer, Logger logger)
     {
+        _consoleBuffer = consoleBuffer;
         _logger = logger;
-        _consolebuffer = consoleBuffer;
 
         _levelNames = Enum.GetNames<LogLevel>();
         _levelShowFlags = new bool[_levelNames.Length];
-
         ShowAll();
+
+        consoleBuffer.OnEntryCollected += OnEntryCollected;
     }
 
-    public void DrawGui()
+    private void OnEntryCollected(object? sender, MemoryLogSinkEventArgs e)
     {
-        _consolebuffer.Update();
+        _mustRecompute = true;
+    }
+
+    public unsafe void DrawGui()
+    {
+        // Update the console buffer
+        _consoleBuffer.Update();
+
+        // if necessary recompute the filtered entries
+        if (_mustRecompute)
+        {
+            RecomputeFilteredEntries();
+            _mustRecompute = false;
+        }
 
         if (ImGui.Begin("Output"))
         {
             if (ImGui.Button("Clear"))
-                _consolebuffer.Clear();
+            {
+                _consoleBuffer.Clear();
+                _mustRecompute = true;
+            }
 
             ImGui.SameLine();
             ImGui.Checkbox("Auto-scroll", ref _autoScroll);
@@ -50,26 +68,32 @@ public sealed class ConsoleViewer : IGuiHook
                 for (int i = 0; i < _levelNames.Length; i++)
                 {
                     ImGui.SameLine();
-                    ImGui.Checkbox(_levelNames[i], ref _levelShowFlags[i]);
+                    if (ImGui.Checkbox(_levelNames[i], ref _levelShowFlags[i]))
+                        _mustRecompute = true;
                 }
 
                 if (ImGui.Button("All"))
+                {
                     ShowAll();
+                    _mustRecompute = true;
+                }
 
                 ImGui.SameLine();
-
                 if (ImGui.Button("None"))
+                {
                     ShowNone();
+                    _mustRecompute = true;
+                }
 
                 ImGui.Text("Context Filter:");
                 ImGui.SameLine();
                 ImGui.PushItemWidth(200);
-                ImGui.InputText("##ContextFilter", ref _contextFilter, 256);
+                if (ImGui.InputText("##ContextFilter", ref _contextFilter, 256))
+                    _mustRecompute = true;
+
                 ImGui.PopItemWidth();
                 if (ImGui.IsItemHovered())
-                {
                     ImGui.SetTooltip("Filter logs by context (leave empty to show all)");
-                }
 
                 ImGui.Separator();
             }
@@ -77,12 +101,27 @@ public sealed class ConsoleViewer : IGuiHook
             float logHeight = ImGui.GetContentRegionAvail().Y - 100;
             ImGui.BeginChild("ScrollRegion", new NVec2(0, logHeight), 0, ImGuiWindowFlags.HorizontalScrollbar);
 
-            var filteredEntries = GetFilteredEntries();
-            foreach (var entry in filteredEntries)
+            int totalItems = _filteredEntries.Count;
+            if (totalItems > 0)
             {
-                ImGui.PushStyleColor(ImGuiCol.Text, GetColorForLevel(entry.Level));
-                ImGui.TextWrapped($"[{entry.TimeStamp:HH:mm:ss}] [{entry.Context}::{entry.Level}] {entry.Message}");
-                ImGui.PopStyleColor();
+                var listClipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+                listClipper.Begin(totalItems, ImGui.GetTextLineHeightWithSpacing());
+
+                while (listClipper.Step())
+                {
+                    int max = Math.Min(listClipper.DisplayEnd, totalItems);
+                    for (int i = listClipper.DisplayStart; i < max; i++)
+                    {
+                        LogEntry entry = _filteredEntries[i];
+                        var formatted = $"[{entry.TimeStamp:HH:mm:ss}] [{entry.Context}::{entry.Level}] {entry.Message}";
+                        ImGui.PushStyleColor(ImGuiCol.Text, GetColorForLevel(entry.Level));
+                        ImGui.TextUnformatted(formatted);
+                        ImGui.PopStyleColor();
+                    }
+                }
+
+                listClipper.End();
+                listClipper.Destroy();
             }
 
             if (_autoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 5.0f)
@@ -92,10 +131,13 @@ public sealed class ConsoleViewer : IGuiHook
 
             ImGui.Separator();
             ImGui.Dummy(new NVec2(0, 10));
+
+            // Console Input
             ImGui.Text("Input");
             ImGui.SameLine();
             ImGui.PushItemWidth(-1);
-            if (ImGui.InputText("##ConsoleInput", ref _inputBuffer, 1024, ImGuiInputTextFlags.EnterReturnsTrue))
+            if (ImGui.InputText("##ConsoleInput", ref _inputBuffer, 1024,
+                                 ImGuiInputTextFlags.EnterReturnsTrue))
             {
                 if (!string.IsNullOrWhiteSpace(_inputBuffer))
                 {
@@ -104,9 +146,9 @@ public sealed class ConsoleViewer : IGuiHook
                 }
             }
             ImGui.PopItemWidth();
-
-            ImGui.End();
         }
+
+        ImGui.End();
     }
 
     private void ShowAll()
@@ -119,20 +161,23 @@ public sealed class ConsoleViewer : IGuiHook
         Array.Fill(_levelShowFlags, false);
     }
 
-    private IEnumerable<LogEntry> GetFilteredEntries()
+    private void RecomputeFilteredEntries()
     {
-        return _consolebuffer.Entries.Where(entry =>
+        _filteredEntries.Clear();
+        var entries = _consoleBuffer.CollectedEntries.ToArray();
+        foreach (LogEntry entry in entries)
         {
             if (!_levelShowFlags[(int)entry.Level])
-                return false;
+                continue;
 
-            if (!string.IsNullOrWhiteSpace(_contextFilter))
+            if (!string.IsNullOrWhiteSpace(_contextFilter) &&
+                !entry.Context.Contains(_contextFilter, StringComparison.OrdinalIgnoreCase))
             {
-                return entry.Context?.Contains(_contextFilter, StringComparison.OrdinalIgnoreCase) == true;
+                continue;
             }
 
-            return true;
-        });
+            _filteredEntries.Add(entry);
+        }
     }
 
     private static NVec4 GetColorForLevel(LogLevel level)
@@ -145,8 +190,7 @@ public sealed class ConsoleViewer : IGuiHook
             LogLevel.Warn => new NVec4(1.0f, 0.75f, 0.0f, 1f),
             LogLevel.Error => new NVec4(1.0f, 0.2f, 0.2f, 1f),
             LogLevel.Fatal => new NVec4(0.8f, 0f, 0f, 1f),
-            _ => new NVec4(1f, 1f, 1f, 1f)
+            _ => new NVec4(1f, 1f, 1f, 1f),
         };
     }
-
 }

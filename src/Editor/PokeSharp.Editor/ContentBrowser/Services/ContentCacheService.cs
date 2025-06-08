@@ -52,7 +52,7 @@ public sealed class ContentCacheService : IContentCacheService, IEngineHook
     private void OnFileSystemChanged(object? sender, FileSystemChangedArgs e)
     {
         VirtualPath entryChangedPath = e.VirtualPath;
-        _logger.Trace($"File system change received '{entryChangedPath}'");
+        _logger.Trace($"{(e.VirtualPath.IsFile ? "File" : "Directory")} {e.ChangeType.ToString().ToLower()} '{entryChangedPath}'");
 
         // TODO: Need a clean way of getting the state of the editor.
         if (_navigator.CurrentPath == null)
@@ -62,28 +62,32 @@ public sealed class ContentCacheService : IContentCacheService, IEngineHook
         }
 
         VirtualPath currentPath = _navigator.CurrentPath;
-        bool isChild = entryChangedPath.IsDirectory && entryChangedPath.IsSubPath(currentPath);
-        if (!currentPath.IsDirectSubPath(entryChangedPath) && !isChild)
+        bool isChild = entryChangedPath.IsDirectory && entryChangedPath.IsParentOf(currentPath);
+        if (!currentPath.IsDirectParentOf(entryChangedPath) && !isChild)
         {
             _logger.Trace("Changed entry is outside current path scope. Ignoring.");
             return;
         }
 
+        _logger.Trace("File change in current directory scope. Invalidating current directory.");
         Invalidate(ContentScope.CurrentDirectory);
     }
 
     private void OnVolumeMounted(object? sender, VirtualVolumeEventArgs e)
     {
+        _logger.Trace("Volume mounted. Invalidating volumes.");
         Invalidate(ContentScope.Volumes);
     }
 
     private void OnVolumeUnmounted(object? sender, VirtualVolumeEventArgs e)
     {
+        _logger.Trace("Volume unmounted. Invalidating volumes.");
         Invalidate(ContentScope.Volumes);
     }
 
     private void OnCurrentPathChanged(object? sender, VirtualPath e)
     {
+        _logger.Trace("Navigator path changed. Invalidating current directory.");
         Invalidate(ContentScope.CurrentDirectory);
     }
 
@@ -103,7 +107,7 @@ public sealed class ContentCacheService : IContentCacheService, IEngineHook
         if (scope == ContentScope.None)
             return;
 
-        _logger.Trace("Refreshing cache");
+        _logger.Trace("Refreshing content cache");
 
         if (scope.HasFlag(ContentScope.Volumes))
             RefreshVolumes();

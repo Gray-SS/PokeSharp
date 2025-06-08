@@ -2,7 +2,7 @@ using ImGuiNET;
 
 namespace PokeSharp.Editor.Views;
 
-public sealed class HierarchyViewer : IGuiHook
+public sealed class HierarchyViewer : IEditorView
 {
     public void DrawGui()
     {

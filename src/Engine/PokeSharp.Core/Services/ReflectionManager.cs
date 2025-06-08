@@ -1,6 +1,6 @@
 using System.Reflection;
 using Ninject;
-using PokeSharp.Core.Attributes;
+using PokeSharp.Core.Annotations;
 using PokeSharp.Core.Logging;
 
 namespace PokeSharp.Core.Services;

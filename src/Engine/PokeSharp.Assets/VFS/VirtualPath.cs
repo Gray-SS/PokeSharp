@@ -179,7 +179,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// <b>Note:</b> It is assumed that the current path represents a directory.
     /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
     /// </remarks>
-    public bool IsSubPath(VirtualPath path)
+    public bool IsParentOf(VirtualPath path)
     {
         Debug.Assert(IsDirectory, "Current path must represent a directory to determine children.");
 
@@ -214,7 +214,7 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
     /// <b>Note:</b> It is assumed that the current path represents a directory.
     /// A <c>Debug.Assert</c> is used to enforce this assumption during development.
     /// </remarks>
-    public bool IsDirectSubPath(VirtualPath path)
+    public bool IsDirectParentOf(VirtualPath path)
     {
         Debug.Assert(IsDirectory, "Current path must represent a directory to determine children.");
 
@@ -386,9 +386,6 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(
-            StringComparer.OrdinalIgnoreCase.GetHashCode(Scheme),
-            StringComparer.Ordinal.GetHashCode(LocalPath)
-        );
+        return StringComparer.Ordinal.GetHashCode(Uri);
     }
 }

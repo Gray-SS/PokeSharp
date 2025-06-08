@@ -4,8 +4,9 @@ namespace PokeSharp.Assets;
 
 public interface IAssetImporter
 {
+    string SupportedExtensions { get; }
+
     Type ProcessorType { get; }
 
-    bool CanImport(VirtualPath path);
     object? Import(IVirtualFile file);
 }

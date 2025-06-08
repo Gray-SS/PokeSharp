@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PokeSharp.Core;
-using PokeSharp.Core.Attributes;
+using PokeSharp.Core.Annotations;
 using PokeSharp.Core.Resolutions;
 
 namespace PokeSharp.Inputs;

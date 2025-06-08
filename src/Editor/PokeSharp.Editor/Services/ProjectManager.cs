@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
+using PokeSharp.Assets;
 using PokeSharp.Assets.VFS.Services;
 using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
+using PokeSharp.Core.Threadings;
 using PokeSharp.Editor.Serializations;
 
 namespace PokeSharp.Editor.Services;
@@ -18,13 +18,18 @@ public sealed class ProjectManager : IProjectManager
 
     public event EventHandler<Project>? ProjectOpened;
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly IVirtualVolumeManager _volumeManager;
+    private readonly AssetPipeline _assetPipeline;
 
-    public ProjectManager(ILogger logger, IVirtualVolumeManager volumeManager)
+    public ProjectManager(
+        Logger logger,
+        IVirtualVolumeManager volumeManager,
+        AssetPipeline assetPipeline)
     {
         _logger = logger;
         _volumeManager = volumeManager;
+        _assetPipeline = assetPipeline;
     }
 
     public bool TryCreateProject(string projectName, string directoryPath, bool openOnCreation, [NotNullWhen(true)] out Project? project)
@@ -195,6 +200,9 @@ public sealed class ProjectManager : IProjectManager
 
         ActiveProject = project;
         ProjectOpened?.Invoke(this, project);
+
+        // ThreadHelper.RunOnMainThread(_assetPipeline.ReimportAll);
+        _assetPipeline.ReimportAll();
         _logger.Info($"Project successfully opened from '{project.ProjectRoot}'");
         return true;
     }

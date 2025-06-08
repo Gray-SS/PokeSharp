@@ -13,6 +13,8 @@ public sealed class AssetPipeline
 {
     public IReadOnlyCollection<object> LoadedAssets => _cachedAssets.Values;
 
+    public event EventHandler? AssetImported;
+
     private readonly IAssetImporter[] _importers;
     private readonly IAssetProcessor[] _processors;
     private readonly IAssetWriter[] _writers;
@@ -47,6 +49,9 @@ public sealed class AssetPipeline
 
     public void ReimportAll()
     {
+        _logger.Debug("Reimporting assets");
+
+        _metadataStore.EnterBulkMode();
         _metadataStore.DeleteAll();
 
         var volumes = _volumeManager.GetVolumes().ToArray();
@@ -58,6 +63,10 @@ public sealed class AssetPipeline
             IVirtualDirectory directory = _vfs.GetDirectory(volume.RootPath);
             ImportRecursive(directory);
         }
+
+        _metadataStore.ExitBulkMode();
+
+        _logger.Debug("Assets successfully reimported.");
     }
 
     private void ImportRecursive(IVirtualDirectory directory)
@@ -94,7 +103,7 @@ public sealed class AssetPipeline
         {
             ArgumentNullException.ThrowIfNull(assetPath);
 
-            _logger.Debug($"Importing '{assetPath}'");
+            _logger.Debug($"Importing asset at path '{assetPath}'");
 
             IVirtualFile file = _vfs.GetFile(assetPath);
             if (!file.Exists)
@@ -133,16 +142,18 @@ public sealed class AssetPipeline
                     _metadataStore.Save(assetPath, metadata);
                     return;
                 }
+                _logger.Trace($"Importer supporting {extension} found: '{foundImporter.GetType().Name}'");
 
                 IAssetProcessor? foundProcessor = _processors.FirstOrDefault(x => foundImporter.ProcessorType == x.GetType());
                 if (foundProcessor == null)
                 {
-                    _logger.Warn($"No processor paired with importer' {foundImporter.GetType().Name}' was found");
-                    metadata.ErrorMessage = $"No processor paired with importer' {foundImporter.GetType().Name}' was found";
+                    _logger.Warn($"No processor paired with importer '{foundImporter.GetType().Name}' was found");
+                    metadata.ErrorMessage = $"No processor paired with importer '{foundImporter.GetType().Name}' was found";
 
                     _metadataStore.Save(assetPath, metadata);
                     return;
                 }
+                _logger.Trace($"Processor paired to importer found and resolved: '{foundProcessor.GetType().Name}'");
 
                 metadata.Importer = foundImporter;
                 metadata.AssetType = foundProcessor.OutputType;
@@ -158,37 +169,42 @@ public sealed class AssetPipeline
             object? rawAsset;
             try
             {
+                _logger.Trace($"Importing asset with importer: '{importer.GetType().Name}'");
                 rawAsset = importer.Import(file);
                 if (rawAsset == null)
                 {
                     _logger.Warn($"Importer '{importer.GetType().Name}' returned null for '{assetPath}' - file may be corrupted or unsupported");
                     metadata.ErrorMessage = "Something went wrong in the import process. Check the logs for more details.";
 
+                    _logger.Debug("Saving metadata as a fallback.");
                     _metadataStore.Save(assetPath, metadata);
                     return;
                 }
             }
             catch (AssetImporterException ex)
             {
-                _metadataStore.Save(assetPath, metadata);
-
                 _logger.Warn($"Import failed for '{assetPath}'. {ex.Message}");
                 metadata.ErrorMessage = $"Import failed: {ex.Message}";
+
+                _logger.Debug("Saving metadata as a fallback.");
+                _metadataStore.Save(assetPath, metadata);
                 return;
             }
             catch (Exception ex)
             {
-                _metadataStore.Save(assetPath, metadata);
-
                 _logger.Error($"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}");
                 _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
                 metadata.ErrorMessage = $"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}";
+
+                _logger.Debug("Saving metadata as a fallback.");
+                _metadataStore.Save(assetPath, metadata);
                 return;
             }
 
             Type rawAssetType = rawAsset.GetType();
             _metadataStore.Save(assetPath, metadata);
-            _logger.Debug($"Import successful: {rawAssetType.Name}");
+            AssetImported?.Invoke(this, EventArgs.Empty);
+            _logger.Debug($"Asset of type '{rawAssetType.Name}' imported.");
         }
         catch (ArgumentNullException ex)
         {

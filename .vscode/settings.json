@@ -9,5 +9,8 @@
         "**/bin": true,
         // "**/*.csproj": true,
     },
-    "explorer.compactFolders": false
+    "explorer.compactFolders": false,
+    "commentTranslate.targetLanguage": "en",
+    "commentTranslate.source": "intellsmi.deepl-translate-deepl",
+    "commentTranslate.hover.enabled": false
 }

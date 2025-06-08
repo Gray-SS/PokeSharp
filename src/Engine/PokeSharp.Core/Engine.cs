@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using PokeSharp.Core.Exceptions;
 using PokeSharp.Core.Services;
-using PokeSharp.Core.Attributes;
+using PokeSharp.Core.Annotations;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
 using Ninject;
@@ -95,6 +95,8 @@ public abstract class Engine : Game
 
     protected sealed override void Initialize()
     {
+        ThreadHelper.Initialize();
+
         LoadModules();
         ConfigureWindowTitle();
 

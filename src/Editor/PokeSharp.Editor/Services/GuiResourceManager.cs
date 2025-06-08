@@ -7,17 +7,22 @@ namespace PokeSharp.Editor.Services;
 
 public sealed class GuiResourceManager : IGuiResourceManager
 {
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
     private readonly ImGuiRenderer _renderer;
     private readonly Dictionary<Texture2D, nint> _textures;
     private readonly Dictionary<string, ImFontPtr> _fonts;
 
-    public GuiResourceManager(ImGuiRenderer renderer, ILogger logger)
+    public GuiResourceManager(ImGuiRenderer renderer, Logger logger)
     {
         _logger = logger;
         _renderer = renderer;
         _textures = new Dictionary<Texture2D, nint>();
         _fonts = new Dictionary<string, ImFontPtr>();
+    }
+
+    public void ClearFonts()
+    {
+        _fonts.Clear();
     }
 
     public void RegisterFont(string fontName, ImFontPtr font)

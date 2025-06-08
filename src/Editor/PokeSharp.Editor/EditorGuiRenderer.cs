@@ -1,69 +1,76 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using MonoGame.ImGuiNet;
+using PokeSharp.Assets;
 using PokeSharp.Editor.Services;
 using PokeSharp.Rendering;
 
-namespace PokeSharp.Editor;
-
-public sealed class EditorGuiRenderer : IRenderer
+namespace PokeSharp.Editor
 {
-    private readonly IEditorViewManager _dispatcher;
-    private readonly IGuiResourceManager _resManager;
-    private readonly ImGuiRenderer _imGuiRenderer;
-
-    public EditorGuiRenderer(ImGuiRenderer renderer, IGuiResourceManager resManager, IEditorViewManager dispatcher)
+    public sealed class EditorGuiRenderer : IRenderer
     {
-        _dispatcher = dispatcher;
-        _imGuiRenderer = renderer;
-        _resManager = resManager;
+        private static readonly ushort[] IconRanges =
+        [
+            0xF000, 0xF8FF, 0
+        ];
 
-        ConfigureImGui();
-    }
 
-    private unsafe void ConfigureImGui()
-    {
-        ImGuiIOPtr io = ImGui.GetIO();
+        private bool _rebuildFontAtlas;
+        private readonly IEditorViewManager _dispatcher;
+        private readonly IGuiResourceManager _resManager;
+        private readonly ImGuiRenderer _imGuiRenderer;
 
-        io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        // io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-
-        ImFontConfigPtr config = ImGuiNative.ImFontConfig_ImFontConfig();
-        config.MergeMode = false;
-        config.PixelSnapH = true;
-
-        string fontPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "inter_medium.ttf");
-        ImFontPtr fontMedium = io.Fonts.AddFontFromFileTTF(fontPath, 18.0f, config);
-        _resManager.RegisterFont("medium", fontMedium);
-
-        ImFontConfigPtr iconConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-        iconConfig.MergeMode = true;
-        iconConfig.PixelSnapH = true;
-
-        ushort[] iconRanges = [0xf000, 0xf8ff, 0];
-        fixed (ushort* rangesPtr = iconRanges)
+        public EditorGuiRenderer(
+            AssetPipeline assetPipeline,
+            ImGuiRenderer renderer,
+            IGuiResourceManager resManager,
+            IEditorViewManager dispatcher)
         {
-            fontPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "fa-solid-900.ttf");
-            io.Fonts.AddFontFromFileTTF(fontPath, 18.0f, iconConfig, (IntPtr)rangesPtr);
+            _dispatcher = dispatcher;
+            _imGuiRenderer = renderer;
+            _resManager = resManager;
+
+            assetPipeline.AssetImported += (s, e) => _rebuildFontAtlas = true;
+            ConfigureImGui();
         }
 
-        _imGuiRenderer.RebuildFontAtlas();
+        private unsafe void ConfigureImGui()
+        {
+            ImGuiIOPtr io = ImGui.GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-        ImGuiNative.ImFontConfig_destroy(config.NativePtr);
-        ImGuiNative.ImFontConfig_destroy(iconConfig.NativePtr);
-    }
+            ImFontConfigPtr config = ImGuiNative.ImFontConfig_ImFontConfig();
+            config.MergeMode = false;
+            config.PixelSnapH = true;
+            string interPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "inter_medium.ttf");
+            ImFontPtr fontMedium = io.Fonts.AddFontFromFileTTF(interPath, 18.0f, config);
+            if (fontMedium.NativePtr == null)
+                throw new InvalidOperationException($"Couldn't load inter font at path '{interPath}'");
 
-    public void Draw(GameTime gameTime)
-    {
-        _imGuiRenderer.BeginLayout(gameTime);
+            _resManager.RegisterFont("medium", fontMedium);
+            ImGuiNative.ImFontConfig_destroy(config.NativePtr);
 
-        // ImGui.ShowStyleEditor();
+            ImFontConfigPtr iconConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+            iconConfig.MergeMode = true;
+            iconConfig.PixelSnapH = true;
+            fixed (ushort* rangesPtr = IconRanges)
+            {
+                string faPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "fa-solid-900.ttf");
+                ImFontPtr fa = io.Fonts.AddFontFromFileTTF(faPath, 18.0f, iconConfig, (IntPtr)rangesPtr);
+                if (fa.NativePtr == null)
+                    throw new InvalidOperationException($"Couldn't load font awesome icons at path '{faPath}'");
+            }
 
-        ImFontPtr fontMedium = _resManager.GetFont("medium");
-        ImGui.PushFont(fontMedium);
-        _dispatcher.Draw();
-        ImGui.PopFont();
+            ImGuiNative.ImFontConfig_destroy(iconConfig.NativePtr);
 
-        _imGuiRenderer.EndLayout();
+            _imGuiRenderer.RebuildFontAtlas();
+        }
+
+        public void Draw(GameTime gameTime)
+        {
+            _imGuiRenderer.BeforeLayout(gameTime);
+            _dispatcher.Draw();
+            _imGuiRenderer.AfterLayout();
+        }
     }
 }

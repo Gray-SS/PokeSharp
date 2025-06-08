@@ -1,6 +1,6 @@
 namespace PokeSharp.Editor.Services;
 
-public interface IGuiHookDispatcher
+public interface IEditorViewManager
 {
     void Draw();
 }

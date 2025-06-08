@@ -8,15 +8,25 @@ using System;
 using PokeSharp.Core.Logging;
 using PokeSharp.Scenes;
 using PokeSharp.Entities;
+using PokeSharp.Core.Logging.Outputs;
+using Ninject;
 
 namespace PokeSharp.DesktopGL;
 
-public sealed class PokesharpApp : App<PokesharpEngine>
+public sealed class PokesharpApp : App
 {
     public override string AppName => "PokéSharp Runtime";
-    public override Version AppVersion => new Version(1, 0, 0);
+    public override Version AppVersion => new(1, 0, 0);
 
-    protected override void RegisterModules(IModuleLoader loader)
+    protected override void OnRun()
+    {
+        using PokesharpEngine engine = Kernel.Get<PokesharpEngine>();
+        Kernel.Bind<Engine>().ToConstant(engine);
+
+        engine.Run();
+    }
+
+    protected override void ConfigureModules(IModuleLoader loader)
     {
         loader.RegisterModule(new RomModule());
         loader.RegisterModule(new AssetsModule());
@@ -30,12 +40,11 @@ public sealed class PokesharpApp : App<PokesharpEngine>
     {
         base.ConfigureLogging(settings);
 
-        settings.AddOutput(new ConsoleLogOutput());
+        settings.AddOutput(new ConsoleLogSink());
+    }
 
-#if DEBUG
-        settings.LogLevel = LogLevel.Trace;
-#else
-        settings.LogLevel = LogLevel.Info;
-#endif
+    protected override void ConfigureServices(IKernel kernel)
+    {
+        kernel.Bind<PokesharpEngine>().ToSelf().InSingletonScope();
     }
 }

@@ -1,35 +1,61 @@
+using PokeSharp.Assets;
+using PokeSharp.Assets.Services;
 using PokeSharp.Assets.VFS;
+using PokeSharp.Assets.VFS.Events;
 using PokeSharp.Assets.VFS.Services;
 using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
-using PokeSharp.Editor.Services;
+using PokeSharp.Core.Threadings;
 
-namespace PokeSharp.Assets.Services;
+namespace PokeSharp.Editor.Services;
 
 public sealed class LibraryMetadataStore : IAssetMetadataStore
 {
-    private const string LibsScheme = "libs";
+    private int _bulkOperations;
 
-    private readonly ILogger _logger;
-    private readonly VirtualPath _libsRoot;
+    private readonly Logger _logger;
     private readonly IVirtualFileSystem _vfs;
-    private readonly IProjectManager _projectManager;
-    private readonly IVirtualVolumeManager _volumeManager;
     private readonly IAssetMetadataSerializer _serializer;
 
+    private readonly Dictionary<VirtualPath, Guid> _pathToIdLookup;
+    private readonly Dictionary<Guid, AssetMetadata> _idToMetadataLookup;
+
     public LibraryMetadataStore(
-        ILogger logger,
+        Logger logger,
         IVirtualFileSystem vfs,
-        IProjectManager projectManager,
-        IVirtualVolumeManager volumeManager,
         IAssetMetadataSerializer serializer)
     {
-        _vfs = vfs;
         _logger = logger;
+
+        _vfs = vfs;
+        _vfs.OnFileSystemChanged += OnFileSystemChanged;
+
         _serializer = serializer;
-        _volumeManager = volumeManager;
-        _projectManager = projectManager;
-        _libsRoot = VirtualPath.Parse("libs://");
+        _pathToIdLookup = new Dictionary<VirtualPath, Guid>();
+        _idToMetadataLookup = new Dictionary<Guid, AssetMetadata>();
+    }
+
+    private void OnFileSystemChanged(object? sender, FileSystemChangedArgs e)
+    {
+        if (!Project.IsActive || _bulkOperations > 0) return;
+
+        if (e.VirtualPath.IsDirectory || !Project.Active.LibsVolume.RootPath.IsParentOf(e.VirtualPath))
+            return;
+
+        if (e.ChangeType == FileSystemChangeType.Created)
+        {
+            _logger.Trace("Asset metadata created. Loading them");
+        }
+        else
+        {
+            _logger.Trace($"Invalidating '{e.VirtualPath}'");
+            if (_pathToIdLookup.Remove(e.VirtualPath, out Guid assetId))
+            {
+                _idToMetadataLookup.Remove(assetId);
+                _logger.Trace($"Invalidated metadata cache {e.VirtualPath} ({assetId})");
+            }
+            else _logger.Trace($"No metadata cached for '{e.VirtualPath}'");
+        }
     }
 
     public bool Exists(VirtualPath assetPath)
@@ -45,36 +71,108 @@ public sealed class LibraryMetadataStore : IAssetMetadataStore
 
     public VirtualPath GetMetadataPath(VirtualPath assetPath)
     {
-        return _libsRoot.Combine(assetPath.Scheme + "/")
-                        .Combine(assetPath.LocalPath + ".meta");
+        return Project.Active.LibsVolume.RootPath.Combine(assetPath.Scheme + "/")
+                                                 .Combine(assetPath.LocalPath + ".meta");
     }
 
     public AssetMetadata Load(VirtualPath assetPath)
     {
-        IVirtualFile file = GetMetadataFile(assetPath);
-        if (!file.Exists)
-            throw new FileNotFoundException($"Metadata of asset '{assetPath}' wasn't found at path '{file.Path}'.");
+        _logger.Trace($"Loading asset metadata for asset: '{assetPath}'");
+        if (_pathToIdLookup.TryGetValue(assetPath, out Guid id))
+        {
+            _logger.Trace($"Metadata cache hit. Returning cached asset metadata.");
+            return _idToMetadataLookup[id];
+        }
 
-        return _serializer.Deserialize(file);
+        IVirtualFile metadataFile = GetMetadataFile(assetPath);
+        if (!metadataFile.Exists)
+            throw new FileNotFoundException($"Metadata of asset '{assetPath}' wasn't found at path '{metadataFile.Path}'.");
+
+        AssetMetadata metadata = _serializer.Deserialize(metadataFile);
+
+        _logger.Trace($"Asset metadata cached with key '{metadataFile.Path}' -> '{metadata.Id}'");
+        _pathToIdLookup[metadataFile.Path] = metadata.Id;
+        _idToMetadataLookup[metadata.Id] = metadata;
+        return metadata;
     }
 
     public void Save(VirtualPath assetPath, AssetMetadata metadata)
     {
         VirtualPath metadataPath = GetMetadataPath(assetPath);
+        _logger.Trace($"Saving asset metadata at '{metadataPath}' ({metadata.Id}).");
         IVirtualFile file = _vfs.CreateFile(metadataPath, true);
+        if (!file.Exists)
+        {
+            _logger.Warn($"Failed creating metadata file '{metadataPath}'");
+            return;
+        }
+
         _serializer.Serialize(file, metadata);
+
+        _pathToIdLookup[metadataPath] = metadata.Id;
+        _idToMetadataLookup[metadata.Id] = metadata;
+        _logger.Trace($"Asset metadata cached with key '{metadataPath}' -> '{metadata.Id}'");
+        _logger.Trace($"Asset metadata saved to '{metadataPath}' ({metadata.Id})");
+    }
+
+    public AssetMetadata? GetMetadata(VirtualPath assetPath)
+    {
+        if (_pathToIdLookup.TryGetValue(GetMetadataPath(assetPath), out Guid assetId))
+            return _idToMetadataLookup[assetId];
+
+        return null;
+    }
+
+    public AssetMetadata? GetMetadata(Guid assetId)
+    {
+        _idToMetadataLookup.TryGetValue(assetId, out AssetMetadata? metadata);
+        return metadata;
+    }
+
+    public IEnumerable<AssetMetadata> GetCachedMetadatas()
+    {
+        return _idToMetadataLookup.Values;
+    }
+
+    public void EnterBulkMode()
+    {
+        _bulkOperations++;
+        _logger.Debug($"Bulk mode started ({_bulkOperations})");
+    }
+
+    public void ExitBulkMode()
+    {
+        _logger.Debug($"Dispatching bulk mode end ({_bulkOperations})");
+
+        ThreadHelper.RunOnMainThread(() =>
+        {
+            _logger.Debug($"Bulk mode ended ({_bulkOperations})");
+            _bulkOperations--;
+        });
     }
 
     public void DeleteAll()
     {
-        if (!_projectManager.HasActiveProject)
+        if (!Project.IsActive)
+        {
+            _logger.Warn("No project is active. Cannot delete the metadata files and directories.");
             return;
+        }
 
-        IVirtualVolume? volume = _projectManager.ActiveProject!.LibsVolume;
+        EnterBulkMode();
+        _logger.Trace("Deleting all metadata files and directories");
+
+        _pathToIdLookup.Clear();
+        _idToMetadataLookup.Clear();
+
+        PhysicalVolume volume = Project.Active.LibsVolume;
         foreach (var child in volume.RootDirectory.GetDirectories())
             child.Delete();
 
         foreach (var child in volume.RootDirectory.GetFiles())
             child.Delete();
+
+        _logger.Trace("Deleted all metadata files and directories.");
+        ExitBulkMode();
     }
 }

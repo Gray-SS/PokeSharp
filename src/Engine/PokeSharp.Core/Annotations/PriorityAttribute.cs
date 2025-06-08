@@ -1,4 +1,4 @@
-namespace PokeSharp.Core.Attributes;
+namespace PokeSharp.Core.Annotations;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class PriorityAttribute : Attribute

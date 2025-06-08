@@ -10,9 +10,9 @@ using PokeSharp.Core.Windowing;
 
 namespace PokeSharp.Core;
 
-public class CoreModule : Module
+public class EngineModule : Module
 {
-    public override string Name => "Core";
+    public override string Name => "Engine";
 
     public override void Configure(IKernel kernel)
     {

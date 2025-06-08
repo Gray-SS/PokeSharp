@@ -44,7 +44,10 @@ public sealed class InspectorViewer : IEditorView
                 return;
 
             _logger.Trace($"Selection changed, loading asset metadata for '{file.Path}'");
-            _assetMetadata = _metadataStore.Load(file.Path);
+            _assetMetadata = _metadataStore.GetMetadata(file.Path);
+
+            if (_assetMetadata == null)
+                _logger.Warn($"No metadata found for asset at path '{file.Path}'");
         }
     }
 
@@ -53,8 +56,9 @@ public sealed class InspectorViewer : IEditorView
         if (ImGui.Begin("Inspector"))
         {
             DrawInspectorContent();
-            ImGui.End();
         }
+
+        ImGui.End();
     }
 
     private void DrawInspectorContent()

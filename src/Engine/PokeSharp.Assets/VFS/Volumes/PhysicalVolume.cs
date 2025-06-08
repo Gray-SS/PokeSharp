@@ -1,4 +1,8 @@
+using System.Diagnostics;
 using PokeSharp.Assets.VFS.Events;
+using PokeSharp.Core;
+using PokeSharp.Core.Logging;
+using PokeSharp.Core.Threadings;
 
 namespace PokeSharp.Assets.VFS.Volumes;
 
@@ -8,7 +12,12 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public event EventHandler<FileSystemChangedArgs>? OnFileSystemChanged;
 
+    private readonly Logger _logger;
     private readonly FileSystemWatcher _watcher;
+
+    /// Used because the file system watcher can't provide informations about
+    /// whether a deleted path was a file or a directory. This sucks.
+    private readonly Dictionary<string, bool> _pathIsDirectory = new();
 
     public PhysicalVolume(string id, string scheme, string displayName, string physicalPath) : base(id, scheme, displayName)
     {
@@ -16,6 +25,10 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
             throw new ArgumentException($"Unable to create physical volume - Physical path '{physicalPath}' doesn't exists or is not a directory");
 
         PhysicalPath = Path.GetFullPath(physicalPath);
+
+        _logger = LoggerFactory.GetLogger(typeof(PhysicalVolume));
+
+        _logger.Trace($"Volume '{displayName}' is watching at path '{physicalPath}'");
         _watcher = new FileSystemWatcher(PhysicalPath)
         {
             IncludeSubdirectories = true,
@@ -23,27 +36,76 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
         };
 
+        _pathIsDirectory = new Dictionary<string, bool>();
+        PopulateIsDirectoryCache(PhysicalPath);
+
         _watcher.Changed += HandleOnFileChanged;
         _watcher.Created += HandleOnFileChanged;
         _watcher.Deleted += HandleOnFileChanged;
         _watcher.Renamed += HandleOnFileChanged;
+        _watcher.Error += HandleFileSystemWatcherError;
+    }
+
+    private void PopulateIsDirectoryCache(string directory)
+    {
+        foreach (var dir in Directory.GetDirectories(directory, "*", SearchOption.AllDirectories))
+            _pathIsDirectory[dir] = true;
+
+        foreach (var file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
+            _pathIsDirectory[file] = false;
+    }
+
+    private void HandleFileSystemWatcherError(object sender, ErrorEventArgs e)
+    {
+        Exception? exception = e.GetException();
+        if (exception == null)
+            _logger.Error("Unknown error occured in physical file system watcher");
+        else
+        {
+            _logger.Error($"Error occured in physical file system watcher: {exception.GetType().Name}: {exception.Message}");
+            _logger.Debug($"{exception.StackTrace ?? "No stack trace available"}");
+        }
     }
 
     private void HandleOnFileChanged(object sender, FileSystemEventArgs e)
     {
-        var changeType = e.ChangeType switch
+        ThreadHelper.RunOnMainThread(() =>
         {
-            WatcherChangeTypes.Created => FileSystemChangedArgs.ChangeType.Created,
-            WatcherChangeTypes.Changed => FileSystemChangedArgs.ChangeType.Modified,
-            WatcherChangeTypes.Renamed => FileSystemChangedArgs.ChangeType.Renamed,
-            WatcherChangeTypes.Deleted => FileSystemChangedArgs.ChangeType.Deleted,
-            _ => throw new NotImplementedException($"The change type '{e.ChangeType}' was not handled.")
-        };
+            var changeType = e.ChangeType switch
+            {
+                WatcherChangeTypes.Created => FileSystemChangeType.Created,
+                WatcherChangeTypes.Changed => FileSystemChangeType.Modified,
+                WatcherChangeTypes.Renamed => FileSystemChangeType.Renamed,
+                WatcherChangeTypes.Deleted => FileSystemChangeType.Deleted,
+                _ => throw new NotImplementedException($"The change type '{e.ChangeType}' was not handled.")
+            };
 
-        string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
-        VirtualPath virtualPath = RootPath.Combine(Path.GetRelativePath(PhysicalPath, fullPath));
+            string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
+            string relativePath = Path.GetRelativePath(PhysicalPath, fullPath);
 
-        OnFileSystemChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
+            bool isDirectory;
+            if (e.ChangeType == WatcherChangeTypes.Deleted)
+            {
+                if (!_pathIsDirectory.TryGetValue(fullPath, out isDirectory))
+                {
+                    _logger.Warn($"Unknown type for deleted path {fullPath}, assuming file.");
+                    isDirectory = false;
+                }
+
+                _pathIsDirectory.Remove(fullPath);
+            }
+            else
+            {
+                isDirectory = Directory.Exists(fullPath);
+                _pathIsDirectory[fullPath] = isDirectory;
+            }
+
+            string localPath = relativePath + (isDirectory ? "/" : "");
+            VirtualPath virtualPath = RootPath.Combine(localPath);
+
+            ThrowHelper.Assert(!(isDirectory && !virtualPath.IsDirectory), $"Path was cached as a directory but the virtual path represents a file: '{virtualPath}'.");
+            OnFileSystemChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
+        });
     }
 
     private string GetPhysicalPath(VirtualPath virtualPath)
@@ -118,10 +180,10 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite)
     {
-        if (virtualPath.IsDirectory)
-            throw new InvalidOperationException($"Cannot create file at directory path: '{virtualPath}'");
+        ThrowHelper.Assert(virtualPath.IsFile, $"Cannot create a file at a path representing a directory: '{virtualPath}'");
 
         string physicalPath = GetPhysicalPath(virtualPath);
+        _logger.Trace($"Creating file at '{virtualPath}'");
 
         if (!overwrite && (File.Exists(physicalPath) || Directory.Exists(physicalPath)))
             throw new InvalidOperationException($"Entry already exists at path '{virtualPath}' and overwrite is disabled");
@@ -135,14 +197,15 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
         using var _ = File.Create(physicalPath);
 
+        _logger.Trace($"File created at '{virtualPath}'.");
         return new VirtualFile(this, virtualPath);
     }
 
     public IVirtualDirectory CreateDirectory(VirtualPath virtualPath)
     {
-        if (!virtualPath.IsDirectory)
-            throw new InvalidOperationException($"Cannot create directory at file path: '{virtualPath}'");
+        ThrowHelper.Assert(virtualPath.IsDirectory, $"Cannot to create a directory at a path representing a file: '{virtualPath}'");
 
+        _logger.Trace($"Creating directory at '{virtualPath}'");
         string physicalPath = GetPhysicalPath(virtualPath);
 
         if (File.Exists(physicalPath))
@@ -150,13 +213,13 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
         Directory.CreateDirectory(physicalPath);
 
+        _logger.Trace($"Directory created at '{virtualPath}'.");
         return new VirtualDirectory(this, virtualPath);
     }
 
     public IVirtualEntry MoveEntry(VirtualPath srcPath, VirtualPath destDirectoryPath)
     {
-        if (!destDirectoryPath.IsDirectory)
-            throw new InvalidOperationException($"Destination '{destDirectoryPath}' is not a directory.");
+        ThrowHelper.Assert(destDirectoryPath.IsDirectory, $"Cannot move an entry at a destination path representing a file: '{destDirectoryPath}'");
 
         string physicalSrcPath = GetPhysicalPath(srcPath);
         string physicalDestDirPath = GetPhysicalPath(destDirectoryPath);
@@ -166,8 +229,11 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
             if (!Directory.Exists(physicalSrcPath))
                 throw new DirectoryNotFoundException($"No directory found at '{srcPath}'");
 
+            _logger.Trace($"Moving directory from '{srcPath}' to '{destDirectoryPath}'");
             string targetDir = Path.Combine(physicalDestDirPath, Path.GetFileName(physicalSrcPath.TrimEnd('/')));
             Directory.Move(physicalSrcPath, targetDir);
+
+            _logger.Trace($"Directory moved from '{srcPath}' to '{destDirectoryPath}'.");
             return new VirtualDirectory(this, destDirectoryPath.Combine(Path.GetFileName(physicalSrcPath.TrimEnd('/')) + '/'));
         }
         else
@@ -175,10 +241,12 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
             if (!File.Exists(physicalSrcPath))
                 throw new FileNotFoundException($"No file found at '{srcPath}'");
 
+            _logger.Trace($"Moving file from '{srcPath}' to '{destDirectoryPath}'");
             string targetFile = Path.Combine(physicalDestDirPath, Path.GetFileName(physicalSrcPath));
-            System.Console.WriteLine($"Moving physical '{physicalSrcPath}' to '{physicalDestDirPath}'");
 
             File.Move(physicalSrcPath, targetFile);
+
+            _logger.Trace($"File moved from '{srcPath}' to '{destDirectoryPath}'");
             return new VirtualFile(this, destDirectoryPath.Combine(Path.GetFileName(physicalSrcPath)));
         }
     }
@@ -187,8 +255,13 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
     {
         string physicalPath = GetPhysicalPath(virtualPath);
 
+        string entryTypeName = virtualPath.IsFile ? "file" : "directory";
+        _logger.Trace($"Deleting {entryTypeName} at '{virtualPath}'");
         if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
+        {
+            _logger.Warn($"{entryTypeName} doesn't exists. Skipping.");
             return false; // Entry doesn't exist, consider it as already deleted
+        }
 
         if (File.Exists(physicalPath))
         {
@@ -199,16 +272,18 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
             Directory.Delete(physicalPath, recursive: true);
         }
 
+        _logger.Trace($"{entryTypeName} deleted at '{virtualPath}'");
         return true;
     }
 
     public IVirtualEntry RenameEntry(VirtualPath virtualPath, string newName)
     {
-        if (string.IsNullOrWhiteSpace(newName))
-            throw new ArgumentException("New name cannot be null or empty", nameof(newName));
+        ThrowHelper.AssertNotNullOrWhitespace(newName, "The new name cannot be null or empty");
 
         string physicalPath = GetPhysicalPath(virtualPath);
 
+        string entryTypeName = virtualPath.IsFile ? "file" : "directory";
+        _logger.Trace($"Renaming {entryTypeName} from '{virtualPath.Name}' to '{newName}' at '{virtualPath}'");
         if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
             throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
 
@@ -223,12 +298,16 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
         {
             File.Move(physicalPath, newPhysicalPath);
             VirtualPath newVirtualPath = parentPath.Combine(newName);
+
+            _logger.Trace($"file renamed from '{virtualPath.Name}' to '{newName}' at '{virtualPath}'");
             return new VirtualFile(this, newVirtualPath);
         }
         else if (Directory.Exists(physicalPath))
         {
             Directory.Move(physicalPath, newPhysicalPath);
             VirtualPath newVirtualPath = parentPath.Combine(newName + "/");
+
+            _logger.Trace($"Directory renamed from '{virtualPath.Name}' to '{newName}' at '{virtualPath}'");
             return new VirtualDirectory(this, newVirtualPath);
         }
 
@@ -239,6 +318,8 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
     {
         string physicalPath = GetPhysicalPath(virtualPath);
 
+        string entryTypeName = virtualPath.IsFile ? "file" : "directory";
+        _logger.Trace($"Duplicating {entryTypeName} at '{virtualPath}'");
         if (!File.Exists(physicalPath) && !Directory.Exists(physicalPath))
             throw new FileNotFoundException($"No file or directory found at virtual path '{virtualPath}'");
 
@@ -256,12 +337,16 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
         {
             File.Copy(physicalPath, duplicatePhysicalPath);
             VirtualPath duplicateVirtualPath = parentPath.Combine(duplicatedName);
+
+            _logger.Trace($"File duplicated at '{virtualPath}'");
             return new VirtualFile(this, duplicateVirtualPath);
         }
         else if (Directory.Exists(physicalPath))
         {
             CopyDirectoryRecursive(physicalPath, duplicatePhysicalPath);
             VirtualPath duplicateVirtualPath = parentPath.Combine(duplicatedName + "/");
+
+            _logger.Trace($"Directory duplicated at '{virtualPath}'");
             return new VirtualDirectory(this, duplicateVirtualPath);
         }
 
@@ -270,8 +355,7 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public Stream OpenWrite(VirtualPath virtualPath)
     {
-        if (virtualPath.IsDirectory)
-            throw new InvalidOperationException($"Cannot open directory for writing: '{virtualPath}'");
+        ThrowHelper.Assert(virtualPath.IsFile, $"Cannot open directory for writing: '{virtualPath}'");
 
         string physicalPath = GetPhysicalPath(virtualPath);
 
@@ -288,8 +372,7 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public Stream OpenRead(VirtualPath virtualPath)
     {
-        if (virtualPath.IsDirectory)
-            throw new InvalidOperationException($"Cannot open directory for reading: '{virtualPath}'");
+        ThrowHelper.Assert(virtualPath.IsFile, $"Cannot open directory for reading: '{virtualPath}'.");
 
         string physicalPath = GetPhysicalPath(virtualPath);
 
@@ -301,8 +384,7 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public byte[] ReadBytes(VirtualPath virtualPath)
     {
-        if (virtualPath.IsDirectory)
-            throw new InvalidOperationException($"Cannot read bytes from a directory: '{virtualPath}'");
+        ThrowHelper.Assert(virtualPath.IsFile, $"Cannot read bytes from a directory: '{virtualPath}'");
 
         string physicalPath = GetPhysicalPath(virtualPath);
         if (!File.Exists(physicalPath))

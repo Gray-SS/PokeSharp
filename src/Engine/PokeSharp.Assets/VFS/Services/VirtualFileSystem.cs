@@ -1,6 +1,8 @@
 using PokeSharp.Assets.VFS.Events;
 using PokeSharp.Assets.VFS.Extensions;
 using PokeSharp.Assets.VFS.Volumes;
+using PokeSharp.Core;
+using PokeSharp.Core.Logging;
 
 namespace PokeSharp.Assets.VFS.Services;
 
@@ -11,10 +13,13 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
     public event EventHandler<FileSystemChangedArgs>? OnFileSystemChanged;
 
     private bool _disposed;
+    private readonly Logger _logger;
     private readonly IVirtualVolumeManager _volumeManager;
 
-    public VirtualFileSystem(IVirtualVolumeManager volumeManager)
+    public VirtualFileSystem(IVirtualVolumeManager volumeManager, Logger logger)
     {
+        _logger = logger;
+
         _volumeManager = volumeManager;
         _volumeManager.OnVolumeMounted += HandleOnVolumeMounted;
         _volumeManager.OnVolumeUnmounted += HandleOnVolumeUnmounted;
@@ -33,6 +38,7 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
 
     private void HandleOnFileSystemChanged(object? sender, FileSystemChangedArgs e)
     {
+        _logger.Trace($"Watchable volume triggered file system changed. ({(e.VirtualPath.IsDirectory ? "Directory" : "File")} {e.ChangeType.ToString().ToLower()} '{e.VirtualPath}')");
         OnFileSystemChanged?.Invoke(sender, e);
     }
 
@@ -87,36 +93,46 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
     public bool DeleteEntry(VirtualPath vpath)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(vpath).AsWriteable();
+        _logger.Trace($"Deleting virtual {(vpath.IsFile ? "file" : "directory")} at '{vpath}'");
         return volume.DeleteEntry(vpath);
     }
 
     public IVirtualEntry RenameEntry(VirtualPath vpath, string newName)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(vpath).AsWriteable();
+        _logger.Trace($"Renaming virtual {(vpath.IsFile ? "file" : "directory")} from '{vpath.Name}' to '{newName}' at '{vpath}'");
         return volume.RenameEntry(vpath, newName);
     }
 
     public IVirtualEntry DuplicateEntry(VirtualPath vpath)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(vpath).AsWriteable();
+        _logger.Trace($"Duplicating virtual {(vpath.IsFile ? "file" : "directory")} at '{vpath}'");
         return volume.DuplicateEntry(vpath);
     }
 
     public IVirtualEntry MoveEntry(VirtualPath vpath, VirtualPath newPath)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(vpath).AsWriteable();
+        _logger.Trace($"Moving virtual {(vpath.IsFile ? "file" : "directory")} from '{vpath}' to '{newPath}'");
         return volume.MoveEntry(vpath, newPath);
     }
 
     public IVirtualFile CreateFile(VirtualPath virtualPath, bool overwrite = false)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsWriteable();
+
+        ThrowHelper.Assert(virtualPath.IsFile, "Cannot create a file at a path representing a directory.");
+        _logger.Trace($"Creating file at '{virtualPath}'");
         return volume.CreateFile(virtualPath, overwrite);
     }
 
     public IVirtualDirectory CreateDirectory(VirtualPath virtualPath)
     {
         IWritableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsWriteable();
+
+        ThrowHelper.Assert(virtualPath.IsFile, "Cannot create a directory at a path representing a file.");
+        _logger.Trace($"Creating directory at '{virtualPath}'");
         return volume.CreateDirectory(virtualPath);
     }
 
@@ -142,11 +158,6 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
     {
         IReadableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsReadable();
         return volume.ReadBytes(virtualPath);
-    }
-
-    private void HandleOnFileChanged(object? sender, FileSystemChangedArgs e)
-    {
-        OnFileSystemChanged?.Invoke(sender, e);
     }
 
     private void Dispose(bool disposing)

@@ -8,25 +8,26 @@ using PokeSharp.Core.Services;
 
 namespace PokeSharp.Core;
 
-public interface IApp : IHaveKernel
+public interface IApp : IDisposable, IHaveKernel
 {
     string AppName { get; }
-    Version AppVersion{ get; }
+    Version AppVersion { get; }
 
     IModuleLoader ModuleLoader { get; }
 
     void Run();
 }
 
-public abstract class App<TEngine> : IApp where TEngine : Engine
+public abstract class App : IApp
 {
     public abstract string AppName { get; }
-    public virtual Version AppVersion => new Version(1, 0, 0);
+    public virtual Version AppVersion => new(1, 0, 0);
 
     public IModuleLoader ModuleLoader { get; private set; } = null!;
 
     public IKernel Kernel => _kernel;
 
+    private bool _isDisposed;
     private IKernel _kernel = null!;
     private Logger _logger = null!;
 
@@ -41,9 +42,8 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
 
             ServiceLocator.Initialize(this);
             ConfigureModules();
-            LogLoggerSettings();
 
-            RunEngine();
+            OnRun();
         }
         catch (Exception ex)
         {
@@ -53,7 +53,7 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         }
         finally
         {
-            Cleanup();
+            Dispose();
         }
     }
 
@@ -61,13 +61,15 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
     {
         IKernel kernel = new StandardKernel();
 
-        // App specific services
+        // App required services
         kernel.Bind<IApp>().ToConstant(this);
-        kernel.Bind<TEngine>().ToSelf().InSingletonScope();
         kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
         kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
         kernel.Bind<Logger>().ToProvider<LoggerProvider>();
+
+        // Configure app-specific services
+        this.ConfigureServices(kernel);
 
         return kernel;
     }
@@ -88,8 +90,8 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
     private void ConfigureModules()
     {
         ModuleLoader = Kernel.Get<IModuleLoader>();
-        ModuleLoader.RegisterModule(new CoreModule());
-        RegisterModules(ModuleLoader);
+        ModuleLoader.RegisterModule(new EngineModule());
+        ConfigureModules(ModuleLoader);
 
         ModuleLoader.ConfigureModules();
         if (!ModuleLoader.IsConfigured)
@@ -98,33 +100,26 @@ public abstract class App<TEngine> : IApp where TEngine : Engine
         }
     }
 
-    private void LogLoggerSettings()
-    {
-        LoggerSettings settings = _kernel.Get<LoggerSettings>();
+    protected abstract void OnRun();
+    protected abstract void ConfigureServices(IKernel kernel);
+    protected abstract void ConfigureModules(IModuleLoader loader);
 
-        _logger.Info("Logger settings:");
-        _logger.Info($"\tMinimum log level: {settings.LogLevel}");
-        _logger.Info("\tOutputs:");
-        foreach (ILogSink output in settings.Outputs)
+    public void Dispose()
+    {
+        if (!_isDisposed)
         {
-            _logger.Info($"\t- {output.GetType().Name}:{output.Name}");
+            _logger?.Info("Shutting down application...");
+
+            Dispose(disposing: false);
+
+            _kernel?.Dispose();
+            ServiceLocator.Cleanup();
+            GC.SuppressFinalize(this);
+            _isDisposed = true;
         }
     }
 
-    private void RunEngine()
+    protected virtual void Dispose(bool disposing)
     {
-        using TEngine engine = _kernel.Get<TEngine>();
-        _kernel.Bind<Engine>().ToConstant(engine);
-
-        engine.Run();
-    }
-
-    protected abstract void RegisterModules(IModuleLoader loader);
-
-    private void Cleanup()
-    {
-        _logger?.Info("Shutting down application...");
-        _kernel?.Dispose();
-        ServiceLocator.Cleanup();
     }
 }

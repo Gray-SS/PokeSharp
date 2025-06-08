@@ -1,6 +1,6 @@
 using ImGuiNET;
 using NativeFileDialogSharp;
-using PokeSharp.Core.Attributes;
+using PokeSharp.Core.Annotations;
 using PokeSharp.Editor.Services;
 
 using NVec2 = System.Numerics.Vector2;
@@ -8,7 +8,7 @@ using NVec2 = System.Numerics.Vector2;
 namespace PokeSharp.Editor.Views;
 
 [Priority(999)]
-public sealed class MainViewer : IGuiHook
+public sealed class MainViewer : IEditorView
 {
     private readonly IProjectManager _projectManager;
 
@@ -31,15 +31,19 @@ public sealed class MainViewer : IGuiHook
     private void DrawDockspace()
     {
         ImGuiWindowFlags flags = GetDockspaceSettings();
-        ImGui.Begin("DockSpace Root", flags);
-        ImGui.PopStyleVar(3);
+        if (ImGui.Begin("DockSpace Root", flags))
+        {
+            ImGui.PopStyleVar(3);
 
-        DrawMainMenuBar();
+            DrawMainMenuBar();
 
-        uint dockspaceId = ImGui.GetID("MyDockspace");
-        ImGui.DockSpace(dockspaceId, NVec2.Zero, ImGuiDockNodeFlags.None);
+            uint dockspaceId = ImGui.GetID("MyDockspace");
+            ImGui.DockSpace(dockspaceId, NVec2.Zero, ImGuiDockNodeFlags.None);
 
-        DrawCreatePopup();
+            DrawCreatePopup();
+        }
+
+        ImGui.End();
     }
 
     private static ImGuiWindowFlags GetDockspaceSettings()
@@ -95,7 +99,6 @@ public sealed class MainViewer : IGuiHook
 
                 if (ImGui.MenuItem("Exit"))
                 {
-                    Console.WriteLine("Quitter");
                 }
 
                 ImGui.EndMenu();

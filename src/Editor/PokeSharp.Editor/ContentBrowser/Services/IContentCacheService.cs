@@ -43,16 +43,6 @@ public interface IContentCacheService
     void Invalidate(ContentScope scope);
 
     /// <summary>
-    /// Marks a specific file or directory at the given path as invalidated.
-    /// </summary>
-    /// <param name="entryPath">The path of the file or directory to invalidate.</param>
-    /// <remarks>
-    /// Invalidation is deferred and will be processed later.
-    /// For immediate update, use <see cref="Refresh"/>.
-    /// </remarks>
-    // void Invalidate(VirtualPath entryPath);
-
-    /// <summary>
     /// Immediately refreshes a specific content scope.
     /// </summary>
     /// <param name="scope">The content scope to refresh. Defaults to all content.</param>
@@ -60,13 +50,4 @@ public interface IContentCacheService
     /// Use <see cref="Invalidate"/> for deferred refresh.
     /// </remarks>
     void Refresh(ContentScope scope);
-
-    /// <summary>
-    /// Immediately refreshes a specific file or directory at the given path.
-    /// </summary>
-    /// <param name="entryPath">The path of the file or directory to refresh.</param>
-    /// <remarks>
-    /// Use <see cref="Invalidate"/> for deferred refresh.
-    /// </remarks>
-    // void Refresh(VirtualPath entryPath);
 }

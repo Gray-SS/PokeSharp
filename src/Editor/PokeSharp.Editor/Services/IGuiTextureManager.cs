@@ -5,6 +5,8 @@ namespace PokeSharp.Editor.Services;
 
 public interface IGuiResourceManager
 {
+    void ClearFonts();
+
     nint RegisterTexture(Texture2D texture);
     void RegisterFont(string fontName, ImFontPtr font);
 

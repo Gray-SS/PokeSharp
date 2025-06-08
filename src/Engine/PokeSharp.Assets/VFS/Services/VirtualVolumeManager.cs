@@ -62,8 +62,10 @@ public sealed class VirtualVolumeManager : IVirtualVolumeManager
             return;
         }
 
-        _mountedVolumes.Remove(volume.Scheme);
-        OnVolumeUnmounted?.Invoke(this, new VirtualVolumeEventArgs(volume, this));
+        if (_mountedVolumes.Remove(volume.Scheme))
+        {
+            OnVolumeUnmounted?.Invoke(this, new VirtualVolumeEventArgs(volume, this));
+        }
     }
 
     public void UnmountVolume(string scheme)

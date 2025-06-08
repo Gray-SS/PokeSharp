@@ -9,7 +9,7 @@ public sealed class GbaVfsBuilder : RomVfsBuilder
 {
     public RomReader<GbaPointer> Reader { get; }
 
-    private readonly ILogger _logger;
+    private readonly Logger _logger;
 
     public GbaVfsBuilder(Rom rom) : base(rom)
     {
@@ -20,8 +20,8 @@ public sealed class GbaVfsBuilder : RomVfsBuilder
 
     public override void Build(RomDirectory root)
     {
-        _logger.Info($"Building and extraction started for '{Rom.Config.Name}'");
-        _logger.Debug($"Target extraction directory: '{root.Path}'");
+        _logger.Info($"Extraction started for '{Rom.Config.Name}'");
+        _logger.Debug($"Target directory: '{root.Path}'");
 
         if (Rom.Config.SupportsSpeciesLoading)
         {
@@ -32,22 +32,21 @@ public sealed class GbaVfsBuilder : RomVfsBuilder
 
     private void BuildSpecies(RomDirectory root)
     {
-        _logger.Info($"Building species at '{root.Path}'");
+        _logger.Info($"Extracting pokémons");
 
         GbaPokemonsConfig config = Rom.Config.Pokemons;
         GbaPointer namesPointer = GbaPointer.FromRaw(config.Names);
 
         for (int i = 0; i < config.Count; i++)
         {
-            _logger.Trace($"[{i + 1}/{config.Count}] Extracting pokémon name");
             int address = namesPointer.PhysicalAddress + i * config.NameLength;
 
             ReadOnlySpan<byte> text = Reader.ReadSpan(address, config.NameLength);
-            string name = GbaTextDecoder.Decode(text);
-            _logger.Trace($"[{i + 1}/{config.Count}] Pokémon name decoded as '{name}'");
 
-            RomFile pokemonNameFile = root.AddFile($"{name}.txt", Encoding.UTF8.GetBytes(name));
-            _logger.Trace($"[{i + 1}/{config.Count}] Storing name at '{pokemonNameFile.Path}'");
+            string name = GbaTextDecoder.Decode(text);
+            root.AddFile($"{name}.txt", Encoding.UTF8.GetBytes(name));
         }
+
+        _logger.Info($"Extracted pokémons at '{root.Path}'");
     }
 }

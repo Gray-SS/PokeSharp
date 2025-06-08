@@ -1,3 +1,4 @@
+using Ninject;
 using PokeSharp.Assets;
 using PokeSharp.Core;
 using PokeSharp.Core.Logging;
@@ -11,12 +12,16 @@ using PokeSharp.Scenes;
 
 namespace PokeSharp.Editor;
 
-public sealed class EditorApp : App<EditorEngine>
+public sealed class EditorApp : App
 {
     public override string AppName => "PokéSharp Editor";
-    public override Version AppVersion => new Version(1, 0, 0);
+    public override Version AppVersion => new(1, 0, 0);
 
-    protected override void RegisterModules(IModuleLoader loader)
+    protected override void OnRun()
+    {
+    }
+
+    protected override void ConfigureModules(IModuleLoader loader)
     {
         loader.RegisterModule(new RomModule());
         loader.RegisterModule(new AssetsModule());
@@ -33,6 +38,9 @@ public sealed class EditorApp : App<EditorEngine>
         base.ConfigureLogging(settings);
 
         settings.LogLevel = LogLevel.Trace;
-        settings.AddOutput(new ConsoleLogSink());
+    }
+
+    protected override void ConfigureServices(IKernel kernel)
+    {
     }
 }

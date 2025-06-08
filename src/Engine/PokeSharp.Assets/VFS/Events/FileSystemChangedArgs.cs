@@ -1,21 +1,21 @@
 namespace PokeSharp.Assets.VFS.Events;
 
+public enum FileSystemChangeType
+{
+    Created,
+    Renamed,
+    Modified,
+    Deleted,
+}
+
 public sealed class FileSystemChangedArgs : EventArgs
 {
-    public enum ChangeType
-    {
-        Created,
-        Renamed,
-        Modified,
-        Deleted,
-    }
-
-    public ChangeType Type { get; }
+    public FileSystemChangeType ChangeType { get; }
     public VirtualPath VirtualPath { get; }
 
-    public FileSystemChangedArgs(ChangeType type, VirtualPath virtualPath)
+    public FileSystemChangedArgs(FileSystemChangeType type, VirtualPath virtualPath)
     {
-        Type = type;
+        ChangeType = type;
         VirtualPath = virtualPath;
     }
 }

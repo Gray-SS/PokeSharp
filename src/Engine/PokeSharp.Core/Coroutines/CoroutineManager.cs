@@ -1,6 +1,6 @@
 using System.Collections;
 using Microsoft.Xna.Framework;
-using PokeSharp.Core.Attributes;
+using PokeSharp.Core.Annotations;
 
 namespace PokeSharp.Core.Coroutines;
 

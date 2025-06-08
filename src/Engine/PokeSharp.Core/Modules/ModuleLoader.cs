@@ -94,7 +94,7 @@ public sealed class ModuleLoader : IModuleLoader
         if (_modules.Count == 0)
             throw new ModuleException("No module has been registered. Cannot continue without modules.");
 
-        if (!_modules.Any(x => x is CoreModule))
+        if (!_modules.Any(x => x is EngineModule))
             throw new ModuleException("The core module wasn't registered. This is required.");
 
         if (_modules.Count == 1)
