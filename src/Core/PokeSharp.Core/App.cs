@@ -67,6 +67,7 @@ public abstract class App : IApp
         // App required services
         kernel.Bind<IApp>().ToConstant(this);
         kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
+        kernel.Bind<IDynamicTypeResolver>().To<DynamicTypeResolver>().InSingletonScope();
         kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
         kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
         kernel.Bind<Logger>().ToProvider<LoggerProvider>();
