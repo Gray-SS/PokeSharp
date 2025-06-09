@@ -35,6 +35,9 @@ public abstract class App : IApp
     {
         try
         {
+            ValidateSingleInstance();
+
+            _instance = this;
             _kernel = ConfigureContainer();
             ConfigureLogging();
 
@@ -121,4 +124,32 @@ public abstract class App : IApp
     protected virtual void Dispose(bool disposing)
     {
     }
+
+    private static void ValidateSingleInstance()
+    {
+        if (_instance != null)
+        {
+            throw new AppException($"Only one instance of '{nameof(App)}' is allowed to be started. " +
+                                    $"You tried to create and start a second instance of '{nameof(App)}'. " +
+                                    $"Ensure your application only instantiates a single '{nameof(App)}'.");
+        }
+    }
+
+    public static App Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                throw new AppException($"""
+                    The App has not been instantied yet.
+                    Make sure to instantiate your App before accessing '{nameof(App.Instance)}'.
+                """);
+            }
+
+            return _instance;
+        }
+    }
+
+    private static App _instance = null!;
 }
