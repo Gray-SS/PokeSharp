@@ -24,7 +24,6 @@
     <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
     <ProjectReference Include="..\..\Editor\PokeSharp.Editor\PokeSharp.Editor.csproj" />
-    <ProjectReference Include="..\..\Editor\PokeSharp.Editor.UI\PokeSharp.Editor.UI.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.ROM\PokeSharp.ROM.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
   </ItemGroup>

@@ -11,20 +11,20 @@ namespace MonoGame.ImGuiNet
     /// </summary>
     public class ImGuiRenderer
     {
-        private Game _game;
+        private readonly Game _game;
 
         // Graphics
-        private GraphicsDevice _graphicsDevice;
+        private readonly GraphicsDevice _graphicsDevice;
 
-        private BasicEffect _effect;
-        private RasterizerState _rasterizerState;
+        private BasicEffect? _effect;
+        private readonly RasterizerState _rasterizerState;
 
-        private byte[] _vertexData;
-        private VertexBuffer _vertexBuffer;
+        private byte[] _vertexData = null!;
+        private VertexBuffer _vertexBuffer = null!;
         private int _vertexBufferSize;
 
-        private byte[] _indexData;
-        private IndexBuffer _indexBuffer;
+        private byte[] _indexData = null!;
+        private IndexBuffer _indexBuffer = null!;
         private int _indexBufferSize;
 
         // Textures
@@ -37,7 +37,7 @@ namespace MonoGame.ImGuiNet
         private int _scrollWheelValue;
         private int _horizontalScrollWheelValue;
         private readonly float WHEEL_DELTA = 120;
-        private Keys[] _allKeys = Enum.GetValues<Keys>();
+        private static readonly Keys[] _allKeys = Enum.GetValues<Keys>();
 
         public ImGuiRenderer(Game game)
         {
