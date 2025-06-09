@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using PokeSharp.Core.Exceptions;
-using PokeSharp.Core.Annotations;
 using PokeSharp.Core.Logging;
 using PokeSharp.Core.Modules;
 using Ninject;
@@ -8,11 +7,9 @@ using PokeSharp.Core;
 using PokeSharp.Engine.Core.Services;
 using PokeSharp.Engine.Core.Threadings;
 using PokeSharp.Engine.Core.Windowing;
-using PokeSharp.Engine.Core.Exceptions;
 
 namespace PokeSharp.Engine.Core;
 
-[Priority(-100)]
 public abstract class BaseEngine : Game
 {
     public IApp App => ServiceLocator.CurrentApp;
@@ -28,10 +25,6 @@ public abstract class BaseEngine : Game
 
     public BaseEngine(EngineConfiguration config)
     {
-        ValidateSingleInstance();
-
-        _instance = this;
-
         // We're not using dependency injection for the engine logger,
         // because injecting it through EngineConfiguration would set its context
         // to EngineConfiguration instead of Engine.
@@ -102,23 +95,23 @@ public abstract class BaseEngine : Game
         LoadModules();
         ConfigureWindowTitle();
 
-        _logger.Info("Initializing the game loop...");
+        Logger.Info("Initializing the game loop...");
         OnInitialize();
-        _logger.Info("Game loop initialized.");
+        Logger.Info("Game loop initialized.");
 
         base.Initialize();
     }
 
     protected sealed override void LoadContent()
     {
-        _logger.Info("Loading content...");
+        Logger.Info("Loading content...");
         OnLoad();
-        _logger.Info("Content successfully loaded.");
+        Logger.Info("Content successfully loaded.");
     }
 
     protected override void BeginRun()
     {
-        _logger.Info("Running the game loop...");
+        Logger.Info("Running the game loop...");
     }
 
     protected sealed override void Update(GameTime gameTime)
@@ -136,7 +129,7 @@ public abstract class BaseEngine : Game
     protected override void OnExiting(object sender, EventArgs args)
     {
         base.OnExiting(sender, args);
-        _logger.Info("Exiting the game loop...");
+        Logger.Info("Exiting the game loop...");
     }
 
     #endregion // Monogame related API
@@ -151,44 +144,12 @@ public abstract class BaseEngine : Game
 
     private void LoadModules()
     {
-        _moduleLoader.LoadModules();
+        ModuleLoader.LoadModules();
         if (!_moduleLoader.IsLoaded)
             throw new AppException("The module loader have not been loaded correctly.");
 
-        _logger.Info($"{_moduleLoader.LoadedModules.Count()} module(s) loaded.");
-    }
-
-    private void ValidateSingleInstance()
-    {
-        if (_instance != null)
-        {
-            throw new EngineException($"Only one instance of '{nameof(BaseEngine)}' is allowed. " +
-                                    $"You tried to create a second instance of '{GetType().Name}'. " +
-                                    "Ensure your application only instantiates a single Engine.");
-        }
+        Logger.Info($"{_moduleLoader.LoadedModules.Count()} module(s) loaded.");
     }
 
     #endregion
-
-    #region Singleton
-
-    public static BaseEngine Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                throw new EngineException($"""
-                    The Engine has not been instantied yet.
-                    Make sure to instantiate you Engine subclass before accessing '{nameof(BaseEngine.Instance)}'.
-                """);
-            }
-
-            return _instance;
-        }
-    }
-
-    private static BaseEngine _instance = null!;
-
-    #endregion // Singleton
 }
