@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PokeSharp.Engine.Core\PokeSharp.Engine.Core.csproj" />
+    <ProjectReference Include="..\PokeSharp.Assets\PokeSharp.Assets.csproj" />
+    <ProjectReference Include="..\PokeSharp.Entities\PokeSharp.Entities.csproj" />
+    <ProjectReference Include="..\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
+    <ProjectReference Include="..\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
+    <ProjectReference Include="..\PokeSharp.ROM\PokeSharp.ROM.csproj" />
+    <ProjectReference Include="..\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
+  </ItemGroup>
+
+</Project>

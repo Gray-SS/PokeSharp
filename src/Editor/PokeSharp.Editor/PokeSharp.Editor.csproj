@@ -2,17 +2,11 @@
 
   <ItemGroup>
     <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Assets\PokeSharp.Assets.csproj" />
-    <ProjectReference Include="..\..\Core\PokeSharp.Core\PokeSharp.Core.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
     <PackageReference Include="NativeFileDialogSharp" Version="0.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Engine\PokeSharp.ROM\PokeSharp.ROM.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Entities\PokeSharp.Entities.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Engine\PokeSharp.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +14,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

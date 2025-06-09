@@ -19,14 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Engine\PokeSharp.Assets\PokeSharp.Assets.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Engine.Core\PokeSharp.Engine.Core.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeSharp.Entities\PokeSharp.Entities.csproj" />
     <ProjectReference Include="..\..\Editor\PokeSharp.Editor\PokeSharp.Editor.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.ROM\PokeSharp.ROM.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Scenes\PokeSharp.Scenes.csproj" />
   </ItemGroup>
+
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
     <Exec Command="dotnet tool restore" />
