@@ -3,7 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PokeSharp.Editor.Application\PokeSharp.Editor.Application.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Assets\PokeSharp.Assets.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Core\PokeSharp.Core.csproj" />
+    <ProjectReference Include="..\..\Core\PokeSharp.Core\PokeSharp.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

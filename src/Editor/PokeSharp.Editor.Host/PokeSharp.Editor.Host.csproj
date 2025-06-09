@@ -7,7 +7,7 @@
     <ProjectReference Include="..\PokeSharp.Editor.Presentation\PokeSharp.Editor.Presentation.csproj" />
     <ProjectReference Include="..\PokeSharp.Editor.Presentation.ImGui\PokeSharp.Editor.Presentation.ImGui.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Assets\PokeSharp.Assets.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeSharp.Core\PokeSharp.Core.csproj" />
+    <ProjectReference Include="..\..\Core\PokeSharp.Core\PokeSharp.Core.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Entities\PokeSharp.Entities.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Inputs\PokeSharp.Inputs.csproj" />
     <ProjectReference Include="..\..\Engine\PokeSharp.Rendering\PokeSharp.Rendering.csproj" />
