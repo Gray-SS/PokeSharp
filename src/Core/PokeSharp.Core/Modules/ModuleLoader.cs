@@ -70,7 +70,7 @@ public sealed class ModuleLoader : IModuleLoader
         }
 
         _logger.Debug($"Registering module '{module.Name}'...");
-        module.Register(this);
+        module.RegisterSubModules(this);
         module.StateChanged += OnModuleStateChanged;
 
         _modules.Add(internalModule);

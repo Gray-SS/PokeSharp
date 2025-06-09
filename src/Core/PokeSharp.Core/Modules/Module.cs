@@ -45,7 +45,7 @@ public abstract class Module : IModule, IModuleInternal
     {
     }
 
-    public virtual void Register(IModuleLoader loader)
+    public virtual void RegisterSubModules(IModuleLoader loader)
     {
     }
 

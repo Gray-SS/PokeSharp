@@ -26,7 +26,7 @@ public interface IModule
     // TODO: Replace the IKernel by IBindingRoot to only have the ability to bind
     void Configure(IKernel kernel);
 
-    void Register(IModuleLoader loader);
+    void RegisterSubModules(IModuleLoader loader);
 
     void ConfigureLogging(LoggerSettings settings, IResolutionRoot container);
 }
