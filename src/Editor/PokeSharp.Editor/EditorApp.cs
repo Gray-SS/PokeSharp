@@ -2,8 +2,8 @@ using Ninject;
 using PokeSharp.Assets;
 using PokeSharp.Core;
 using PokeSharp.Core.Logging;
-using PokeSharp.Core.Logging.Outputs;
 using PokeSharp.Core.Modules;
+using PokeSharp.Engine.Core;
 using PokeSharp.Entities;
 using PokeSharp.Inputs;
 using PokeSharp.Rendering;
@@ -23,6 +23,7 @@ public sealed class EditorApp : App
 
     protected override void ConfigureModules(IModuleLoader loader)
     {
+        loader.RegisterModule(new EngineModule());
         loader.RegisterModule(new RomModule());
         loader.RegisterModule(new AssetsModule());
         loader.RegisterModule(new InputsModule());

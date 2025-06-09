@@ -1,12 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PokeSharp.Core;
-using PokeSharp.Core.Resolutions;
+using PokeSharp.Engine.Core;
+using PokeSharp.Engine.Core.Resolutions;
 using PokeSharp.Inputs;
 
 namespace PokeSharp.DesktopGL;
 
-public class PokesharpEngine : Engine
+public class PokesharpEngine : BaseEngine
 {
     public PokesharpEngine(EngineConfiguration config) : base(config)
     {

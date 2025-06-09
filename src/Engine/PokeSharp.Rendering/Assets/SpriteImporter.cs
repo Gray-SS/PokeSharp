@@ -3,7 +3,6 @@ using PokeSharp.Assets;
 using PokeSharp.Assets.Exceptions;
 using PokeSharp.Assets.VFS;
 using PokeSharp.Core.Logging;
-using PokeSharp.Core.Threadings;
 using PokeSharp.Rendering.Assets.Raw;
 
 namespace PokeSharp.Rendering.Assets;

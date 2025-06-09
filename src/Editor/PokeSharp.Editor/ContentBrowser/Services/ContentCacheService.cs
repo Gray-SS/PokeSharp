@@ -3,9 +3,9 @@ using PokeSharp.Assets.VFS;
 using PokeSharp.Assets.VFS.Events;
 using PokeSharp.Assets.VFS.Services;
 using PokeSharp.Assets.VFS.Volumes;
-using PokeSharp.Core;
 using PokeSharp.Core.Logging;
 using PokeSharp.Editor.ContentBrowser.Events;
+using PokeSharp.Engine.Core;
 
 namespace PokeSharp.Editor.ContentBrowser.Services;
 

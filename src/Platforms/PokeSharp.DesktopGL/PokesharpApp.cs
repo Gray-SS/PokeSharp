@@ -10,6 +10,7 @@ using PokeSharp.Scenes;
 using PokeSharp.Entities;
 using PokeSharp.Core.Logging.Outputs;
 using Ninject;
+using PokeSharp.Engine.Core;
 
 namespace PokeSharp.DesktopGL;
 
@@ -21,13 +22,14 @@ public sealed class PokesharpApp : App
     protected override void OnRun()
     {
         using PokesharpEngine engine = Kernel.Get<PokesharpEngine>();
-        Kernel.Bind<Engine>().ToConstant(engine);
+        Kernel.Bind<BaseEngine>().ToConstant(engine);
 
         engine.Run();
     }
 
     protected override void ConfigureModules(IModuleLoader loader)
     {
+        loader.RegisterModule(new EngineModule());
         loader.RegisterModule(new RomModule());
         loader.RegisterModule(new AssetsModule());
         loader.RegisterModule(new InputsModule());

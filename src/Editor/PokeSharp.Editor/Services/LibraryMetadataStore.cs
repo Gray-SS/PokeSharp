@@ -5,7 +5,7 @@ using PokeSharp.Assets.VFS.Events;
 using PokeSharp.Assets.VFS.Services;
 using PokeSharp.Assets.VFS.Volumes;
 using PokeSharp.Core.Logging;
-using PokeSharp.Core.Threadings;
+using PokeSharp.Engine.Core.Threadings;
 
 namespace PokeSharp.Editor.Services;
 

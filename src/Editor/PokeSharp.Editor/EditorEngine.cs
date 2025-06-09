@@ -2,14 +2,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PokeSharp.Core;
-using PokeSharp.Core.Resolutions;
-using PokeSharp.Core.Resolutions.Events;
+using PokeSharp.Engine.Core;
+using PokeSharp.Engine.Core.Resolutions;
 using PokeSharp.Inputs;
 using PokeSharp.Rendering;
 
 namespace PokeSharp.Editor;
 
-public sealed class EditorEngine : Engine
+public sealed class EditorEngine : BaseEngine
 {
     private RenderTarget2D _renderTarget = null!;
     private EditorGuiRenderer _imGuiRenderer = null!;

@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\PokeSharp.Core\PokeSharp.Core.csproj" />
+    <ProjectReference Include="..\PokeSharp.Engine.Core\PokeSharp.Engine.Core.csproj" />
     <ProjectReference Include="..\PokeSharp.Assets\PokeSharp.Assets.csproj" />
   </ItemGroup>
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

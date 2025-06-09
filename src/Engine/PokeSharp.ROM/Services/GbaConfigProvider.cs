@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using PokeSharp.Core.Exceptions;
+using PokeSharp.Engine.Core.Exceptions;
 using PokeSharp.ROM.Platforms.Gba;
 
 namespace PokeSharp.ROM.Services;

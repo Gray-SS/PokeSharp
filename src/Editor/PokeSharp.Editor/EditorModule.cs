@@ -8,6 +8,7 @@ using PokeSharp.Core.Logging.Outputs;
 using PokeSharp.Core.Modules;
 using PokeSharp.Editor.ContentBrowser.Services;
 using PokeSharp.Editor.Services;
+using PokeSharp.Engine.Core;
 
 namespace PokeSharp.Editor;
 
@@ -39,7 +40,7 @@ public sealed class EditorModule : Module
     {
         IKernel kernel = App.Kernel;
 
-        Engine engine = kernel.Get<Engine>();
+        BaseEngine engine = kernel.Get<BaseEngine>();
         kernel.Bind<ImGuiRenderer>().ToConstant(new ImGuiRenderer(engine));
     }
 }
