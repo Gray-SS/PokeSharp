@@ -1,0 +1,24 @@
+using PokeEngine.Assets.VFS;
+
+namespace PokeEngine.Assets.Services;
+
+public interface IAssetMetadataStore
+{
+    bool Exists(VirtualPath assetPath);
+
+    IVirtualFile GetMetadataFile(VirtualPath assetPath);
+    VirtualPath GetMetadataPath(VirtualPath assetPath);
+
+    IEnumerable<AssetMetadata> GetCachedMetadatas();
+
+    void DeleteAll();
+
+    void EnterBulkMode();
+    void ExitBulkMode();
+
+    void Save(VirtualPath assetPath, AssetMetadata metadata);
+    AssetMetadata Load(VirtualPath assetPath);
+
+    AssetMetadata? GetMetadata(Guid assetId);
+    AssetMetadata? GetMetadata(VirtualPath assetPath);
+}

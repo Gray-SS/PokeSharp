@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PokeLab.Domain\PokeLab.Domain.csproj" />
+    <ProjectReference Include="..\PokeLab.Infrastructure\PokeLab.Infrastructure.csproj" />
+    <ProjectReference Include="..\PokeLab.Application\PokeLab.Application.csproj" />
+    <ProjectReference Include="..\PokeLab.Presentation\PokeLab.Presentation.csproj" />
+    <ProjectReference Include="..\PokeLab.Presentation.ImGui\PokeLab.Presentation.ImGui.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeEngine\PokeEngine.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PokeEngine.Core\PokeEngine.Core.csproj" />
+    <ProjectReference Include="..\PokeEngine.Assets\PokeEngine.Assets.csproj" />
+    <ProjectReference Include="..\PokeEngine.Entities\PokeEngine.Entities.csproj" />
+    <ProjectReference Include="..\PokeEngine.Inputs\PokeEngine.Inputs.csproj" />
+    <ProjectReference Include="..\PokeEngine.Rendering\PokeEngine.Rendering.csproj" />
+    <ProjectReference Include="..\PokeEngine.ROM\PokeEngine.ROM.csproj" />
+    <ProjectReference Include="..\PokeEngine.Scenes\PokeEngine.Scenes.csproj" />
+  </ItemGroup>
+
+</Project>
