@@ -7,7 +7,7 @@ public sealed class EntitiesModule : Module
 {
     public override string Name => "PokéSharp - Entities";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
     }
 }

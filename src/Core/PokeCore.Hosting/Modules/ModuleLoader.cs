@@ -113,7 +113,7 @@ public sealed class ModuleLoader : IModuleLoader
             }
 
             _logger.Trace($"Configuring module '{module.Name}'...");
-            module.Configure(_kernel);
+            module.ConfigureServices(_kernel);
 
             Type moduleType = module.GetType();
             _kernel.Bind(moduleType).ToConstant(module);

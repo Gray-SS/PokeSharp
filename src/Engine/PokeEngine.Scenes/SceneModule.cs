@@ -7,7 +7,7 @@ public sealed class ScenesModule : Module
 {
     public override string Name => "Pokésharp - Scenes";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
     }
 }

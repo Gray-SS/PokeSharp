@@ -10,7 +10,7 @@ public sealed class RomModule : Module
 
     public override string Name => "Rom";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
         kernel.Bind<IGbaConfigProvider>()
             .To<GbaConfigProvider>()

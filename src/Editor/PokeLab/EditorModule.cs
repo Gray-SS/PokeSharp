@@ -16,7 +16,7 @@ public sealed class EditorModule : Module
 {
     public override string Name => "Editor";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
         kernel.Bind<MemoryLogSink>().ToSelf().InSingletonScope();
         kernel.Bind<IProjectManager>().To<ProjectManager>().InSingletonScope();

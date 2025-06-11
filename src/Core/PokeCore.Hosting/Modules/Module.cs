@@ -35,7 +35,7 @@ public abstract class Module : IModule, IModuleInternal
 
     #region Module API
 
-    public abstract void Configure(IKernel kernel);
+    public abstract void ConfigureServices(IKernel kernel);
 
     public virtual void ConfigureLogging(LoggerSettings settings, IResolutionRoot container)
     {

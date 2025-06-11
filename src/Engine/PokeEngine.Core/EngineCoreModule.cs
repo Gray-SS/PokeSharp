@@ -15,7 +15,7 @@ public class EngineCoreModule : Module
 {
     public override string Name => "Engine";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
         kernel.Bind<IEngineHookDispatcher>().To<EngineHookDispatcher>().InSingletonScope();
         kernel.Bind<ICoroutineManager>().To<CoroutineManager>().InSingletonScope();

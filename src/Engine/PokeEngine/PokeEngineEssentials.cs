@@ -14,7 +14,7 @@ public class PokeEngineEssentials : Module
 {
     public override string Name => "PokeEngine Essentials";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
     }
 

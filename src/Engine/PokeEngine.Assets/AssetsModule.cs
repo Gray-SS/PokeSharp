@@ -10,7 +10,7 @@ public sealed class AssetsModule : Module
 {
     public override string Name => "Assets";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
         kernel.Bind<AssetPipeline>().ToSelf().InSingletonScope();
         kernel.Bind<IVirtualFileSystem>().To<VirtualFileSystem>().InSingletonScope();

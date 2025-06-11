@@ -1,9 +1,9 @@
+using Ninject;
 using Microsoft.Xna.Framework;
+using PokeCore.Hosting;
 using PokeCore.Hosting.Exceptions;
 using PokeCore.Hosting.Logging;
 using PokeCore.Hosting.Modules;
-using Ninject;
-using PokeCore.Hosting;
 using PokeEngine.Core.Services;
 using PokeEngine.Core.Threadings;
 using PokeEngine.Core.Windowing;

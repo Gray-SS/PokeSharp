@@ -7,7 +7,7 @@ public sealed class InputsModule : Module
 {
     public override string Name => "Inputs";
 
-    public override void Configure(IKernel kernel)
+    public override void ConfigureServices(IKernel kernel)
     {
         kernel.Bind<IInputManager>().To<InputManager>().InSingletonScope();
     }

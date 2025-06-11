@@ -24,7 +24,7 @@ public interface IModule
     void Load();
 
     // TODO: Replace the IKernel by IBindingRoot to only have the ability to bind
-    void Configure(IKernel kernel);
+    void ConfigureServices(IKernel kernel);
 
     void RegisterSubModules(IModuleLoader loader);
 
