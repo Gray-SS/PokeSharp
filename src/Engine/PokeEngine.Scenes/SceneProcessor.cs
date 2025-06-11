@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Reflection;
 using System.Text.Json;
+using PokeCore.Logging;
 using PokeEngine.Assets;
-using PokeCore.Hosting.Logging;
 using PokeEngine.Entities;
 
 namespace PokeEngine.Scenes;
@@ -11,7 +11,7 @@ public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
 {
     private readonly Logger _logger;
 
-    public SceneProcessor(Logger logger)
+    public SceneProcessor(Logger<SceneProcessor> logger)
     {
         _logger = logger;
     }

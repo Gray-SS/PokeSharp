@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS.Events;
 using PokeEngine.Assets.VFS.Volumes;
-using PokeCore.Hosting.Logging;
 
 namespace PokeEngine.Assets.VFS.Services;
 
@@ -16,7 +16,7 @@ public sealed class VirtualVolumeManager : IVirtualVolumeManager
     private readonly Dictionary<string, IVirtualVolume> _mountedVolumes;
     private bool disposedValue;
 
-    public VirtualVolumeManager(Logger logger)
+    public VirtualVolumeManager(Logger<VirtualVolumeManager> logger)
     {
         _logger = logger;
         _mountedVolumes = new Dictionary<string, IVirtualVolume>();

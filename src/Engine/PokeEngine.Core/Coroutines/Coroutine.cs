@@ -1,6 +1,5 @@
 using System.Collections;
-using Microsoft.Xna.Framework;
-using PokeCore.Hosting;
+using PokeCore.DependencyInjection.Abstractions;
 
 namespace PokeEngine.Core.Coroutines;
 
@@ -16,7 +15,7 @@ public sealed class Coroutine
         _routines.Push(routine);
     }
 
-    public void Update(GameTime gameTime)
+    public void Update(UpdateContext context)
     {
         if (IsDone || _routines.Count == 0)
             return;
@@ -24,7 +23,7 @@ public sealed class Coroutine
         var routine = _routines.Peek();
         if (routine.Current is ICoroutine coroutine)
         {
-            if (coroutine.IsFinished(gameTime))
+            if (coroutine.IsFinished(context))
                 ExecuteStep(routine);
         }
         else if (routine.Current is IEnumerator nested)

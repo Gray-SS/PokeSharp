@@ -1,58 +1,42 @@
-using Ninject;
 using Microsoft.Xna.Framework;
-using PokeCore.Hosting;
-using PokeCore.Hosting.Exceptions;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Modules;
-using PokeEngine.Core.Services;
-using PokeEngine.Core.Threadings;
+using PokeCore.Logging;
+using PokeCore.Hosting.Abstractions;
+using PokeCore.DependencyInjection.Abstractions;
 using PokeEngine.Core.Windowing;
+using PokeEngine.Core.Threadings;
 
 namespace PokeEngine.Core;
 
-public abstract class BaseEngine : Game
+public abstract class BaseEngine : Game, IGameLoop
 {
-    public IApp App => ServiceLocator.CurrentApp;
     public GraphicsDeviceManager Graphics { get; }
-    public Logger Logger => _logger;
-    public IKernel Kernel => _kernel;
-    public IModuleLoader ModuleLoader => _moduleLoader;
 
-    private readonly IKernel _kernel;
-    private readonly Logger _logger;
-    private readonly IModuleLoader _moduleLoader;
-    private IEngineHookDispatcher _hooksDispatcher = null!;
+    public IApp App { get; }
+    public Logger Logger { get; }
+    public new IServiceContainer Services { get; }
+
+    public event EventHandler? Initialized;
+    public event EventHandler<DrawContext>? Rendered;
+    public event EventHandler<UpdateContext>? Updated;
+
+    private readonly DrawContext _drawContext;
+    private readonly UpdateContext _updateContext;
+
+    // private IEngineHookDispatcher _hooksDispatcher = null!;
 
     public BaseEngine(EngineConfiguration config)
     {
-        // We're not using dependency injection for the engine logger,
-        // because injecting it through EngineConfiguration would set its context
-        // to EngineConfiguration instead of Engine.
-        _logger = LoggerFactory.GetLogger<BaseEngine>();
-        _kernel = config.Kernel;
-        _moduleLoader = config.ModuleLoader;
-
+        App = config.App;
+        Logger = config.Logger;
+        Services = config.Services;
         Graphics = new GraphicsDeviceManager(this);
 
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
-    }
 
-    /// <summary>
-    /// This function is used to inject the IEngineHookDispatcher from the core module.
-    /// </summary>
-    /// <remarks>
-    /// Why not retrieve it directly via dependency injection? Because the IEngineHookDispatcher loads IEngineHooks, which are essentially services using MonoGame graphics.
-    /// If we inject it directly, then dependencies such as GraphicsDevice, GameWindow, etc. won't be accessible.
-    /// </remarks>
-    /// <param name="dispatcher">The resolved dispatcher</param>
-    internal void InjectDispatcher(IEngineHookDispatcher dispatcher)
-    {
-        _logger.Debug($"{nameof(IEngineHookDispatcher)} has been successfully injected into '{nameof(BaseEngine)}'");
-        _hooksDispatcher = dispatcher;
+        _drawContext = new DrawContext();
+        _updateContext = new UpdateContext();
     }
-
-    #region Engine related API
 
     /// <summary>
     /// Used to initialize graphics.
@@ -64,7 +48,10 @@ public abstract class BaseEngine : Game
     /// </remarks>
     protected virtual void OnInitialize()
     {
-        _hooksDispatcher.Initialize();
+        Initialized?.Invoke(this, EventArgs.Empty);
+
+        // _hooksDispatcher = Services.GetService<IEngineHookDispatcher>();
+        // _hooksDispatcher.Initialize();
     }
 
     /// <summary>
@@ -76,42 +63,39 @@ public abstract class BaseEngine : Game
 
     protected virtual void OnUpdate(GameTime gameTime)
     {
-        _hooksDispatcher.Update(gameTime);
+        _updateContext.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Updated?.Invoke(this, _updateContext);
+        // _hooksDispatcher.Update(gameTime);
     }
 
     protected virtual void OnDraw(GameTime gameTime)
     {
-        _hooksDispatcher.Draw(gameTime);
+        _drawContext.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Rendered?.Invoke(this, _drawContext);
+        // _hooksDispatcher.Draw(gameTime);
     }
-
-    #endregion // Engine related API
-
-    #region Monogame related
 
     protected sealed override void Initialize()
     {
         ThreadHelper.Initialize();
 
-        LoadModules();
+        // LoadModules();
         ConfigureWindowTitle();
 
         Logger.Info("Initializing the game loop...");
         OnInitialize();
-        Logger.Info("Game loop initialized.");
 
         base.Initialize();
     }
 
     protected sealed override void LoadContent()
     {
-        Logger.Info("Loading content...");
         OnLoad();
-        Logger.Info("Content successfully loaded.");
     }
 
     protected override void BeginRun()
     {
-        Logger.Info("Running the game loop...");
+        Logger.Info("Entering the game loop");
     }
 
     protected sealed override void Update(GameTime gameTime)
@@ -129,27 +113,12 @@ public abstract class BaseEngine : Game
     protected override void OnExiting(object sender, EventArgs args)
     {
         base.OnExiting(sender, args);
-        Logger.Info("Exiting the game loop...");
+        Logger.Info("Exiting the game loop");
     }
-
-    #endregion // Monogame related API
-
-    #region Helpers
 
     private void ConfigureWindowTitle()
     {
-        IWindowManager windowManager = _kernel.Get<IWindowManager>();
+        IWindowManager windowManager = Services.GetService<IWindowManager>();
         windowManager.Title = $"{App.AppName} - {App.AppVersion}";
     }
-
-    private void LoadModules()
-    {
-        ModuleLoader.LoadModules();
-        if (!_moduleLoader.IsLoaded)
-            throw new AppException("The module loader have not been loaded correctly.");
-
-        Logger.Info($"{_moduleLoader.LoadedModules.Count()} module(s) loaded.");
-    }
-
-    #endregion
 }

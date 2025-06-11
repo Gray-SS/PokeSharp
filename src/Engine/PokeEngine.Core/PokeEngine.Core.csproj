@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\PokeCore.Hosting\PokeCore.Hosting.csproj" />
+    <ProjectReference Include="..\..\Core\PokeCore.Common\PokeCore.Common.csproj" />
   </ItemGroup>
 
 </Project>

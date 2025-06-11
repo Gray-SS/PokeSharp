@@ -48,9 +48,9 @@ public class Tween<T> : ICoroutine
         IsRunning = false;
     }
 
-    public bool IsFinished(GameTime gameTime)
+    public bool IsFinished(UpdateContext context)
     {
-        _elapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _elapsed += context.DeltaTime;
 
         float t = Math.Clamp(_elapsed / Duration, 0f, 1f);
         float eased = Ease(t);

@@ -1,17 +1,19 @@
-using Ninject;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Modules;
+using PokeCore.Logging;
+using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.Hosting.Abstractions;
 
 namespace PokeEngine.Core;
 
 public sealed class EngineConfiguration
 {
-    public IKernel Kernel { get; }
-    public IModuleLoader ModuleLoader { get; }
+    public IApp App { get; }
+    public IServiceContainer Services { get; }
+    public Logger<BaseEngine> Logger { get; }
 
-    public EngineConfiguration(IKernel kernel, IModuleLoader moduleLoader)
+    public EngineConfiguration(IApp app, IServiceContainer services, Logger<BaseEngine> logger)
     {
-        Kernel = kernel;
-        ModuleLoader = moduleLoader;
+        App = app;
+        Services = services;
+        Logger = logger;
     }
 }

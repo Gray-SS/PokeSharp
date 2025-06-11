@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework.Graphics;
+using PokeCore.Logging;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
 using PokeEngine.Assets.VFS;
-using PokeCore.Hosting.Logging;
 using PokeEngine.Rendering.Assets.Raw;
 
 namespace PokeEngine.Rendering.Assets;
@@ -15,7 +15,7 @@ public sealed class SpriteImporter : AssetImporter<RawSprite>
     private readonly Logger _logger;
     private readonly GraphicsDevice _graphicsDevice;
 
-    public SpriteImporter(Logger logger, GraphicsDevice graphicsDevice)
+    public SpriteImporter(Logger<SpriteImporter> logger, GraphicsDevice graphicsDevice)
     {
         _logger = logger;
         _graphicsDevice = graphicsDevice;

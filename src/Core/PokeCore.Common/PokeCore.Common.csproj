@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PokeCore.DependencyInjection.Abstractions\PokeCore.DependencyInjection.Abstractions.csproj" />
+    <ProjectReference Include="..\PokeCore.Hosting.Abstractions\PokeCore.Hosting.Abstractions.csproj" />
+    <ProjectReference Include="..\PokeCore.Logging\PokeCore.Logging.csproj" />
+    <ProjectReference Include="..\PokeCore.Diagnostics\PokeCore.Diagnostics.csproj" />
+  </ItemGroup>
+
+</Project>

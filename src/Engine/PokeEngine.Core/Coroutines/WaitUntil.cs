@@ -11,7 +11,7 @@ public sealed class WaitUntil : ICoroutine
         Predicate = predicate;
     }
 
-    public bool IsFinished(GameTime gameTime)
+    public bool IsFinished(UpdateContext _)
     {
         return Predicate.Invoke();
     }

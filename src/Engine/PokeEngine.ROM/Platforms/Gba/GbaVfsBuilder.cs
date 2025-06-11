@@ -1,5 +1,5 @@
 using System.Text;
-using PokeCore.Hosting.Logging;
+using PokeCore.Logging;
 using PokeEngine.ROM.Services;
 using PokeEngine.ROM.Utils;
 
@@ -13,7 +13,7 @@ public sealed class GbaVfsBuilder : RomVfsBuilder
 
     public GbaVfsBuilder(Rom rom) : base(rom)
     {
-        _logger = LoggerFactory.GetLogger(typeof(GbaVfsBuilder));
+        _logger = LoggerFactory.GetLogger<GbaVfsBuilder>();
 
         Reader = new RomReader<GbaPointer>(rom.RawData);
     }

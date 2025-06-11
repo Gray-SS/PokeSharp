@@ -1,111 +1,138 @@
-using Ninject;
-using Ninject.Infrastructure;
-using PokeCore.Hosting.Exceptions;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Logging.Outputs;
-using PokeCore.Hosting.Modules;
-using PokeCore.Hosting.Services;
+using PokeCore.Logging;
+using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.Hosting.Abstractions;
 
 namespace PokeCore.Hosting;
 
-public interface IApp : IDisposable, IHaveKernel
-{
-    string AppName { get; }
-    Version AppVersion { get; }
-
-    IModuleLoader ModuleLoader { get; }
-
-    void Run();
-}
-
-public abstract class App : IApp
+public abstract class App : IApp, IDisposable
 {
     public abstract string AppName { get; }
     public virtual Version AppVersion => new(1, 0, 0);
 
-    public IModuleLoader ModuleLoader { get; private set; } = null!;
-
-    public IKernel Kernel => _kernel;
+    public bool IsRunning => _isRunning;
+    public IServiceContainer Services => _services;
 
     private bool _isDisposed;
-    private IKernel _kernel = null!;
     private Logger _logger = null!;
 
-    public void Run()
+    private bool _isRunning;
+    private IServiceContainer _services = null!;
+    private IEnumerable<IHostedService> _hostedServices = null!;
+
+    private readonly CancellationTokenSource _cts;
+
+    public App()
     {
+        _cts = new CancellationTokenSource();
+    }
+
+    public async Task<bool> StartAsync()
+    {
+        if (_isRunning)
+        {
+            _logger?.Error("Started the application twice.");
+            return false;
+        }
+
         try
         {
-            ValidateSingleInstance();
+            var builder = new AppBuilder();
+            ConfigureApplication(builder);
 
-            _instance = this;
-            _kernel = ConfigureContainer();
-            ConfigureLogging();
+            IServiceCollections serviceCollections = builder.Build();
+            serviceCollections.AddSingleton<IApp>(this);
+            serviceCollections.AddSingleton<IServiceContainer>(sc => sc);
+            ConfigureServices(serviceCollections);
 
-            _logger.Info("Starting application...");
+            IServiceContainer services = serviceCollections.Build();
+            ServiceLocator.Initialize(services);
 
-            ServiceLocator.Initialize(this);
-            ConfigureModules();
+            _logger = services.GetService<Logger<App>>();
+            _logger.Info($"Starting {AppName} v{AppVersion}...");
+            _logger.Info($"Configuring application...");
+            Configure(services);
 
-            OnRun();
+            _hostedServices = services.GetServices<IHostedService>();
+
+            _logger.Info($"Starting hosted services...");
+            Task[] tasks = _hostedServices.Select(x => x.StartAsync(_cts.Token)).ToArray();
+            await Task.WhenAll(tasks);
+
+            _logger.Info($"Application started successfully.");
+            _services = services;
+            _isRunning = true;
+            return true;
         }
         catch (Exception ex)
         {
-            _logger?.Fatal($"Critical application failure: {ex.Message}");
-            _logger?.Debug($"{ex.StackTrace ?? "No stack trace available."}");
-            throw;
+            if (_logger != null)
+                _logger.Fatal("Unexpected error occured while starting application.", ex);
+            else
+                Console.Error.WriteLine($"Fatal: {ex}");
+
+            _cts.Cancel();
+            await StopAsync();
+            return false;
+        }
+    }
+
+    public async Task StopAsync()
+    {
+        if (!_isRunning)
+            return;
+
+        _logger.Info("Stopping application...");
+        _cts.Cancel();
+
+        if (_hostedServices != null)
+        {
+            foreach (var service in _hostedServices.Reverse())
+            {
+                try
+                {
+                    await service.StopAsync(_cts.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error($"Error stopping service {service.GetType().Name}", ex);
+                }
+            }
+        }
+
+        Dispose();
+    }
+
+    public async Task WaitForShutdownAsync()
+    {
+        if (!_isRunning)
+            return;
+
+        try
+        {
+            Task[] waitables = _hostedServices
+                .OfType<IWaitableHostedService>()
+                .Select(x => x.WaitForShutdownAsync())
+                .ToArray();
+
+            await Task.WhenAll(waitables);
+        }
+        catch (Exception ex)
+        {
+            _logger?.Fatal("Application terminated unexpectedly.", ex);
+            _cts.Cancel();
         }
         finally
         {
-            Dispose();
+            await StopAsync();
         }
     }
 
-    private IKernel ConfigureContainer()
+    protected abstract void Configure(IServiceContainer services);
+    protected abstract void ConfigureServices(IServiceCollections services);
+
+    protected virtual void ConfigureApplication(IAppBuilder builder)
     {
-        IKernel kernel = new StandardKernel();
-
-        // App required services
-        kernel.Bind<IApp>().ToConstant(this);
-        kernel.Bind<IReflectionManager>().To<ReflectionManager>().InSingletonScope();
-        kernel.Bind<IDynamicTypeResolver>().To<DynamicTypeResolver>().InSingletonScope();
-        kernel.Bind<IModuleLoader>().To<ModuleLoader>().InSingletonScope();
-        kernel.Bind<LoggerSettings>().ToSelf().InSingletonScope();
-        kernel.Bind<Logger>().ToProvider<LoggerProvider>();
-
-        // Configure app-specific services
-        this.ConfigureServices(kernel);
-
-        return kernel;
     }
-
-    private void ConfigureLogging()
-    {
-        LoggerSettings loggerSettings = _kernel.Get<LoggerSettings>();
-        ConfigureLogging(loggerSettings);
-
-        _logger = new ContextLogger(loggerSettings, "App");
-    }
-
-    protected virtual void ConfigureLogging(LoggerSettings settings)
-    {
-        settings.AddOutput(new FileLogSink(targetDirectory: "logs"));
-    }
-
-    private void ConfigureModules()
-    {
-        ModuleLoader = Kernel.Get<IModuleLoader>();
-        ConfigureModules(ModuleLoader);
-
-        ModuleLoader.ConfigureModules();
-        if (!ModuleLoader.IsConfigured)
-        {
-            throw new AppException("The module loader have not been configured correctly.");
-        }
-    }
-
-    protected abstract void OnRun();
-    protected abstract void ConfigureServices(IKernel kernel);
-    protected abstract void ConfigureModules(IModuleLoader loader);
 
     public void Dispose()
     {
@@ -113,44 +140,22 @@ public abstract class App : IApp
         {
             _logger?.Info("Shutting down application...");
 
-            Dispose(disposing: false);
-
-            _kernel?.Dispose();
+            Dispose(disposing: true);
             ServiceLocator.Cleanup();
-            GC.SuppressFinalize(this);
+
+
             _isDisposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 
     protected virtual void Dispose(bool disposing)
     {
-    }
-
-    private static void ValidateSingleInstance()
-    {
-        if (_instance != null)
+        if (disposing)
         {
-            throw new AppException($"Only one instance of '{nameof(App)}' is allowed to be started. " +
-                                    $"You tried to create and start a second instance of '{nameof(App)}'. " +
-                                    $"Ensure your application only instantiates a single '{nameof(App)}'.");
+            _cts.Cancel();
+            _cts.Dispose();
+            (_services as IDisposable)?.Dispose();
         }
     }
-
-    public static App Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                throw new AppException($"""
-                    The App has not been instantied yet.
-                    Make sure to instantiate your App before accessing '{nameof(App.Instance)}'.
-                """);
-            }
-
-            return _instance;
-        }
-    }
-
-    private static App _instance = null!;
 }

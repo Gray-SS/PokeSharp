@@ -1,36 +1,35 @@
-﻿using Ninject;
-using PokeCore.Hosting.Modules;
-using PokeEngine.Assets;
+using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.Hosting.Abstractions.Extensions;
 using PokeEngine.Core;
+using PokeEngine.Assets;
 using PokeEngine.Entities;
 using PokeEngine.Inputs;
 using PokeEngine.Rendering;
 using PokeEngine.ROM;
 using PokeEngine.Scenes;
+using PokeEngine.Core.Modules;
+using PokeEngine.Core.Modules.Extensions;
 
 namespace PokeEngine;
 
-public class PokeEngineEssentials : Module
+public sealed class PokeEngineEssentials<TEngine> : EngineModule
+    where TEngine : BaseEngine
 {
-    public override string Name => "PokeEngine Essentials";
+    public override string Name => "PokéEngine Essentials";
+    public override Version Version => new(1, 0, 0);
 
-    public override void ConfigureServices(IKernel kernel)
+    public override void Configure(IServiceContainer services)
     {
     }
 
-    public override void RegisterSubModules(IModuleLoader loader)
+    public override void ConfigureServices(IServiceCollections services)
     {
-        loader.RegisterModule(new EngineCoreModule());
-        loader.RegisterModule(new InputsModule());
-        loader.RegisterModule(new EntitiesModule());
-        loader.RegisterModule(new ScenesModule());
-        loader.RegisterModule(new RomModule());
-        loader.RegisterModule(new RenderingModule());
-        loader.RegisterModule(new AssetsModule());
-    }
-
-    public override void Load()
-    {
-
+        services.AddPokeModule<PokeEngineCoreModule<TEngine>>();
+        services.AddPokeModule<PokeEngineAssetsModule>();
+        services.AddPokeModule<PokeEngineEntitiesModule>();
+        services.AddPokeModule<PokeEngineInputsModule>();
+        services.AddPokeModule<PokeEngineRenderingModule>();
+        services.AddPokeModule<PokeEngineRomModule>();
+        services.AddPokeModule<PokeEngineScenesModule>();
     }
 }

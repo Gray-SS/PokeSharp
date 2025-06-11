@@ -1,9 +1,6 @@
-﻿using System.Linq;
-using PokeCore.Hosting;
+﻿using PokeCore.Hosting.Abstractions;
 using PokeRuntime.Desktop;
-using PokeLab;
 
-bool editor = args.Contains("--editor");
-
-IApp app = editor ? new EditorApp() : new PokesharpApp();
-app.Run();
+IApp app = new PokesharpApp();
+await app.StartAsync();
+await app.WaitForShutdownAsync();

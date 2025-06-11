@@ -1,6 +1,6 @@
+using PokeCore.Diagnostics;
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS.Events;
-using PokeCore.Hosting;
-using PokeCore.Hosting.Logging;
 using PokeEngine.Core.Threadings;
 
 namespace PokeEngine.Assets.VFS.Volumes;
@@ -25,7 +25,7 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
         PhysicalPath = Path.GetFullPath(physicalPath);
 
-        _logger = LoggerFactory.GetLogger(typeof(PhysicalVolume));
+        _logger = LoggerFactory.GetLogger<PhysicalVolume>();
 
         _logger.Trace($"Volume '{displayName}' is watching at path '{physicalPath}'");
         _watcher = new FileSystemWatcher(PhysicalPath)

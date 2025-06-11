@@ -9,7 +9,7 @@ using PokeEngine.Core;
 
 namespace PokeLab.ContentBrowser.Services;
 
-public sealed class ContentCacheService : IContentCacheService, IEngineHook
+public sealed class ContentCacheService : IContentCacheService, IGameLoop
 {
     public event EventHandler<ContentCacheRefreshedArgs>? OnCacheRefreshed;
 

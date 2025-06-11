@@ -1,7 +1,7 @@
+using PokeCore.Logging;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
 using PokeEngine.Assets.VFS.Services;
-using PokeCore.Hosting.Logging;
 using PokeEngine.ROM.Services;
 
 namespace PokeEngine.ROM.Platforms.Gba;
@@ -12,7 +12,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
     private readonly IGbaConfigProvider _configProvider;
     private readonly IVirtualVolumeManager _volumeManager;
 
-    public GbaRomProcessor(IGbaConfigProvider configProvider, Logger logger, IVirtualVolumeManager volumeManager)
+    public GbaRomProcessor(IGbaConfigProvider configProvider, Logger<GbaRomProcessor> logger, IVirtualVolumeManager volumeManager)
     {
         _volumeManager = volumeManager;
         _logger = logger;

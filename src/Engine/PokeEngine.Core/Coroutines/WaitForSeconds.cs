@@ -13,9 +13,9 @@ public sealed class WaitForSeconds : ICoroutine
         _duration = duration;
     }
 
-    public bool IsFinished(GameTime gameTime)
+    public bool IsFinished(UpdateContext context)
     {
-        _elapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _elapsed += context.DeltaTime;
         return _elapsed >= _duration;
     }
 }

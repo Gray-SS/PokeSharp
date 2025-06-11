@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PokeCore.Hosting;
+using PokeCore.DependencyInjection.Abstractions;
 
 namespace PokeEngine.Inputs;
 

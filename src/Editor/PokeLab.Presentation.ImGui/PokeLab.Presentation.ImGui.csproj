@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PokeLab.Presentation\PokeLab.Presentation.csproj" />
+    <ProjectReference Include="..\..\Engine\PokeEngine\PokeEngine.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

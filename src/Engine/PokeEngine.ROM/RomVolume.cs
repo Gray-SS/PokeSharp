@@ -1,7 +1,6 @@
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Events;
 using PokeEngine.Assets.VFS.Volumes;
-using PokeCore.Hosting.Logging;
 using PokeEngine.ROM.Services;
 
 namespace PokeEngine.ROM;
@@ -17,7 +16,7 @@ public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
     {
         ArgumentNullException.ThrowIfNull(vfsBuilder);
 
-        _logger = LoggerFactory.GetLogger(typeof(RomVolume));
+        _logger = LoggerFactory.GetLogger<RomVolume>();
         _files = new Dictionary<VirtualPath, RomFile>();
         _directories = new Dictionary<VirtualPath, RomDirectory>();
 

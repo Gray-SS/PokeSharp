@@ -1,6 +1,6 @@
-using PokeCore.Hosting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PokeCore.DependencyInjection.Abstractions;
 
 namespace PokeEngine.Core.Resolutions;
 

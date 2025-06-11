@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PokeCore.Hosting.Logging;
+using PokeCore.Logging;
 using PokeEngine.Core.Windowing;
 
 namespace PokeEngine.Core.Resolutions;
@@ -45,7 +45,7 @@ public sealed class ResolutionManager : IResolutionManager, IDisposable
     public static readonly ResolutionSize MinResolution = new(320, 240);
     public static readonly ResolutionSize MaxResolution = new(7680, 4320);
 
-    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics, Logger logger)
+    public ResolutionManager(IWindowManager window, GraphicsDeviceManager graphics, Logger<ResolutionManager> logger)
     {
         _logger = logger;
         _window = window;

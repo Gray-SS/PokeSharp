@@ -1,8 +1,7 @@
-using System.Diagnostics;
+using PokeCore.Common;
+using PokeCore.Diagnostics;
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS;
-using PokeCore.Hosting;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Services;
 
 namespace PokeEngine.Assets.Services;
 
@@ -11,7 +10,7 @@ public sealed class AssetMetadataSerializer : IAssetMetadataSerializer
     private readonly Logger _logger;
     private readonly IDynamicTypeResolver _typeResolver;
 
-    public AssetMetadataSerializer(Logger logger, IDynamicTypeResolver typeResolver)
+    public AssetMetadataSerializer(Logger<AssetMetadataSerializer> logger, IDynamicTypeResolver typeResolver)
     {
         _logger = logger;
         _typeResolver = typeResolver;

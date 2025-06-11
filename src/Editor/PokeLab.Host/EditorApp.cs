@@ -1,14 +1,9 @@
 using Ninject;
-using PokeEngine.Assets;
 using PokeCore.Hosting;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Logging.Outputs;
-using PokeCore.Hosting.Modules;
-using PokeEngine.Entities;
-using PokeEngine.Inputs;
-using PokeEngine.Rendering;
-using PokeEngine.ROM;
-using PokeEngine.Scenes;
+using PokeLab.Application;
+using PokeLab.Infrastructure;
+using PokeLab.Presentation;
+using PokeLab.Presentation.ImGui;
 
 namespace PokeLab.Host;
 
@@ -19,15 +14,9 @@ public sealed class EditorApp : App
 
     protected override void ConfigureModules(IModuleLoader loader)
     {
-        // TODO: - [ ] Create a centralized project that references all engine-related modules.
-        //       - [ ] Create a module named "EngineModule" that loads all the required engine submodules.
-
-        loader.RegisterModule(new AssetsModule());
-        loader.RegisterModule(new RomModule());
-        loader.RegisterModule(new InputsModule());
-        loader.RegisterModule(new ScenesModule());
-        loader.RegisterModule(new EntitiesModule());
-        loader.RegisterModule(new RenderingModule());
+        loader.RegisterModule(new PokeLabApplicationModule());
+        loader.RegisterModule(new PokeLabInfrastructureModule());
+        loader.RegisterModule(new PokeLabPresentationImGuiModule());
     }
 
     protected override void ConfigureServices(IKernel kernel)
@@ -41,5 +30,7 @@ public sealed class EditorApp : App
 
     protected override void OnRun()
     {
+        ITickSource source = Kernel.Get<ITickSource>();
+        source.Run();
     }
 }

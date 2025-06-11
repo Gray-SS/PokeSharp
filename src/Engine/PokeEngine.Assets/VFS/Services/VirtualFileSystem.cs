@@ -1,8 +1,8 @@
+using PokeCore.Diagnostics;
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS.Events;
 using PokeEngine.Assets.VFS.Extensions;
 using PokeEngine.Assets.VFS.Volumes;
-using PokeCore.Hosting;
-using PokeCore.Hosting.Logging;
 
 namespace PokeEngine.Assets.VFS.Services;
 
@@ -16,7 +16,7 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
     private readonly Logger _logger;
     private readonly IVirtualVolumeManager _volumeManager;
 
-    public VirtualFileSystem(IVirtualVolumeManager volumeManager, Logger logger)
+    public VirtualFileSystem(IVirtualVolumeManager volumeManager, Logger<VirtualFileSystem> logger)
     {
         _logger = logger;
 

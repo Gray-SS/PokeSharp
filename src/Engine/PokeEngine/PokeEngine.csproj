@@ -14,6 +14,8 @@
     <ProjectReference Include="..\PokeEngine.Rendering\PokeEngine.Rendering.csproj" />
     <ProjectReference Include="..\PokeEngine.ROM\PokeEngine.ROM.csproj" />
     <ProjectReference Include="..\PokeEngine.Scenes\PokeEngine.Scenes.csproj" />
+
+    <ProjectReference Include="..\..\Core\PokeCore.Common\PokeCore.Common.csproj" />
   </ItemGroup>
 
 </Project>

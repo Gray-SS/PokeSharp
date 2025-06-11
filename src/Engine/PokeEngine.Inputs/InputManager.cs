@@ -1,13 +1,13 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PokeCore.Hosting.Annotations;
+using PokeCore.Common.Annotations;
 using PokeEngine.Core;
 using PokeEngine.Core.Resolutions;
 
 namespace PokeEngine.Inputs;
 
 [Priority(999)]
-public sealed class InputManager : IInputManager, IEngineHook
+public sealed class InputManager : IInputManager
 {
     public Vector2 MousePosition { get; private set; }
 
@@ -18,20 +18,13 @@ public sealed class InputManager : IInputManager, IEngineHook
     private KeyboardState _lastKbState;
     private IResolutionManager _resManager;
 
-    public InputManager(IResolutionManager resManager)
+    public InputManager(IResolutionManager resManager, IGameLoop gameLoop)
     {
         _resManager = resManager;
+        gameLoop.Updated += OnUpdate;
     }
 
-    public void Initialize()
-    {
-    }
-
-    public void Draw(GameTime gameTime)
-    {
-    }
-
-    public void Update(GameTime gameTime)
+    public void OnUpdate(object? sender, UpdateContext context)
     {
         _lastKbState = _kbState;
         _lastMsState = _msState;

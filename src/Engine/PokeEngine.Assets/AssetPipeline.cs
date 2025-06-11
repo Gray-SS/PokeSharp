@@ -1,11 +1,10 @@
+using PokeCore.Common;
+using PokeCore.Logging;
 using PokeEngine.Assets.Exceptions;
 using PokeEngine.Assets.Services;
 using PokeEngine.Assets.VFS;
 using PokeEngine.Assets.VFS.Services;
 using PokeEngine.Assets.VFS.Volumes;
-using PokeCore.Hosting.Exceptions;
-using PokeCore.Hosting.Logging;
-using PokeCore.Hosting.Services;
 
 namespace PokeEngine.Assets;
 
@@ -31,7 +30,7 @@ public sealed class AssetPipeline
         IAssetMetadataStore metadataStore,
         IVirtualVolumeManager volumeManager,
         IVirtualFileSystem vfs,
-        Logger logger)
+        Logger<AssetPipeline> logger)
     {
         _vfs = vfs;
         _volumeManager = volumeManager;
