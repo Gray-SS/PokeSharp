@@ -37,12 +37,13 @@ public sealed class ContextLogger : Logger
         var currentThreadId = Environment.CurrentManagedThreadId;
         var entry = new LogEntry(timestamp, level, _context, message, currentThreadId, exception, callerFilePath, callerMemberName);
 
-        _lock.Enter();
-        foreach (ILogSink output in _settings.Outputs)
+        using (_lock.EnterScope())
         {
-            output.Log(entry);
+            foreach (ILogSink output in _settings.Outputs)
+            {
+                output.Log(entry);
+            }
         }
-        _lock.Exit();
     }
 }
 
