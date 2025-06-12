@@ -6,7 +6,7 @@ namespace PokeLab.Presentation.ImGui;
 
 public sealed class PokeLabEngine : BaseEngine
 {
-    private EditorGuiRenderer _renderer = null!;
+    private PokeLabImGuiRenderer _renderer = null!;
 
     public PokeLabEngine(EngineConfiguration config) : base(config)
     {
@@ -14,8 +14,8 @@ public sealed class PokeLabEngine : BaseEngine
 
     protected override void OnInitialize()
     {
-        Resolution.SetResolution(ResolutionSize.R1920x1080);
-        _renderer = Services.GetService<EditorGuiRenderer>();
+        Resolution.SetResolution(ResolutionSize.R1280x720);
+        _renderer = Services.GetService<PokeLabImGuiRenderer>();
 
         base.OnInitialize();
     }

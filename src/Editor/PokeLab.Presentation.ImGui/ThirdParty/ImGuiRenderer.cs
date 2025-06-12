@@ -28,7 +28,7 @@ namespace MonoGame.ImGuiNet
         private int _indexBufferSize;
 
         // Textures
-        private Dictionary<IntPtr, Texture2D> _loadedTextures;
+        private readonly Dictionary<IntPtr, Texture2D> _loadedTextures;
 
         private int _textureId;
         private IntPtr? _fontTextureId;
