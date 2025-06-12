@@ -14,6 +14,7 @@ public abstract class App : IApp, IDisposable
 
     private bool _isDisposed;
     private Logger _logger = null!;
+    private static readonly Lock _lock = new();
 
     private bool _isRunning;
     private IServiceContainer _services = null!;
@@ -28,10 +29,15 @@ public abstract class App : IApp, IDisposable
 
     public async Task<bool> StartAsync()
     {
-        if (_isRunning)
+        using (_lock.EnterScope())
         {
-            _logger?.Error("Started the application twice.");
-            return false;
+            if (_isRunning)
+            {
+                _logger?.Error("Started the application twice.");
+                return false;
+            }
+
+            _isRunning = true;
         }
 
         try
@@ -60,7 +66,6 @@ public abstract class App : IApp, IDisposable
 
             _logger.Info($"Application started successfully.");
             _services = services;
-            _isRunning = true;
             return true;
         }
         catch (Exception ex)
@@ -78,8 +83,13 @@ public abstract class App : IApp, IDisposable
 
     public async Task StopAsync()
     {
-        if (!_isRunning)
-            return;
+        using (_lock.EnterScope())
+        {
+            if (!_isRunning)
+                return;
+
+            _isRunning = false;
+        }
 
         _logger.Info("Stopping application...");
         _cts.Cancel();
@@ -104,8 +114,11 @@ public abstract class App : IApp, IDisposable
 
     public async Task WaitForShutdownAsync()
     {
-        if (!_isRunning)
-            return;
+        using (_lock.EnterScope())
+        {
+            if (!_isRunning)
+                return;
+        }
 
         try
         {
@@ -114,7 +127,10 @@ public abstract class App : IApp, IDisposable
                 .Select(x => x.WaitForShutdownAsync())
                 .ToArray();
 
+            _logger.Debug("Waiting for shutdown...");
             await Task.WhenAll(waitables);
+
+            _logger.Info("Application terminated.");
         }
         catch (Exception ex)
         {
@@ -142,7 +158,6 @@ public abstract class App : IApp, IDisposable
 
             Dispose(disposing: true);
             ServiceLocator.Cleanup();
-
 
             _isDisposed = true;
             GC.SuppressFinalize(this);
