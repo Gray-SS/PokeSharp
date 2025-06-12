@@ -1,7 +1,7 @@
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS;
 using PokeEngine.Assets.VFS.Events;
 using PokeEngine.Assets.VFS.Services;
-using PokeCore.Hosting.Logging;
 using PokeLab.Application.ContentBrowser;
 
 namespace PokeLab.Presentation.ContentBrowser;
@@ -19,7 +19,7 @@ public sealed class ContentBrowserController : IDisposable
     private readonly IContentBrowserNavigator _navigator;
 
     public ContentBrowserController(
-        Logger logger,
+        Logger<ContentBrowserController> logger,
         ITickSource tickSource,
         IVirtualVolumeManager volumeManager,
         IContentBrowserView view,

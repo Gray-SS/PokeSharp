@@ -1,7 +1,7 @@
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS;
 using PokeEngine.Assets.VFS.Services;
 using PokeEngine.Assets.VFS.Volumes;
-using PokeCore.Hosting.Logging;
 using PokeLab.Application.ContentBrowser;
 
 namespace PokeLab.Infrastructure.ContentBrowser;
@@ -27,7 +27,7 @@ public sealed class DefaultContentBrowserCache : IContentBrowserCache
     private readonly List<IVirtualDirectory> _cachedDirectories;
 
     public DefaultContentBrowserCache(
-        Logger logger,
+        Logger<DefaultContentBrowserCache> logger,
         IVirtualVolumeManager volumeManager,
         IContentBrowserNavigator navigator)
     {

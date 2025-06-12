@@ -1,4 +1,5 @@
 using PokeLab.Host;
 
 using var app = new EditorApp();
-app.Run();
+await app.StartAsync();
+await app.WaitForShutdownAsync();

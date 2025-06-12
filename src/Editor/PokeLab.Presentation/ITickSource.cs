@@ -12,9 +12,4 @@ public interface ITickSource
     /// Event called on each tick
     /// </summary>
     event Action? OnTick;
-
-    /// <summary>
-    /// Run the tick source
-    /// </summary>
-    void Run();
 }

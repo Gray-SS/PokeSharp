@@ -3,18 +3,6 @@ namespace PokeLab.Presentation.Common;
 public interface IEditorViewManager
 {
     /// <summary>
-    /// Register the specified view
-    /// </summary>
-    /// <param name="view">The view to be registered</param>
-    void RegisterView(IEditorView view);
-
-    /// <summary>
-    /// Unregister the view at the specified viewId
-    /// </summary>
-    /// <param name="viewId">The view id to unregister</param>
-    void UnregisterView(string viewId);
-
-    /// <summary>
     /// Render all registered views
     /// </summary>
     void RenderViews();

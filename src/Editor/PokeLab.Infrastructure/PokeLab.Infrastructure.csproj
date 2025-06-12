@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PokeLab.Application\PokeLab.Application.csproj" />
-    <ProjectReference Include="..\..\Core\PokeCore.Hosting\PokeCore.Hosting.csproj" />
+    <ProjectReference Include="..\..\Core\PokeCore.Hosting.Abstractions\PokeCore.Hosting.Abstractions.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

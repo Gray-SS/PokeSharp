@@ -1,19 +1,18 @@
 using PokeEngine.Core;
-using Microsoft.Xna.Framework;
 
 namespace PokeLab.Presentation.ImGui;
 
-public sealed class ImGuiTickSource : BaseEngine, ITickSource
+public sealed class ImGuiTickSource : ITickSource
 {
     public event Action? OnTick;
 
-    public ImGuiTickSource(EngineConfiguration config) : base(config)
+    public ImGuiTickSource(IGameLoop gameLoop)
     {
+        gameLoop.Rendered += OnDraw;
     }
 
-    protected override void OnDraw(GameTime gameTime)
+    private void OnDraw(object? sender, DrawContext context)
     {
         OnTick?.Invoke();
-        base.OnDraw(gameTime);
     }
 }

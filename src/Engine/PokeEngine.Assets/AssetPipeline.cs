@@ -83,16 +83,19 @@ public sealed class AssetPipeline
 
     private IAssetImporter[] LoadImporters()
     {
+        // TODO: Find IAssetImporter registered as services instead of reflection
         return _reflectionManager.InstantiateClassesOfType<IAssetImporter>();
     }
 
     private IAssetProcessor[] LoadProcessors()
     {
+        // TODO: Find IAssetProcessor registered as services instead of reflection
         return _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
     }
 
     private IAssetWriter[] LoadWriters()
     {
+        // TODO: Find IAssetWriter registered as services instead of reflection
         return _reflectionManager.InstantiateClassesOfType<IAssetWriter>();
     }
 

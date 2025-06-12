@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\PokeCore.Hosting\PokeCore.Hosting.csproj" />
+    <ProjectReference Include="..\..\Core\PokeCore.Hosting.Abstractions\PokeCore.Hosting.Abstractions.csproj" />
     <ProjectReference Include="..\..\Engine\PokeEngine.Assets\PokeEngine.Assets.csproj" />
   </ItemGroup>
 

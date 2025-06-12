@@ -1,7 +1,7 @@
+using PokeCore.Diagnostics;
+using PokeCore.Logging;
 using PokeEngine.Assets.VFS;
 using PokeEngine.Assets.VFS.Services;
-using PokeCore.Hosting;
-using PokeCore.Hosting.Logging;
 using PokeLab.Application.ContentBrowser;
 
 namespace PokeLab.Infrastructure.ContentBrowser;
@@ -18,7 +18,7 @@ public sealed class DefaultContentBrowserNavigator : IContentBrowserNavigator
     private readonly Stack<VirtualPath> _backwardStack;
     private readonly Stack<VirtualPath> _forwardStack;
 
-    public DefaultContentBrowserNavigator(IVirtualFileSystem vfs, Logger logger)
+    public DefaultContentBrowserNavigator(IVirtualFileSystem vfs, Logger<DefaultContentBrowserNavigator> logger)
     {
         CurrentPath = null!;
         CurrentDirectory = null!;

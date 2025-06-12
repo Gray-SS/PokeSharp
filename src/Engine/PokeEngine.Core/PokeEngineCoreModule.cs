@@ -4,6 +4,7 @@ using PokeEngine.Core.Resolutions;
 using PokeEngine.Core.Windowing;
 using PokeEngine.Core.Modules;
 using PokeCore.Hosting.Abstractions.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace PokeEngine.Core;
 
@@ -21,6 +22,7 @@ public class PokeEngineCoreModule<TEngine> : EngineModule
     public override void ConfigureServices(IServiceCollections services)
     {
         services.AddSingleton<TEngine>();
+        services.AddSingleton<Game>(sp => sp.GetService<TEngine>());
         services.AddSingleton<BaseEngine>(sp => sp.GetService<TEngine>());
         services.AddSingleton<IGameLoop>(sp => sp.GetService<TEngine>());
         services.AddHostedService<EngineHost<TEngine>>();

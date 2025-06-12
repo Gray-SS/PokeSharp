@@ -1,10 +1,11 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using MonoGame.ImGuiNet;
-using PokeLab.Services;
 using PokeEngine.Rendering;
+using PokeLab.Presentation.Common;
+using PokeLab.Presentation.ImGui.Common;
 
-namespace PokeLab;
+namespace PokeLab.Presentation.ImGui;
 
 public sealed class EditorGuiRenderer : IRenderer
 {
@@ -13,17 +14,16 @@ public sealed class EditorGuiRenderer : IRenderer
         0xF000, 0xF8FF, 0
     ];
 
-
-    private readonly IEditorViewManager _dispatcher;
+    private readonly IEditorViewManager _viewManager;
     private readonly IGuiResourceManager _resManager;
     private readonly ImGuiRenderer _imGuiRenderer;
 
     public EditorGuiRenderer(
         ImGuiRenderer renderer,
         IGuiResourceManager resManager,
-        IEditorViewManager dispatcher)
+        IEditorViewManager viewManager)
     {
-        _dispatcher = dispatcher;
+        _viewManager = viewManager;
         _imGuiRenderer = renderer;
         _resManager = resManager;
 
@@ -32,7 +32,7 @@ public sealed class EditorGuiRenderer : IRenderer
 
     private unsafe void ConfigureImGui()
     {
-        ImGuiIOPtr io = ImGui.GetIO();
+        ImGuiIOPtr io = Gui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         ImFontConfigPtr config = ImGuiNative.ImFontConfig_ImFontConfig();
@@ -65,7 +65,7 @@ public sealed class EditorGuiRenderer : IRenderer
     public void Draw(GameTime gameTime)
     {
         _imGuiRenderer.BeforeLayout(gameTime);
-        _dispatcher.Draw();
+        _viewManager.RenderViews();
         _imGuiRenderer.AfterLayout();
     }
 }
