@@ -8,8 +8,8 @@ public interface IProjectManager
     Project Current { get; }
 
     Task NewAsync(string name, string basePath);
-    Task OpenAsync(string basePath);
-    Task DeleteAsync(string basePath);
-    Task SaveCurrentAsync();
+    Task OpenAsync(string projectFilePath);
+    Task DeleteAsync(string projectFilePath);
+    Task SaveAsync();
     Task CloseAsync();
 }

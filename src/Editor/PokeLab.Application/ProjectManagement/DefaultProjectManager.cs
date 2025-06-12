@@ -39,11 +39,6 @@ public sealed class DefaultProjectManager : IProjectManager
         return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(string basePath)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task NewAsync(string name, string directoryPath)
     {
         ThrowHelper.AssertNotNullOrWhitespace(name);
@@ -94,36 +89,60 @@ public sealed class DefaultProjectManager : IProjectManager
         _logger.Info($"Project '{project.Name}' created.");
     }
 
+    public async Task DeleteAsync(string projectFilePath)
+    {
+        AssertProjectFilePathState(projectFilePath);
+
+        _logger.Info($"Deleting project at path: '{projectFilePath}'");
+        if (IsProjectFilePathCurrentProject(projectFilePath))
+        {
+            // If deleting opened project then close it first
+            await CloseAsync();
+        }
+
+        Project project = await _repository.LoadAsync(projectFilePath);
+        if (IsInvalidState(project, projectFilePath))
+        {
+            _logger.Error("The specified project file path is corrupted and cannot be safely deleted.");
+            return;
+        }
+
+        string projectRootPath = Path.GetDirectoryName(projectFilePath)!;
+        Directory.Delete(projectRootPath, recursive: true);
+        _logger.Info($"Project '{project.Name}' deleted.");
+    }
+
     public async Task OpenAsync(string projectFilePath)
     {
-        ThrowHelper.AssertNotNullOrWhitespace(projectFilePath, "The project file path cannot be null or whitespace");
-        ThrowHelper.Assert(File.Exists(projectFilePath), "The project file path must exist");
-        ThrowHelper.Assert(Path.GetExtension(projectFilePath) == ".pkproj", "The project file extension must be '.pkproj'");
+        AssertProjectFilePathState(projectFilePath);
 
         _logger.Info($"Opening project at path: '{projectFilePath}'");
-        if (Current != null && Path.Combine(Current.RootPath, $"{Current.Name}.pkproj") == projectFilePath)
+        if (IsProjectFilePathCurrentProject(projectFilePath))
         {
+            // If opening currently opened project then return early
             _logger.Warn($"Project '{Current.Name}' already opened.");
             return;
         }
 
-        await CloseAsync();
+        if (IsOpen)
+        {
+            // If a project is opened, close it first
+            await CloseAsync();
+        }
 
         Project project = await _repository.LoadAsync(projectFilePath);
 
-        string? openedProjectRootPath = Path.GetDirectoryName(projectFilePath);
-        if (project.RootPath != openedProjectRootPath)
+        // What happens if the project file name changed (e.g. test_project.pkproj -> new_project.pkproj) ?
+        // Do we need to rename the provided file path to the saved one or rename the saved project to correspond the new project name ?
+        if (IsInvalidState(project, projectFilePath))
         {
-            _logger.Warn($"Project location changed detected from '{project.RootPath}' to '{openedProjectRootPath ?? "<RootDir>"}'");
-
-            if (openedProjectRootPath != null)
-            {
-                project.UpdateLocation(openedProjectRootPath);
-                _logger.Debug("Project location updated");
-                await _repository.SaveAsync(project);
-
-                _logger.Debug("New project location saved");
-            }
+            /*
+                TODO: Create a ProjectState to handle invalid states
+                NOTE: If we arrive here it means the root path is not corresponding to the saved root path.
+                      - The project root directory may have been moved or renamed
+            */
+            _logger.Error("The specified project file path is corrupted and cannot be safely opened.");
+            return;
         }
 
         foreach (ProjectVolume volume in project.Volumes)
@@ -134,6 +153,7 @@ public sealed class DefaultProjectManager : IProjectManager
                 Directory.CreateDirectory(volume.LogicalPath);
             }
 
+            // Mounting the project volume to the virtual file system
             IVirtualVolume virtualVolume = new PhysicalVolume(volume.Id, volume.Scheme, volume.Name, volume.LogicalPath);
             _volumeManager.MountVolume(virtualVolume);
         }
@@ -142,7 +162,7 @@ public sealed class DefaultProjectManager : IProjectManager
         Current = project;
     }
 
-    public async Task SaveCurrentAsync()
+    public async Task SaveAsync()
     {
         if (!IsOpen)
         {
@@ -153,5 +173,28 @@ public sealed class DefaultProjectManager : IProjectManager
         _logger.Info("Saving project");
         await _repository.SaveAsync(Current);
         _logger.Info($"Project '{Current.Name}' saved.");
+    }
+
+    private bool IsProjectFilePathCurrentProject(string projectFilePath)
+    {
+        return Current != null && Path.Combine(Current.RootPath, $"{Current.Name}.pkproj") == projectFilePath;
+    }
+
+    private static bool IsInvalidState(Project project, string projectFilePath)
+    {
+        /*
+            TODO: Create a ProjectState to handle invalid states
+            NOTE: If we arrive here it means the root path is not corresponding to the saved root path.
+                  - The project root directory may have been moved or renamed
+        */
+        string? projectRootPath = Path.GetDirectoryName(projectFilePath);
+        return project.RootPath != projectRootPath;
+    }
+
+    private static void AssertProjectFilePathState(string projectFilePath)
+    {
+        ThrowHelper.AssertNotNullOrWhitespace(projectFilePath, "The project file path cannot be null or whitespace");
+        ThrowHelper.Assert(File.Exists(projectFilePath), "The project file path must exist");
+        ThrowHelper.Assert(Path.GetExtension(projectFilePath) == ".pkproj", "The project file extension must be '.pkproj'");
     }
 }
