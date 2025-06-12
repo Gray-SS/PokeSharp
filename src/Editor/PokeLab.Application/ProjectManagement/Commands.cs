@@ -3,7 +3,6 @@ using PokeLab.Application.Commands;
 namespace PokeLab.Application.ProjectManagement;
 
 public sealed record NewProjectCommand(string Name, string BasePath) : ICommand;
-
 public sealed class NewProjectCommandHandler : ICommandHandler<NewProjectCommand>
 {
     private readonly IProjectManager _projectManager;
@@ -20,7 +19,6 @@ public sealed class NewProjectCommandHandler : ICommandHandler<NewProjectCommand
 }
 
 public sealed record OpenProjectCommand(string FileProjectPath) : ICommand;
-
 public sealed class OpenProjectCommandHandler : ICommandHandler<OpenProjectCommand>
 {
     private readonly IProjectManager _projectManager;
@@ -33,5 +31,21 @@ public sealed class OpenProjectCommandHandler : ICommandHandler<OpenProjectComma
     public async Task ExecuteAsync(OpenProjectCommand command)
     {
         await _projectManager.OpenAsync(command.FileProjectPath);
+    }
+}
+
+public sealed record DeleteProjectCommand(string FileProjectPath) : ICommand;
+public sealed class DeleteProjectCommandHandler : ICommandHandler<DeleteProjectCommand>
+{
+    private readonly IProjectManager _projectManager;
+
+    public DeleteProjectCommandHandler(IProjectManager projectManager)
+    {
+        _projectManager = projectManager;
+    }
+
+    public async Task ExecuteAsync(DeleteProjectCommand command)
+    {
+        await _projectManager.DeleteAsync(command.FileProjectPath);
     }
 }
