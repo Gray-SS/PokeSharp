@@ -1,10 +1,10 @@
-using PokeLab.Application.Commands.Async;
+using PokeLab.Application.Commands;
 
 namespace PokeLab.Application.ProjectManagement;
 
-public sealed record NewProjectCommand(string Name, string BasePath) : ICommandAsync;
+public sealed record NewProjectCommand(string Name, string BasePath) : ICommand;
 
-public sealed class NewProjectCommandHandler : ICommandHandlerAsync<NewProjectCommand>
+public sealed class NewProjectCommandHandler : ICommandHandler<NewProjectCommand>
 {
     private readonly IProjectManager _projectManager;
 
@@ -16,5 +16,22 @@ public sealed class NewProjectCommandHandler : ICommandHandlerAsync<NewProjectCo
     public async Task ExecuteAsync(NewProjectCommand command)
     {
         await _projectManager.NewAsync(command.Name, command.BasePath);
+    }
+}
+
+public sealed record OpenProjectCommand(string FileProjectPath) : ICommand;
+
+public sealed class OpenProjectCommandHandler : ICommandHandler<OpenProjectCommand>
+{
+    private readonly IProjectManager _projectManager;
+
+    public OpenProjectCommandHandler(IProjectManager projectManager)
+    {
+        _projectManager = projectManager;
+    }
+
+    public async Task ExecuteAsync(OpenProjectCommand command)
+    {
+        await _projectManager.OpenAsync(command.FileProjectPath);
     }
 }
