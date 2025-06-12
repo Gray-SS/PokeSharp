@@ -104,11 +104,12 @@ public abstract class App : IApp, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    _logger?.Error($"Error stopping service {service.GetType().Name}", ex);
+                    _logger?.Error($"Error stopping service {service.GetType().Name}.", ex);
                 }
             }
         }
 
+        _logger?.Info("Application stopped.");
         Dispose();
     }
 
@@ -127,10 +128,7 @@ public abstract class App : IApp, IDisposable
                 .Select(x => x.WaitForShutdownAsync())
                 .ToArray();
 
-            _logger.Debug("Waiting for shutdown...");
             await Task.WhenAll(waitables);
-
-            _logger.Info("Application terminated.");
         }
         catch (Exception ex)
         {
@@ -154,12 +152,11 @@ public abstract class App : IApp, IDisposable
     {
         if (!_isDisposed)
         {
-            _logger?.Info("Shutting down application...");
-
             Dispose(disposing: true);
             ServiceLocator.Cleanup();
 
             _isDisposed = true;
+
             GC.SuppressFinalize(this);
         }
     }
@@ -170,6 +167,8 @@ public abstract class App : IApp, IDisposable
         {
             _cts.Cancel();
             _cts.Dispose();
+
+            _logger?.Info("Application shutdown");
             (_services as IDisposable)?.Dispose();
         }
     }
