@@ -1,6 +1,6 @@
 namespace PokeLab;
 
-public interface IEditorView
+public interface IView
 {
     void DrawGui();
 }
