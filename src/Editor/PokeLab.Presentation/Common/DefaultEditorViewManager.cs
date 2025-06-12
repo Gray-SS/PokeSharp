@@ -1,14 +1,12 @@
-using PokeCore.DependencyInjection.Abstractions;
-
 namespace PokeLab.Presentation.Common;
 
 public sealed class DefaultEditorViewManager : IEditorViewManager
 {
     private readonly IEditorView[] _views;
 
-    public DefaultEditorViewManager(IServiceContainer services)
+    public DefaultEditorViewManager(IEditorView[] views)
     {
-        _views = services.GetServices<IEditorView>().ToArray();
+        _views = views;
     }
 
     public IReadOnlyCollection<IEditorView> GetEditorViews()
