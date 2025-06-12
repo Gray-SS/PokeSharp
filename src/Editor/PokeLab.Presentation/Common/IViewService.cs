@@ -1,6 +1,6 @@
 namespace PokeLab.Presentation.Common;
 
-public interface IEditorViewManager
+public interface IViewService
 {
     /// <summary>
     /// Render all registered views

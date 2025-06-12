@@ -1,10 +1,10 @@
 namespace PokeLab.Presentation.Common;
 
-public sealed class DefaultEditorViewManager : IEditorViewManager
+public sealed class DefaultViewService : IViewService
 {
     private readonly IEditorView[] _views;
 
-    public DefaultEditorViewManager(IEditorView[] views)
+    public DefaultViewService(IEditorView[] views)
     {
         _views = views;
     }
