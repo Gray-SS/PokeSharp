@@ -4,12 +4,12 @@ namespace PokeLab.Application.ProjectManagement;
 
 public interface IProjectManager
 {
-    bool HasProject { get; }
+    bool IsOpen { get; }
     Project Current { get; }
 
     Task NewAsync(string name, string basePath);
-    Task LoadAsync(string basePath);
+    Task OpenAsync(string basePath);
     Task DeleteAsync(string basePath);
-    Task SaveAsync();
+    Task SaveCurrentAsync();
     Task CloseAsync();
 }
