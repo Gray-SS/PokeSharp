@@ -1,5 +1,6 @@
 using PokeCore.DependencyInjection.Abstractions;
 using PokeEngine.Extensions;
+using PokeLab.Presentation.Common;
 using PokeLab.Presentation.ContentBrowser;
 using PokeLab.Presentation.Extensions;
 using PokeLab.Presentation.ImGui.Common;
@@ -14,7 +15,10 @@ public static class DIExtensions
         services.AddEditorView<IContentBrowserView, ImGuiContentBrowserView>();
 
         services.AddSingleton<IGuiResourceManager, GuiResourceManager>();
+
         services.AddTransient<ITickSource, ImGuiTickSource>();
+        services.AddSingleton<IWindowService, ImGuiWindowService>();
+
         services.AddPokeEngineEssentials<PokeLabEngine>();
 
         return services;
