@@ -1,6 +1,6 @@
 namespace PokeCore.DependencyInjection.Abstractions;
 
-public interface IServiceCollections : IDisposable
+public interface IServiceCollections
 {
     IServiceCollections AddSingleton<TService>(TService instance)
         where TService : class;

@@ -74,9 +74,4 @@ public sealed class NinjectServiceCollections : IServiceCollections
     {
         return new NinjectServiceContainer(_kernel);
     }
-
-    public void Dispose()
-    {
-        _kernel.Dispose();
-    }
 }
