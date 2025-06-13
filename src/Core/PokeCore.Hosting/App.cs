@@ -9,10 +9,10 @@ public abstract class App : IApp, IDisposable
     public abstract string AppName { get; }
     public virtual Version AppVersion => new(1, 0, 0);
 
+    public bool IsDisposed { get; private set; }
     public bool IsRunning => _isRunning;
     public IServiceContainer Services => _services;
 
-    private bool _isDisposed;
     private Logger _logger = null!;
     private static readonly Lock _lock = new();
 
@@ -29,6 +29,8 @@ public abstract class App : IApp, IDisposable
 
     public async Task<bool> StartAsync()
     {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+
         using (_lock.EnterScope())
         {
             if (_isRunning)
@@ -83,6 +85,8 @@ public abstract class App : IApp, IDisposable
 
     public async Task StopAsync()
     {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+
         using (_lock.EnterScope())
         {
             if (!_isRunning)
@@ -110,11 +114,12 @@ public abstract class App : IApp, IDisposable
         }
 
         _logger?.Info("Application stopped.");
-        Dispose();
     }
 
     public async Task WaitForShutdownAsync()
     {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+
         using (_lock.EnterScope())
         {
             if (!_isRunning)
@@ -150,15 +155,18 @@ public abstract class App : IApp, IDisposable
 
     public void Dispose()
     {
-        if (!_isDisposed)
+        // The lock may not be needed here
+        using (_lock.EnterScope())
         {
-            Dispose(disposing: true);
-            ServiceLocator.Cleanup();
-
-            _isDisposed = true;
-
-            GC.SuppressFinalize(this);
+            if (IsDisposed)
+                return;
         }
+
+        IsDisposed = true;
+        Dispose(disposing: true);
+        ServiceLocator.Cleanup();
+
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -168,8 +176,21 @@ public abstract class App : IApp, IDisposable
             _cts.Cancel();
             _cts.Dispose();
 
-            _logger?.Info("Application shutdown");
+            _logger?.Info("Cleaning services...");
             (_services as IDisposable)?.Dispose();
+            _services = null!;
+
+#if DEBUG
+            // This is used to finalize disposable but non-disposed object.
+            // It's very convenient when working with unmanaged resources.
+            _logger?.Info("Waiting for finalizers...");
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            _logger?.Info("Finalizers completed.");
+#endif
+
+            _logger?.Info("Application shutdown");
         }
     }
 }
