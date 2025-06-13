@@ -1,6 +1,6 @@
 namespace PokeLab.Presentation;
 
-public interface IEditorView
+public interface IView
 {
     /// <summary>
     /// Gets the unique identifier of this view (<i>e.g.</i> <c>Console</c>, <c>AssetBrowser</c>, ect.).

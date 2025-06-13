@@ -2,21 +2,21 @@ namespace PokeLab.Presentation.Common;
 
 public sealed class DefaultViewService : IViewService
 {
-    private readonly IEditorView[] _views;
+    private readonly IView[] _views;
 
-    public DefaultViewService(IEditorView[] views)
+    public DefaultViewService(IView[] views)
     {
         _views = views;
     }
 
-    public IReadOnlyCollection<IEditorView> GetEditorViews()
+    public IReadOnlyCollection<IView> GetEditorViews()
     {
         return _views;
     }
 
     public void RenderViews()
     {
-        foreach (IEditorView view in _views)
+        foreach (IView view in _views)
         {
             view.Render();
         }

@@ -11,5 +11,5 @@ public interface IViewService
     /// Gets all the registered editor view
     /// </summary>
     /// <returns>A read-only collection of the registered views</returns>
-    IReadOnlyCollection<IEditorView> GetEditorViews();
+    IReadOnlyCollection<IView> GetEditorViews();
 }
