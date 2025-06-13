@@ -1,10 +1,10 @@
 namespace PokeLab.Presentation.ContentBrowser;
 
-public sealed class ContentViewModel
+public sealed class ContentModel
 {
     public string Name { get; }
 
-    public ContentViewModel(string name)
+    public ContentModel(string name)
     {
         Name = name;
     }

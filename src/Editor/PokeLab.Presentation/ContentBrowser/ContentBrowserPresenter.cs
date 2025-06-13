@@ -6,7 +6,7 @@ using PokeLab.Application.ContentBrowser;
 
 namespace PokeLab.Presentation.ContentBrowser;
 
-public sealed class ContentBrowserController : IDisposable
+public sealed class ContentBrowserPresenter : IPresenter, IDisposable
 {
     private bool _isDisposed;
 
@@ -18,8 +18,8 @@ public sealed class ContentBrowserController : IDisposable
     private readonly IContentBrowserCache _cache;
     private readonly IContentBrowserNavigator _navigator;
 
-    public ContentBrowserController(
-        Logger<ContentBrowserController> logger,
+    public ContentBrowserPresenter(
+        Logger<ContentBrowserPresenter> logger,
         ITickSource tickSource,
         IVirtualVolumeManager volumeManager,
         IContentBrowserView view,
@@ -32,6 +32,8 @@ public sealed class ContentBrowserController : IDisposable
         _volumeManager = volumeManager;
 
         _view = view;
+        _view.SearchTextChanged += OnSearchTextChanged;
+
         _cache = cache;
         _navigator = navigator;
 
@@ -44,12 +46,19 @@ public sealed class ContentBrowserController : IDisposable
         _volumeManager.OnFileSystemChanged += OnFileSystemChanged;
     }
 
+    private void OnSearchTextChanged(string searchText)
+    {
+        _logger.Trace($"Search text changed: '{searchText}'");
+
+        // TODO: Perform filtering 
+    }
+
     private void OnCacheRefreshed(object? sender, ContentBrowserCacheRefreshed e)
     {
-        var models = new List<ContentViewModel>();
+        var models = new List<ContentModel>();
         foreach (IVirtualDirectory directory in _cache.Directories)
         {
-            var model = new ContentViewModel(directory.Name);
+            var model = new ContentModel(directory.Name);
             models.Add(model);
         }
 

@@ -1,9 +1,10 @@
 namespace PokeLab.Presentation.ContentBrowser;
 
-public interface IContentBrowserView : IEditorView
+public interface IContentBrowserView : IView
 {
     string SearchText { get; set; }
+    event Action<string>? SearchTextChanged;
 
     void RefreshView();
-    void SetItems(IEnumerable<ContentViewModel> items);
+    void SetItems(IEnumerable<ContentModel> items);
 }
