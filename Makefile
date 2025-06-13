@@ -49,10 +49,5 @@ clean:
 help:
 	@echo "Available commands:"
 	@echo ""
-	@echo "  make add-projects              ➜ Add all src/**/** projects to the solution"
-	@echo "  make debug-runtime             ➜ Run the runtime in debug mode"
-	@echo "  make debug-editor              ➜ Run the editor in debug mode"
-	@echo "  make release-release           ➜ Run the runtime in release mode"
-	@echo "  make release-editor            ➜ Run the editor in release mode"
 	@echo "  make clean                     ➜ Delete all bin/ and obj/ folders"
 	@echo "  make help                      ➜ Show this help message"
