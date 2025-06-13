@@ -1,5 +1,4 @@
 using PokeCore.DependencyInjection.Abstractions;
-using PokeCore.Hosting.Abstractions.Extensions;
 using PokeEngine.Core;
 using PokeEngine.Assets;
 using PokeEngine.Entities;
