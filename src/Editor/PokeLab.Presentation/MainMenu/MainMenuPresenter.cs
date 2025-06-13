@@ -31,7 +31,6 @@ public sealed class MainMenuPresenter : IPresenter
     private void OnMainViewIntents(MainMenuIntents intent)
     {
         _logger.Trace($"{intent} request received");
-        _logger.Trace("Processing create project request...");
 
         switch (intent)
         {
