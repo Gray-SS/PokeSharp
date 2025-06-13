@@ -14,11 +14,6 @@ public sealed class PokeLabImGuiRenderer : IRenderer
         0xF000, 0xF8FF, 0
     ];
 
-    private string _projectName = string.Empty;
-    private string _projectPath = string.Empty;
-    private string? _formError = null;
-    private bool _showCreateProjectPopup = false;
-
     private readonly IViewService _viewManager;
     private readonly IGuiResourceManager _resManager;
     private readonly ImGuiRenderer _imGuiRenderer;
