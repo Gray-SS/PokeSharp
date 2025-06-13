@@ -1,9 +1,7 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using MonoGame.ImGuiNet;
-using PokeCore.Logging;
 using PokeEngine.Rendering;
-using PokeLab.Application.Commands;
 using PokeLab.Presentation.Common;
 using PokeLab.Presentation.ImGui.Common;
 
