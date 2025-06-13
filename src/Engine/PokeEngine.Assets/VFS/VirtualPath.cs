@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace PokeEngine.Assets.VFS;
 
 /// <summary>
-/// Represents a virtual file path consisting of a scheme and a normalized path,
+/// Represents a virtual path in a virtual file system consisting of a scheme and a normalized path,
 /// used to reference logical assets in a virtual file system.
 /// </summary>
 /// <remarks>
