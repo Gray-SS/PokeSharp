@@ -6,17 +6,20 @@ using PokeLab.Presentation.Common;
 
 namespace PokeLab.Presentation.MainMenu;
 
-public sealed class MainMenuPresenter : IPresenter
+public sealed class MainMenuPresenter : IPresenter, IDisposable
 {
+    private bool _isDisposed;
     private readonly Logger _logger;
     private readonly IMainMenuView _mainView;
     private readonly IWindowService _windowService;
+    private readonly ITaskDispatcher _taskDispatcher;
     private readonly ICommandDispatcher _commandDispatcher;
 
     public MainMenuPresenter(
         IMainMenuView mainView,
         IWindowService windowService,
         ICommandDispatcher commandDispatcher,
+        ITaskDispatcher taskDispatcher,
         Logger<MainMenuPresenter> logger
     )
     {
@@ -25,11 +28,14 @@ public sealed class MainMenuPresenter : IPresenter
 
         _logger = logger;
         _windowService = windowService;
+        _taskDispatcher = taskDispatcher;
         _commandDispatcher = commandDispatcher;
     }
 
     private void OnMainViewIntents(MainMenuIntents intent)
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+
         _logger.Trace($"{intent} request received");
 
         switch (intent)
@@ -69,7 +75,7 @@ public sealed class MainMenuPresenter : IPresenter
 
     private void OnOpenProjectRequest()
     {
-        _ = Task.Run(async () =>
+        _taskDispatcher.FireAndForget(async () =>
         {
             _logger.Trace("Opening file dialog...");
             string? path = await _windowService.ShowOpenFileDialogAsync(null!, "pkproj");
@@ -89,7 +95,7 @@ public sealed class MainMenuPresenter : IPresenter
     {
         string defaultPath = _mainView.CreateProjectForm.ProjectPath;
 
-        _ = Task.Run(async () =>
+        _taskDispatcher.FireAndForget(async () =>
         {
             _logger.Trace("Opening file dialog...");
             string? path = await _windowService.ShowOpenDirectoryDialogAsync(defaultPath);
@@ -112,7 +118,7 @@ public sealed class MainMenuPresenter : IPresenter
         if (!form.Validate())
             return;
 
-        _ = Task.Run(async () =>
+        _taskDispatcher.FireAndForget(async () =>
         {
             //TODO: Find a way to handle errors
             await _commandDispatcher.ExecuteAsync(new NewProjectCommand(form.ProjectName, form.ProjectPath));
@@ -123,7 +129,7 @@ public sealed class MainMenuPresenter : IPresenter
 
     private void OnDeleteProjectRequest()
     {
-        _ = Task.Run(async () =>
+        _taskDispatcher.FireAndForget(async () =>
         {
             _logger.Trace("Opening file dialog...");
             string? path = await _windowService.ShowOpenFileDialogAsync(null!, "pkproj");
@@ -141,6 +147,14 @@ public sealed class MainMenuPresenter : IPresenter
 
     private void OnExitApplicationRequest()
     {
-        _ = Task.Run(async () => await _commandDispatcher.ExecuteAsync(new ExitCommand()));
+        _taskDispatcher.FireAndForget(async () => await _commandDispatcher.ExecuteAsync(new ExitCommand()));
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+
+        _isDisposed = true;
+        _mainView.OnIntents -= OnMainViewIntents;
     }
 }
