@@ -10,6 +10,7 @@ public static class DIExtensions
     public static IServiceCollections AddPokeLabPresentation(this IServiceCollections services)
     {
         services.AddSingleton<IViewService, DefaultViewService>();
+        services.AddSingleton<ITaskDispatcher, DefaultTaskDispatcher>();
 
         services.AddPresenter<MainMenuPresenter>();
         services.AddPresenter<ContentBrowserPresenter>();
