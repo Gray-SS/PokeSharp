@@ -8,6 +8,7 @@ public interface ILoggerConfiguration
     ILoggerConfiguration AddFileLog(string logDirectory);
     ILoggerConfiguration AddMemoryLog();
 
+    ILoggerConfiguration UseLogLevel(LogLevel level = LogLevel.Debug);
     ILoggerConfiguration UseContextLogger();
     ILoggerConfiguration UseEmptyLogger();
 }
@@ -40,6 +41,12 @@ public sealed class LoggerConfiguration : ILoggerConfiguration
     public ILoggerConfiguration AddMemoryLog()
     {
         _loggerSettings.AddOutput(new MemoryLogSink());
+        return this;
+    }
+
+    public ILoggerConfiguration UseLogLevel(LogLevel logLevel)
+    {
+        _loggerSettings.SetLogLevel(logLevel);
         return this;
     }
 

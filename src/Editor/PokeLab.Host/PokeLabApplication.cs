@@ -1,5 +1,6 @@
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.Hosting;
+using PokeCore.Logging;
 using PokeCore.Logging.Extensions;
 using PokeLab.Application.Extensions;
 using PokeLab.Infrastructure.Extensions;
@@ -30,6 +31,7 @@ public sealed class PokeLabApplication : App
             x.AddConsoleLog();
             x.AddFileLog("logs");
 
+            x.UseLogLevel(LogLevel.Trace);
             x.UseContextLogger();
         });
     }
