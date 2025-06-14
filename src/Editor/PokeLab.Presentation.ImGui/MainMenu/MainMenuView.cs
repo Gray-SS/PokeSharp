@@ -1,25 +1,40 @@
 using ImGuiNET;
+using PokeLab.Presentation.States;
 using PokeLab.Presentation.MainMenu;
+using PokeLab.Presentation.ImGui.Helpers;
 
 namespace PokeLab.Presentation.ImGui.MainMenu;
 
-public sealed class MainMenuView : IMainMenuView
+public sealed class MainMenuView : StatefulView<MainMenuState, MainMenuIntents>, IMainMenuView
 {
-    public string Id => "Main Menu";
-    public string Title => "Main Menu";
-    public bool IsVisible { get; set; }
+    public override string Id => "Main Menu";
+    public override string Title => "Main Menu";
 
-    public CreateProjectFormViewModel CreateProjectForm { get; }
+    private bool _shouldOpenPopup;
+    private bool _shouldClosePopup;
+    private MainMenuState _state;
+    private MainMenuState? _newState;
 
-    public event Action<MainMenuIntents>? OnIntents;
-
-    public MainMenuView()
+    public MainMenuView(IStateStore<MainMenuState, MainMenuIntents> store) : base(store)
     {
-        CreateProjectForm = new CreateProjectFormViewModel();
+        _state = store.CurrentState;
+        _shouldOpenPopup = false;
+        _shouldClosePopup = false;
+
+        store.OnStateChanged += (state) => _newState = state;
     }
 
-    public void Render()
+    public override void Render()
     {
+        if (_newState != null)
+        {
+            _shouldOpenPopup = _newState.State != MainMenuViewState.Idle && _state.State == MainMenuViewState.Idle;
+            _shouldClosePopup = _newState.State == MainMenuViewState.Idle && _state.State != MainMenuViewState.Idle;
+
+            _state = _newState;
+            _newState = null;
+        }
+
         ImGuiWindowFlags flags = GetDockspaceSettings();
         if (Gui.Begin("DockSpace Root", flags))
         {
@@ -42,19 +57,21 @@ public sealed class MainMenuView : IMainMenuView
         {
             if (Gui.BeginMenu("File"))
             {
-                if (Gui.MenuItem("New project"))
-                    InvokeIntent(MainMenuIntents.StartCreateProject);
+                bool inDialog = _state.IsInDialog;
 
-                if (Gui.MenuItem("Open project"))
-                    InvokeIntent(MainMenuIntents.OpenProject);
+                if (Gui.MenuItem("New project", !inDialog))
+                    Dispatch(new MainMenuIntents.StartCreateProject());
 
-                if (Gui.MenuItem("Delete project"))
-                    InvokeIntent(MainMenuIntents.DeleteProject);
+                if (Gui.MenuItem("Open project", !inDialog))
+                    Dispatch(new MainMenuIntents.OpenProject());
+
+                if (Gui.MenuItem("Delete project", !inDialog))
+                    Dispatch(new MainMenuIntents.DeleteProject());
 
                 Gui.Separator();
 
-                if (Gui.MenuItem("Exit"))
-                    InvokeIntent(MainMenuIntents.ExitApplication);
+                if (Gui.MenuItem("Exit", !inDialog))
+                    Dispatch(new MainMenuIntents.ExitApplication());
 
                 Gui.EndMenu();
             }
@@ -65,11 +82,10 @@ public sealed class MainMenuView : IMainMenuView
 
     private void DrawCreatePopup()
     {
-        CreateProjectFormViewModel form = CreateProjectForm;
-        if (form.IsVisible)
+        if (_shouldOpenPopup)
         {
             Gui.OpenPopup("Create Project");
-            form.Hide();
+            _shouldOpenPopup = false;
         }
 
         var center = Gui.GetMainViewport().GetCenter();
@@ -78,6 +94,12 @@ public sealed class MainMenuView : IMainMenuView
 
         if (Gui.BeginPopupModal("Create Project", ImGuiWindowFlags.AlwaysAutoResize))
         {
+            if (_shouldClosePopup)
+            {
+                Gui.CloseCurrentPopup();
+                _shouldClosePopup = false;
+            }
+
             Gui.Dummy(new(0, 5));
             Gui.Text("Create a new project");
             Gui.Separator();
@@ -86,33 +108,32 @@ public sealed class MainMenuView : IMainMenuView
             Gui.Text("Project Name");
             Gui.SameLine();
 
-            string projectName = form.ProjectName;
+            string projectName = _state.ProjectName;
             if (Gui.InputText("##project_name", ref projectName, 256))
-                form.ProjectName = projectName;
+                Dispatch(new MainMenuIntents.SetProjectName(projectName));
 
             Gui.Dummy(new(0, 5));
 
             Gui.Text("Project Path");
             Gui.SameLine();
 
-            string projectPath = form.ProjectPath;
+            string projectPath = _state.ProjectPath;
             if (Gui.InputText("##project_path", ref projectPath, 256))
-                form.ProjectPath = projectPath;
+                Dispatch(new MainMenuIntents.SetProjectPath(projectPath));
 
             Gui.SameLine();
             Gui.Dummy(new(5, 0));
             Gui.SameLine();
 
             if (Gui.Button("Browse"))
-                InvokeIntent(MainMenuIntents.BrowseProjectPath);
+                Dispatch(new MainMenuIntents.BrowseProjectPath());
 
             Gui.Dummy(new(0, 5));
 
-            if (!string.IsNullOrEmpty(form.ErrorMessage))
+            if (!string.IsNullOrEmpty(_state.ErrorMessage))
             {
-                // Display error
                 Gui.PushStyleColor(ImGuiCol.Text, new NVec4(1, 0.2f, 0.2f, 1));
-                Gui.TextWrapped(form.ErrorMessage);
+                Gui.TextWrapped(_state.ErrorMessage);
                 Gui.PopStyleColor();
                 Gui.Spacing();
             }
@@ -128,34 +149,24 @@ public sealed class MainMenuView : IMainMenuView
 
             Gui.SetCursorPosX(cursorX);
 
-            if (Gui.Button("Create", new NVec2(buttonWidth, 0)))
+            if (_state.State == MainMenuViewState.Loading)
             {
-                InvokeIntent(MainMenuIntents.ConfirmCreateProject);
-
-                if (CreateProjectForm.ErrorMessage == null)
-                {
-                    // Executing went fine, closing the popup
-                    Gui.CloseCurrentPopup();
-                }
+                GuiHelper.LoadingSpinner(6f, 2, Color.Cyan);
+                Gui.SameLine();
             }
+
+            if (Gui.Button("Create", new NVec2(buttonWidth, 0)))
+                Dispatch(new MainMenuIntents.ConfirmCreateProject());
 
             Gui.SameLine();
 
             if (Gui.Button("Cancel", new NVec2(buttonWidth, 0)))
-            {
-                form.Reset();
-                Gui.CloseCurrentPopup();
-            }
+                Dispatch(new MainMenuIntents.ClearForm());
 
             Gui.EndPopup();
         }
 
         Gui.PopStyleVar();
-    }
-
-    private void InvokeIntent(MainMenuIntents intent)
-    {
-        OnIntents?.Invoke(intent);
     }
 
     private static ImGuiWindowFlags GetDockspaceSettings()

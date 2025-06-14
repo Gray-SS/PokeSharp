@@ -2,6 +2,7 @@ using PokeLab.Presentation.Common;
 using PokeLab.Presentation.MainMenu;
 using PokeLab.Presentation.ContentBrowser;
 using PokeCore.DependencyInjection.Abstractions;
+using PokeLab.Presentation.States;
 
 namespace PokeLab.Presentation.Extensions;
 
@@ -12,8 +13,9 @@ public static class DIExtensions
         services.AddSingleton<IViewService, DefaultViewService>();
         services.AddSingleton<ITaskDispatcher, DefaultTaskDispatcher>();
 
-        services.AddPresenter<MainMenuPresenter>();
         services.AddPresenter<ContentBrowserPresenter>();
+
+        services.AddState<MainMenuState, MainMenuIntents, MainMenuReducer, MainMenuEffect>(new MainMenuState(string.Empty, string.Empty, null, MainMenuViewState.Idle, false));
 
         return services;
     }
@@ -36,6 +38,29 @@ public static class DIExtensions
         return services;
     }
 
+    private static IServiceCollections AddState<TState, TIntent, TReducer, TEffect>(this IServiceCollections services, TState defaultState)
+        where TState : class
+        where TIntent : class
+        where TReducer : class, IStateReducer<TState, TIntent>
+        where TEffect : class, IStateEffect<TState, TIntent>
+    {
+        services.AddTransient<TReducer>();
+        services.AddTransient<IStateReducer<TState, TIntent>>(sc => sc.GetService<TReducer>());
+
+        services.AddTransient<TEffect>();
+        services.AddTransient<IStateEffect<TState, TIntent>>(sc => sc.GetService<TEffect>());
+
+        services.AddSingleton<IStateStore<TState, TIntent>>(sc =>
+        {
+            var reducer = sc.GetService<IStateReducer<TState, TIntent>>();
+            var effect = sc.GetService<IStateEffect<TState, TIntent>>();
+
+            return new StateStore<TState, TIntent>(defaultState, reducer, effect);
+        });
+
+        return services;
+    }
+
     private static IServiceCollections AddPresenter<TPresenter>(this IServiceCollections services)
         where TPresenter : class, IPresenter
     {
@@ -44,4 +69,5 @@ public static class DIExtensions
 
         return services;
     }
+
 }
