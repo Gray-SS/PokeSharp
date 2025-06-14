@@ -64,6 +64,8 @@ public abstract class BaseEngine : Game, IGameLoop
     protected virtual void OnUpdate(GameTime gameTime)
     {
         _updateContext.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _updateContext.TotalTime = (float)gameTime.TotalGameTime.TotalSeconds;
+
         Updated?.Invoke(this, _updateContext);
         // _hooksDispatcher.Update(gameTime);
     }
@@ -71,6 +73,7 @@ public abstract class BaseEngine : Game, IGameLoop
     protected virtual void OnDraw(GameTime gameTime)
     {
         _drawContext.DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
         Rendered?.Invoke(this, _drawContext);
         // _hooksDispatcher.Draw(gameTime);
     }
