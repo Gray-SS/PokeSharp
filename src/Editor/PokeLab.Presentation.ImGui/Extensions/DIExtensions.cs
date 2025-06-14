@@ -1,4 +1,5 @@
 using PokeCore.DependencyInjection.Abstractions;
+using PokeEngine.Core.Timing;
 using PokeEngine.Extensions;
 using PokeLab.Presentation.Common;
 using PokeLab.Presentation.ContentBrowser;
@@ -20,6 +21,7 @@ public static class DIExtensions
 
         services.AddTransient<ITickSource, ImGuiTickSource>();
         services.AddSingleton<IWindowService, ImGuiWindowService>();
+        services.AddSingleton<ITimingService, TimingService>();
 
         // Custom services
         services.AddSingleton<IGuiResourceManager, GuiResourceManager>();
