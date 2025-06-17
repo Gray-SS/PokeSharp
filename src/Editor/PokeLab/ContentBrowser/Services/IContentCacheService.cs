@@ -1,5 +1,5 @@
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Volumes;
 using PokeLab.ContentBrowser.Events;
 
 namespace PokeLab.ContentBrowser.Services;

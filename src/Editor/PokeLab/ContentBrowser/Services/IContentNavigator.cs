@@ -1,4 +1,4 @@
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 
 namespace PokeLab.ContentBrowser.Services;
 

@@ -1,40 +1,41 @@
 using ImGuiNET;
-using PokeLab.Presentation.States;
 using PokeLab.Presentation.MainMenu;
 using PokeLab.Presentation.ImGui.Helpers;
+using System.ComponentModel;
 
 namespace PokeLab.Presentation.ImGui.MainMenu;
 
-public sealed class MainMenuView : StatefulView<MainMenuState, MainMenuIntents>, IMainMenuView
+public sealed class MainMenuView : View<MainMenuViewModel>
 {
-    public override string Id => "Main Menu";
-    public override string Title => "Main Menu";
-
     private bool _shouldOpenPopup;
     private bool _shouldClosePopup;
-    private MainMenuState _state;
-    private MainMenuState? _newState;
+    private MainMenuViewState _lastViewState;
 
-    public MainMenuView(IStateStore<MainMenuState, MainMenuIntents> store) : base(store)
+    public MainMenuView(MainMenuViewModel viewModel) : base(viewModel)
     {
-        _state = store.CurrentState;
-        _shouldOpenPopup = false;
-        _shouldClosePopup = false;
+        viewModel.PropertyChanging += OnPropertyChanging;
+        viewModel.PropertyChanged += OnPropertyChanged;
+    }
 
-        store.OnStateChanged += (state) => _newState = state;
+    private void OnPropertyChanging(object? sender, PropertyChangingEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.ViewState))
+        {
+            _lastViewState = ViewModel.ViewState;
+        }
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.ViewState))
+        {
+            _shouldOpenPopup = _lastViewState == MainMenuViewState.Idle && ViewModel.ViewState != MainMenuViewState.Idle;
+            _shouldClosePopup = _lastViewState != MainMenuViewState.Idle && ViewModel.ViewState == MainMenuViewState.Idle;
+        }
     }
 
     public override void Render()
     {
-        if (_newState != null)
-        {
-            _shouldOpenPopup = _newState.State != MainMenuViewState.Idle && _state.State == MainMenuViewState.Idle;
-            _shouldClosePopup = _newState.State == MainMenuViewState.Idle && _state.State != MainMenuViewState.Idle;
-
-            _state = _newState;
-            _newState = null;
-        }
-
         ImGuiWindowFlags flags = GetDockspaceSettings();
         if (Gui.Begin("DockSpace Root", flags))
         {
@@ -57,21 +58,21 @@ public sealed class MainMenuView : StatefulView<MainMenuState, MainMenuIntents>,
         {
             if (Gui.BeginMenu("File"))
             {
-                bool inDialog = _state.IsInDialog;
+                bool inDialog = ViewModel.IsInDialog;
 
                 if (Gui.MenuItem("New project", !inDialog))
-                    Dispatch(new MainMenuIntents.StartCreateProject());
+                    Execute(ViewModel.StartCreateProjectCommand);
 
                 if (Gui.MenuItem("Open project", !inDialog))
-                    Dispatch(new MainMenuIntents.OpenProject());
+                    ExecuteBackground(ViewModel.OpenProjectCommand);
 
                 if (Gui.MenuItem("Delete project", !inDialog))
-                    Dispatch(new MainMenuIntents.DeleteProject());
+                    ExecuteBackground(ViewModel.DeleteProjectCommand);
 
                 Gui.Separator();
 
                 if (Gui.MenuItem("Exit", !inDialog))
-                    Dispatch(new MainMenuIntents.ExitApplication());
+                    ExecuteBackground(ViewModel.ExitApplicationCommand);
 
                 Gui.EndMenu();
             }
@@ -108,32 +109,34 @@ public sealed class MainMenuView : StatefulView<MainMenuState, MainMenuIntents>,
             Gui.Text("Project Name");
             Gui.SameLine();
 
-            string projectName = _state.ProjectName;
+            string projectName = ViewModel.ProjectName;
             if (Gui.InputText("##project_name", ref projectName, 256))
-                Dispatch(new MainMenuIntents.SetProjectName(projectName));
+                ViewModel.ProjectName = projectName;
 
             Gui.Dummy(new(0, 5));
 
             Gui.Text("Project Path");
             Gui.SameLine();
 
-            string projectPath = _state.ProjectPath;
+            string projectPath = ViewModel.ProjectPath;
             if (Gui.InputText("##project_path", ref projectPath, 256))
-                Dispatch(new MainMenuIntents.SetProjectPath(projectPath));
+                ViewModel.ProjectPath = projectPath;
 
             Gui.SameLine();
             Gui.Dummy(new(5, 0));
             Gui.SameLine();
 
-            if (Gui.Button("Browse"))
-                Dispatch(new MainMenuIntents.BrowseProjectPath());
+            bool canBrowseProjectPath = ViewModel.BrowseProjectPathCommand.CanExecute(null);
+            Gui.Text($"Button State: {(canBrowseProjectPath ? "Enabled" : "Disabled")}");
+            if (GuiHelper.Button("Browse", ViewModel.BrowseProjectPathCommand.CanExecute(null)))
+                ExecuteBackground(ViewModel.BrowseProjectPathCommand);
 
             Gui.Dummy(new(0, 5));
 
-            if (!string.IsNullOrEmpty(_state.ErrorMessage))
+            if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
             {
                 Gui.PushStyleColor(ImGuiCol.Text, new NVec4(1, 0.2f, 0.2f, 1));
-                Gui.TextWrapped(_state.ErrorMessage);
+                Gui.TextWrapped(ViewModel.ErrorMessage);
                 Gui.PopStyleColor();
                 Gui.Spacing();
             }
@@ -149,19 +152,18 @@ public sealed class MainMenuView : StatefulView<MainMenuState, MainMenuIntents>,
 
             Gui.SetCursorPosX(cursorX);
 
-            if (_state.State == MainMenuViewState.Loading)
+            if (ViewModel.IsLoading)
             {
                 GuiHelper.LoadingSpinner(6f, 2, Color.Cyan);
                 Gui.SameLine();
             }
-
-            if (Gui.Button("Create", new NVec2(buttonWidth, 0)))
-                Dispatch(new MainMenuIntents.ConfirmCreateProject());
+            if (GuiHelper.Button("Create", new NVec2(buttonWidth, 0), ViewModel.ConfirmProjectCreationCommand.CanExecute(null)))
+                ExecuteBackground(ViewModel.ConfirmProjectCreationCommand);
 
             Gui.SameLine();
 
-            if (Gui.Button("Cancel", new NVec2(buttonWidth, 0)))
-                Dispatch(new MainMenuIntents.ClearForm());
+            if (GuiHelper.Button("Cancel", new NVec2(buttonWidth, 0), ViewModel.ClearFormCommand.CanExecute(null)))
+                Execute(ViewModel.ClearFormCommand);
 
             Gui.EndPopup();
         }

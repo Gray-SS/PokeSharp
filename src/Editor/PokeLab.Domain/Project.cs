@@ -27,6 +27,11 @@ public sealed class Project
         UpdatedAt = DateTime.Now;
     }
 
+    public ProjectVolume GetDefaultVolume()
+    {
+        return Volumes.FirstOrDefault() ?? throw new InvalidOperationException("No default volume found.");
+    }
+
     public void UpdateLocation(string rootPath)
     {
         RootPath = Path.GetFullPath(rootPath);

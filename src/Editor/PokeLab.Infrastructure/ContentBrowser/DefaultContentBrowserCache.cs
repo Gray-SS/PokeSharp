@@ -1,12 +1,16 @@
 using PokeCore.Logging;
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Services;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Services;
+using PokeCore.IO.Volumes;
 using PokeLab.Application.ContentBrowser;
 
 namespace PokeLab.Infrastructure.ContentBrowser;
 
-public sealed class DefaultContentBrowserCache : IContentBrowserCache
+public sealed class DefaultContentBrowserCache(
+    Logger<DefaultContentBrowserCache> logger,
+    IVirtualVolumeManager volumeManager,
+    IContentBrowserNavigator navigator
+) : IContentBrowserCache
 {
     public IReadOnlyCollection<IVirtualFile> Files => _cachedFiles;
     public IReadOnlyCollection<IVirtualVolume> Volumes => _cachedVolumes;
@@ -14,42 +18,29 @@ public sealed class DefaultContentBrowserCache : IContentBrowserCache
 
     public bool HaveInvalidatedScopes => _invalidationScope != ContentScope.None;
 
-    public event EventHandler<ContentBrowserCacheRefreshed>? OnRefresh;
-
     private ContentScope _invalidationScope;
 
-    private readonly Logger _logger;
-    private readonly IVirtualVolumeManager _volumesManager;
-    private readonly IContentBrowserNavigator _navigator;
+    private readonly List<IVirtualFile> _cachedFiles = new();
+    private readonly List<IVirtualVolume> _cachedVolumes = new();
+    private readonly List<IVirtualDirectory> _cachedDirectories = new();
 
-    private readonly List<IVirtualFile> _cachedFiles;
-    private readonly List<IVirtualVolume> _cachedVolumes;
-    private readonly List<IVirtualDirectory> _cachedDirectories;
-
-    public DefaultContentBrowserCache(
-        Logger<DefaultContentBrowserCache> logger,
-        IVirtualVolumeManager volumeManager,
-        IContentBrowserNavigator navigator)
+    public void Clear()
     {
-        _logger = logger;
-        _navigator = navigator;
-        _volumesManager = volumeManager;
-
-        _cachedFiles = new List<IVirtualFile>();
-        _cachedVolumes = new List<IVirtualVolume>();
-        _cachedDirectories = new List<IVirtualDirectory>();
+        _cachedFiles.Clear();
+        _cachedVolumes.Clear();
+        _cachedDirectories.Clear();
     }
 
     public void Invalidate(ContentScope scope)
     {
         if (_invalidationScope.HasFlag(scope))
         {
-            _logger.Trace($"Content scope '{scope}' already invalidated. Ignoring.");
+            logger.Trace($"Content scope '{scope}' already invalidated. Ignoring.");
             return;
         }
 
         _invalidationScope |= scope;
-        _logger.Trace($"Content scope '{scope}' invalidated.");
+        logger.Trace($"Content scope '{scope}' invalidated.");
     }
 
     public void Refresh(ContentScope scope)
@@ -57,15 +48,13 @@ public sealed class DefaultContentBrowserCache : IContentBrowserCache
         if (scope == ContentScope.None)
             return;
 
-        _logger.Trace("Refreshing content cache");
+        logger.Trace("Refreshing content cache");
 
         if (scope.HasFlag(ContentScope.Volumes))
             RefreshVolumes();
 
         if (scope.HasFlag(ContentScope.CurrentDirectory))
             RefreshCurrentDirectory();
-
-        OnRefresh?.Invoke(this, new ContentBrowserCacheRefreshed(scope));
     }
 
     public void RefreshInvalidatedScopes()
@@ -76,29 +65,29 @@ public sealed class DefaultContentBrowserCache : IContentBrowserCache
 
     private void RefreshCurrentDirectory()
     {
-        _logger.Trace("Refreshing current directory");
+        logger.Trace("Refreshing current directory");
 
         _cachedFiles.Clear();
         _cachedDirectories.Clear();
 
-        IVirtualDirectory directory = _navigator.CurrentDirectory;
+        IVirtualDirectory directory = navigator.CurrentDirectory;
         if (directory.Exists)
         {
             _cachedFiles.AddRange(directory.GetFiles());
             _cachedDirectories.AddRange(directory.GetDirectories());
-            _logger.Trace("Current directory successfully refreshed");
+            logger.Trace($"Current directory successfully refreshed");
         }
-        else _logger.Warn($"Current directory does not exists at path: '{directory.Path}'");
+        else logger.Warn($"Current directory does not exists at path: '{directory.Path}'");
     }
 
     private void RefreshVolumes()
     {
-        _logger.Trace("Refreshing volumes");
+        logger.Trace("Refreshing volumes");
 
         _cachedVolumes.Clear();
-        foreach (IVirtualVolume volume in _volumesManager.GetVolumes())
+        foreach (IVirtualVolume volume in volumeManager.GetVolumes())
             _cachedVolumes.Add(volume);
 
-        _logger.Trace("Volumes successfully refresh");
+        logger.Trace("Volumes successfully refresh");
     }
 }

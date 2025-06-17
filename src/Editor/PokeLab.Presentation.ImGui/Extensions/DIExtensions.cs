@@ -1,13 +1,12 @@
-using PokeCore.DependencyInjection.Abstractions;
-using PokeEngine.Core.Timing;
+using MonoGame.ImGuiNet;
 using PokeEngine.Extensions;
 using PokeLab.Presentation.Common;
-using PokeLab.Presentation.ContentBrowser;
 using PokeLab.Presentation.Extensions;
 using PokeLab.Presentation.ImGui.Common;
-using PokeLab.Presentation.ImGui.ContentBrowser;
 using PokeLab.Presentation.ImGui.MainMenu;
-using PokeLab.Presentation.MainMenu;
+using PokeLab.Presentation.ImGui.ContentBrowser;
+using PokeCore.DependencyInjection.Abstractions;
+using PokeEngine.Core;
 
 namespace PokeLab.Presentation.ImGui.Extensions;
 
@@ -16,14 +15,14 @@ public static class DIExtensions
     public static IServiceCollections AddPokeLabPresentationImGui(this IServiceCollections services)
     {
         // Presentation layer abstraction implementation
-        services.AddView<IMainMenuView, MainMenuView>();
-        services.AddView<IContentBrowserView, ImGuiContentBrowserView>();
+        services.AddView<MainMenuView>();
+        services.AddView<ContentBrowserView>();
 
         services.AddTransient<ITickSource, ImGuiTickSource>();
         services.AddSingleton<IWindowService, ImGuiWindowService>();
-        services.AddSingleton<ITimingService, TimingService>();
 
         // Custom services
+        services.AddSingleton(sc => new ImGuiRenderer(sc.GetService<BaseEngine>()));
         services.AddSingleton<IGuiResourceManager, GuiResourceManager>();
         services.AddPokeEngineEssentials<PokeLabEngine>();
 

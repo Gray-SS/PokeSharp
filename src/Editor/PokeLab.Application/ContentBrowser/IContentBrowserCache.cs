@@ -1,5 +1,5 @@
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Volumes;
 
 namespace PokeLab.Application.ContentBrowser;
 
@@ -18,11 +18,6 @@ public sealed class ContentBrowserCacheRefreshed : EventArgs
 /// </summary>
 public interface IContentBrowserCache
 {
-    /// <summary>
-    /// Triggered when the cache is refreshed.
-    /// </summary>
-    event EventHandler<ContentBrowserCacheRefreshed>? OnRefresh;
-
     /// <summary>
     /// Gets all cached files.
     /// </summary>
@@ -46,6 +41,11 @@ public interface IContentBrowserCache
     /// </summary>
     /// <returns><c>true</c> if the cache have invalidated scope(s); <c>false</c>, otherwise</returns>
     bool HaveInvalidatedScopes { get; }
+
+    /// <summary>
+    /// Clears the cache
+    /// </summary>
+    void Clear();
 
     /// <summary>
     /// Marks a specific content scope as invalidated.

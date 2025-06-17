@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework.Graphics;
 using PokeCore.Logging;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 using PokeEngine.Rendering.Assets.Raw;
 
 namespace PokeEngine.Rendering.Assets;

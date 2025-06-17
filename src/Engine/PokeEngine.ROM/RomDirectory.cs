@@ -1,5 +1,5 @@
 using System.Collections;
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 
 namespace PokeEngine.ROM;
 

@@ -1,7 +1,7 @@
 using PokeCore.Common;
 using PokeCore.Diagnostics;
 using PokeCore.Logging;
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 
 namespace PokeEngine.Assets.Services;
 

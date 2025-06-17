@@ -4,7 +4,7 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Services;
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 using PokeCore.Hosting.Logging;
 using PokeLab.Services;
 

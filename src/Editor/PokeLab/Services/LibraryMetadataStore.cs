@@ -1,9 +1,9 @@
 using PokeEngine.Assets;
 using PokeEngine.Assets.Services;
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Events;
-using PokeEngine.Assets.VFS.Services;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Events;
+using PokeCore.IO.Services;
+using PokeCore.IO.Volumes;
 using PokeCore.Hosting.Logging;
 using PokeEngine.Core.Threadings;
 

@@ -1,7 +1,7 @@
 using System.Text;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 
 namespace PokeEngine.ROM.Platforms.Gba;
 

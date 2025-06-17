@@ -1,5 +1,5 @@
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Services;
+using PokeCore.IO;
+using PokeCore.IO.Services;
 using PokeCore.Hosting;
 using PokeCore.Hosting.Logging;
 using PokeLab.Services;

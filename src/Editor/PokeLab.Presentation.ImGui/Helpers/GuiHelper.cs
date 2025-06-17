@@ -5,6 +5,26 @@ namespace PokeLab.Presentation.ImGui.Helpers;
 
 public static class GuiHelper
 {
+    public static bool Button(string text, bool isEnabled)
+    {
+        ButtonState state = isEnabled ? ButtonState.Enabled : ButtonState.Disabled;
+        GuiStyle.PushButtonStyle(state);
+        bool isClicked = Gui.Button(text);
+        GuiStyle.PopButtonStyle(state);
+
+        return isClicked && isEnabled;
+    }
+
+    public static bool Button(string text, NVec2 size, bool isEnabled)
+    {
+        ButtonState state = isEnabled ? ButtonState.Enabled : ButtonState.Disabled;
+        GuiStyle.PushButtonStyle(state);
+        bool isClicked = Gui.Button(text, size);
+        GuiStyle.PopButtonStyle(state);
+
+        return isClicked && isEnabled;
+    }
+
     public static unsafe bool LoadingSpinner(float radius, int thickness, Color color)
     {
         var drawList = Gui.GetWindowDrawList();

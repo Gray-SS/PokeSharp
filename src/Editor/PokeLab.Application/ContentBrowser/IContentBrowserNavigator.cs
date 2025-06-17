@@ -1,36 +1,22 @@
-using PokeEngine.Assets.VFS;
+using PokeCore.IO;
 
 namespace PokeLab.Application.ContentBrowser;
 
-public sealed class ContentPathChangedArgs : EventArgs
-{
-    public VirtualPath NewPath { get; }
-    public VirtualPath OldPath { get; }
-
-    public IContentBrowserNavigator Navigator { get; }
-
-    public ContentPathChangedArgs(IContentBrowserNavigator navigator, VirtualPath newPath, VirtualPath oldPath)
-    {
-        Navigator = navigator;
-        NewPath = newPath;
-        OldPath = oldPath;
-    }
-}
-
 public interface IContentBrowserNavigator
 {
+    bool IsInitialized { get; }
     VirtualPath CurrentPath { get; }
     IVirtualDirectory CurrentDirectory { get; }
 
-    public event EventHandler<ContentPathChangedArgs>? OnPathChanged;
-
     bool CanGoBack();
-    bool CanGoForward();
-    bool CanGoTo(VirtualPath path);
-
-    void GoTo(VirtualPath path);
     void GoBack();
+
+    bool CanGoForward();
     void GoForward();
 
+    bool CanGoTo(VirtualPath path);
+    void GoTo(VirtualPath path);
+
     void Initialize(VirtualPath path);
+    void Reset();
 }

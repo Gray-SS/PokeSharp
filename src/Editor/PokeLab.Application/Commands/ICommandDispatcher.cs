@@ -2,6 +2,6 @@ namespace PokeLab.Application.Commands;
 
 public interface ICommandDispatcher
 {
-    Task ExecuteAsync<TCommand>(TCommand command)
+    Task SendAsync<TCommand>(TCommand command)
         where TCommand : ICommand;
 }

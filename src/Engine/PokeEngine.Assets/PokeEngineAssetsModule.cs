@@ -1,5 +1,5 @@
 using PokeCore.DependencyInjection.Abstractions;
-using PokeEngine.Assets.VFS.Services;
+using PokeCore.IO.Services;
 using PokeEngine.Assets.Services;
 using PokeEngine.Core.Modules;
 

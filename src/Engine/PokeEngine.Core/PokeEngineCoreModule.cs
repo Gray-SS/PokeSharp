@@ -5,6 +5,7 @@ using PokeEngine.Core.Windowing;
 using PokeEngine.Core.Modules;
 using PokeCore.Hosting.Abstractions.Extensions;
 using Microsoft.Xna.Framework;
+using PokeEngine.Core.Timing;
 
 namespace PokeEngine.Core;
 
@@ -25,7 +26,6 @@ public class PokeEngineCoreModule<TEngine> : EngineModule
         services.AddSingleton<Game>(sp => sp.GetService<TEngine>());
         services.AddSingleton<BaseEngine>(sp => sp.GetService<TEngine>());
         services.AddSingleton<IGameLoop>(sp => sp.GetService<TEngine>());
-        services.AddHostedService<EngineHost<TEngine>>();
 
         // Define services for MonoGame
         services.AddSingleton(sp => sp.GetService<TEngine>().Window);
@@ -33,9 +33,11 @@ public class PokeEngineCoreModule<TEngine> : EngineModule
         services.AddSingleton(sp => sp.GetService<TEngine>().GraphicsDevice);
         services.AddSingleton(sp => sp.GetService<TEngine>().Content);
 
-        // services.AddSingleton<IEngineHookDispatcher, EngineHookDispatcher>();
         services.AddSingleton<ICoroutineManager, CoroutineManager>();
         services.AddSingleton<IResolutionManager, ResolutionManager>();
         services.AddSingleton<IWindowManager, WindowManager>();
+        services.AddSingleton<ITimingService, TimingService>();
+
+        services.AddHostedService<EngineHost>();
     }
 }

@@ -2,6 +2,6 @@ namespace PokeLab.Presentation.Common;
 
 public interface ITaskDispatcher
 {
-    void RunOnUIThread(Action? deferredAction);
+    void RunOnUIThread(Action? callback);
     void FireAndForget(Action? backgroundTask);
 }

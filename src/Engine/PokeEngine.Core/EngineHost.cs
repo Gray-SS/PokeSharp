@@ -3,15 +3,14 @@ using PokeCore.Hosting.Abstractions;
 
 namespace PokeEngine.Core;
 
-public sealed class EngineHost<TEngine> : IWaitableHostedService
-    where TEngine : BaseEngine
+public sealed class EngineHost : IWaitableHostedService
 {
     private readonly BaseEngine _engine;
     private readonly TaskCompletionSource _tcs;
 
     private readonly Logger _logger;
 
-    public EngineHost(Logger<EngineHost<TEngine>> logger, TEngine engine)
+    public EngineHost(Logger<EngineHost> logger, BaseEngine engine)
     {
         _logger = logger;
         _tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

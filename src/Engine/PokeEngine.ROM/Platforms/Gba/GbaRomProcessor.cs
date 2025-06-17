@@ -1,7 +1,7 @@
 using PokeCore.Logging;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
-using PokeEngine.Assets.VFS.Services;
+using PokeCore.IO.Services;
 using PokeEngine.ROM.Services;
 
 namespace PokeEngine.ROM.Platforms.Gba;

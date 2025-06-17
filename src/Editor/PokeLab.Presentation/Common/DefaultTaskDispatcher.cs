@@ -42,8 +42,8 @@ internal sealed class DefaultTaskDispatcher : ITaskDispatcher, IDisposable
         if (deferredAction == null)
             return;
 
-        _logger.Trace($"Action deferred on the UI thread: '{deferredAction.Method.Name}'");
         _deferredActions.Enqueue(deferredAction);
+        _logger.Trace($"Operation deferred on the UI thread: '{deferredAction.Method.Name}'");
     }
 
     public void Dispose()

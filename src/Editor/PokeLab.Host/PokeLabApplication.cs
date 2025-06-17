@@ -16,7 +16,6 @@ public sealed class PokeLabApplication : App
 
     protected override void Configure(IServiceContainer services)
     {
-        services.ConfigurePokeLabPresentation();
     }
 
     protected override void ConfigureServices(IServiceCollections services)

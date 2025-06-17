@@ -50,6 +50,7 @@ public sealed class GuiResourceManager : IGuiResourceManager
 
         nint id = _renderer.BindTexture(texture);
         _textures.Add(texture, id);
+
         _logger.Info($"Texture '{texture.Name}' has been registered successfully with id '{id}'.");
         return id;
     }

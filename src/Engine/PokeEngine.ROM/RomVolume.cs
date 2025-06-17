@@ -1,6 +1,6 @@
 using PokeCore.Logging;
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Volumes;
 using PokeEngine.ROM.Services;
 
 namespace PokeEngine.ROM;

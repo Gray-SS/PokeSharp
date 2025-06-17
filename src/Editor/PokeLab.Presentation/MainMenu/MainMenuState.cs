@@ -11,6 +11,5 @@ public record MainMenuState(
     string ProjectName,
     string ProjectPath,
     string? ErrorMessage,
-    MainMenuViewState State,
-    bool IsInDialog
+    MainMenuViewState ViewState
 );

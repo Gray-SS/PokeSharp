@@ -2,9 +2,9 @@ using PokeCore.Common;
 using PokeCore.Logging;
 using PokeEngine.Assets.Exceptions;
 using PokeEngine.Assets.Services;
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Services;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Services;
+using PokeCore.IO.Volumes;
 
 namespace PokeEngine.Assets;
 

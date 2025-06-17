@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
-using PokeEngine.Assets.VFS;
-using PokeEngine.Assets.VFS.Events;
-using PokeEngine.Assets.VFS.Services;
-using PokeEngine.Assets.VFS.Volumes;
+using PokeCore.IO;
+using PokeCore.IO.Events;
+using PokeCore.IO.Services;
+using PokeCore.IO.Volumes;
 using PokeCore.Hosting.Logging;
 using PokeLab.ContentBrowser.Events;
 using PokeEngine.Core;
