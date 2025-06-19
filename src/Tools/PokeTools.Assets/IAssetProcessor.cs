@@ -1,9 +1,12 @@
+using PokeCore.Common;
+
 namespace PokeTools.Assets;
 
 public interface IAssetProcessor
 {
-    Type InputType { get; }
-    Type OutputType { get; }
+    Type RawType { get; }
+    Type ProcessedType { get; }
+    AssetType AssetType { get; }
 
-    object? Process(object rawAsset);
+    Result<object, string> Process(object rawAsset);
 }

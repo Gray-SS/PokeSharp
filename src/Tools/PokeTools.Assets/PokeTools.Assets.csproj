@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Engine\PokeEngine\PokeEngine.csproj" />
+
     <ProjectReference Include="..\..\Core\PokeCore.IO\PokeCore.IO.csproj" />
+    <ProjectReference Include="..\..\Core\PokeCore.Common\PokeCore.Common.csproj" />
   </ItemGroup>
 
 </Project>

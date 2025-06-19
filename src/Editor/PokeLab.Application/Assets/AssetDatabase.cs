@@ -1,14 +1,14 @@
-using PokeCore.Common;
-using PokeCore.Logging;
-using PokeEngine.Assets.Exceptions;
-using PokeEngine.Assets.Services;
+using PokeTools.Assets;
 using PokeCore.IO;
 using PokeCore.IO.Services;
 using PokeCore.IO.Volumes;
+using PokeCore.Common;
+using PokeCore.Logging;
+using PokeEngine.Assets.Exceptions;
 
-namespace PokeEngine.Assets;
+namespace PokeLab.Application.Assets;
 
-public sealed class AssetPipeline
+public sealed class AssetDatabase
 {
     public IReadOnlyCollection<object> LoadedAssets => _cachedAssets.Values;
 
@@ -25,12 +25,12 @@ public sealed class AssetPipeline
     private readonly IReflectionManager _reflectionManager;
     private readonly Dictionary<string, object> _cachedAssets;
 
-    public AssetPipeline(
+    public AssetDatabase(
         IReflectionManager reflectionManager,
         IAssetMetadataStore metadataStore,
         IVirtualVolumeManager volumeManager,
         IVirtualFileSystem vfs,
-        Logger<AssetPipeline> logger)
+        Logger<AssetDatabase> logger)
     {
         _vfs = vfs;
         _volumeManager = volumeManager;
@@ -101,122 +101,122 @@ public sealed class AssetPipeline
 
     public void Import(VirtualPath assetPath)
     {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(assetPath);
+        // try
+        // {
+        //     ArgumentNullException.ThrowIfNull(assetPath);
 
-            _logger.Debug($"Importing asset at path '{assetPath}'");
+        //     _logger.Debug($"Importing asset at path '{assetPath}'");
 
-            IVirtualFile file = _vfs.GetFile(assetPath);
-            if (!file.Exists)
-                throw new AssetPipelineException($"File not found: '{assetPath}'");
+        //     IVirtualFile file = _vfs.GetFile(assetPath);
+        //     if (!file.Exists)
+        //         throw new AssetPipelineException($"File not found: '{assetPath}'");
 
-            AssetMetadata metadata;
-            if (!_metadataStore.Exists(assetPath))
-            {
-                _logger.Debug("No asset metadata found. Creating new asset metadata");
+        //     AssetMetadata metadata;
+        //     if (!_metadataStore.Exists(assetPath))
+        //     {
+        //         _logger.Debug("No asset metadata found. Creating new asset metadata");
 
-                Guid assetId = Guid.NewGuid();
-                metadata = new AssetMetadata
-                {
-                    Id = assetId,
-                    ResourcePath = assetPath
-                };
+        //         Guid assetId = Guid.NewGuid();
+        //         metadata = new AssetMetadata
+        //         {
+        //             Id = assetId,
+        //             ResourcePath = assetPath
+        //         };
 
-                _logger.Trace($"Asset metadata instantiated ({assetId})");
+        //         _logger.Trace($"Asset metadata instantiated ({assetId})");
 
-                if (string.IsNullOrEmpty(assetPath.Extension))
-                {
-                    _logger.Warn("No importer can be assigned to an extension-less file.");
-                    metadata.ErrorMessage = "No importer can be assigned to an extension-less file.";
+        //         if (string.IsNullOrEmpty(assetPath.Extension))
+        //         {
+        //             _logger.Warn("No importer can be assigned to an extension-less file.");
+        //             metadata.ErrorMessage = "No importer can be assigned to an extension-less file.";
 
-                    _metadataStore.Save(assetPath, metadata);
-                    return;
-                }
+        //             _metadataStore.Save(assetPath, metadata);
+        //             return;
+        //         }
 
-                string extension = assetPath.Extension;
-                IAssetImporter? foundImporter = _importers.FirstOrDefault(x => x.SupportedExtensions.Split(',').Any(ext => string.Equals(extension, ext, StringComparison.OrdinalIgnoreCase)));
-                if (foundImporter == null)
-                {
-                    _logger.Warn($"No importer found for file extension '{extension}'");
-                    metadata.ErrorMessage = $"No importer found for file extension '{extension}'";
+        //         string extension = assetPath.Extension;
+        //         IAssetImporter? foundImporter = _importers.FirstOrDefault(x => x.SupportedExtensions.Split(',').Any(ext => string.Equals(extension, ext, StringComparison.OrdinalIgnoreCase)));
+        //         if (foundImporter == null)
+        //         {
+        //             _logger.Warn($"No importer found for file extension '{extension}'");
+        //             metadata.ErrorMessage = $"No importer found for file extension '{extension}'";
 
-                    _metadataStore.Save(assetPath, metadata);
-                    return;
-                }
-                _logger.Trace($"Importer supporting {extension} found: '{foundImporter.GetType().Name}'");
+        //             _metadataStore.Save(assetPath, metadata);
+        //             return;
+        //         }
+        //         _logger.Trace($"Importer supporting {extension} found: '{foundImporter.GetType().Name}'");
 
-                IAssetProcessor? foundProcessor = _processors.FirstOrDefault(x => foundImporter.ProcessorType == x.GetType());
-                if (foundProcessor == null)
-                {
-                    _logger.Warn($"No processor paired with importer '{foundImporter.GetType().Name}' was found");
-                    metadata.ErrorMessage = $"No processor paired with importer '{foundImporter.GetType().Name}' was found";
+        //         IAssetProcessor? foundProcessor = _processors.FirstOrDefault(x => foundImporter.ProcessorType == x.GetType());
+        //         if (foundProcessor == null)
+        //         {
+        //             _logger.Warn($"No processor paired with importer '{foundImporter.GetType().Name}' was found");
+        //             metadata.ErrorMessage = $"No processor paired with importer '{foundImporter.GetType().Name}' was found";
 
-                    _metadataStore.Save(assetPath, metadata);
-                    return;
-                }
-                _logger.Trace($"Processor paired to importer found and resolved: '{foundProcessor.GetType().Name}'");
+        //             _metadataStore.Save(assetPath, metadata);
+        //             return;
+        //         }
+        //         _logger.Trace($"Processor paired to importer found and resolved: '{foundProcessor.GetType().Name}'");
 
-                metadata.Importer = foundImporter;
-                metadata.AssetType = foundProcessor.OutputType;
-            }
-            else
-            {
-                _logger.Debug($"Metadata found for asset '{assetPath}'. Loading metadata");
-                metadata = _metadataStore.Load(assetPath);
-            }
+        //         metadata.Importer = foundImporter;
+        //         metadata.AssetType = foundProcessor.OutputType;
+        //     }
+        //     else
+        //     {
+        //         _logger.Debug($"Metadata found for asset '{assetPath}'. Loading metadata");
+        //         metadata = _metadataStore.Load(assetPath);
+        //     }
 
-            IAssetImporter importer = metadata.Importer;
+        //     IAssetImporter importer = metadata.Importer;
 
-            object? rawAsset;
-            try
-            {
-                _logger.Trace($"Importing asset with importer: '{importer.GetType().Name}'");
-                rawAsset = importer.Import(file);
-                if (rawAsset == null)
-                {
-                    _logger.Warn($"Importer '{importer.GetType().Name}' returned null for '{assetPath}' - file may be corrupted or unsupported");
-                    metadata.ErrorMessage = "Something went wrong in the import process. Check the logs for more details.";
+        //     object? rawAsset;
+        //     try
+        //     {
+        //         _logger.Trace($"Importing asset with importer: '{importer.GetType().Name}'");
+        //         rawAsset = importer.Import(file);
+        //         if (rawAsset == null)
+        //         {
+        //             _logger.Warn($"Importer '{importer.GetType().Name}' returned null for '{assetPath}' - file may be corrupted or unsupported");
+        //             metadata.ErrorMessage = "Something went wrong in the import process. Check the logs for more details.";
 
-                    _logger.Debug("Saving metadata as a fallback.");
-                    _metadataStore.Save(assetPath, metadata);
-                    return;
-                }
-            }
-            catch (AssetImporterException ex)
-            {
-                _logger.Warn($"Import failed for '{assetPath}'. {ex.Message}");
-                metadata.ErrorMessage = $"Import failed: {ex.Message}";
+        //             _logger.Debug("Saving metadata as a fallback.");
+        //             _metadataStore.Save(assetPath, metadata);
+        //             return;
+        //         }
+        //     }
+        //     catch (AssetImporterException ex)
+        //     {
+        //         _logger.Warn($"Import failed for '{assetPath}'. {ex.Message}");
+        //         metadata.ErrorMessage = $"Import failed: {ex.Message}";
 
-                _logger.Debug("Saving metadata as a fallback.");
-                _metadataStore.Save(assetPath, metadata);
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}");
-                _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-                metadata.ErrorMessage = $"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}";
+        //         _logger.Debug("Saving metadata as a fallback.");
+        //         _metadataStore.Save(assetPath, metadata);
+        //         return;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.Error($"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}");
+        //         _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        //         metadata.ErrorMessage = $"Unexpected error occured while importing: {ex.GetType().Name}: {ex.Message}";
 
-                _logger.Debug("Saving metadata as a fallback.");
-                _metadataStore.Save(assetPath, metadata);
-                return;
-            }
+        //         _logger.Debug("Saving metadata as a fallback.");
+        //         _metadataStore.Save(assetPath, metadata);
+        //         return;
+        //     }
 
-            Type rawAssetType = rawAsset.GetType();
-            _metadataStore.Save(assetPath, metadata);
-            AssetImported?.Invoke(this, EventArgs.Empty);
-            _logger.Debug($"Asset of type '{rawAssetType.Name}' imported.");
-        }
-        catch (ArgumentNullException ex)
-        {
-            _logger.Error($"Asset import failed - Parameter '{ex.ParamName}' is null");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while importing '{assetPath}': {ex.GetType().Name} - {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
+        //     Type rawAssetType = rawAsset.GetType();
+        //     _metadataStore.Save(assetPath, metadata);
+        //     AssetImported?.Invoke(this, EventArgs.Empty);
+        //     _logger.Debug($"Asset of type '{rawAssetType.Name}' imported.");
+        // }
+        // catch (ArgumentNullException ex)
+        // {
+        //     _logger.Error($"Asset import failed - Parameter '{ex.ParamName}' is null");
+        // }
+        // catch (Exception ex)
+        // {
+        //     _logger.Error($"Unexpected error while importing '{assetPath}': {ex.GetType().Name} - {ex.Message}");
+        //     _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+        // }
     }
 
     public bool TryMove(VirtualPath srcPath, VirtualPath destPath)

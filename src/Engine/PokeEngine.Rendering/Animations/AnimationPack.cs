@@ -1,4 +1,4 @@
-namespace PokeEngine.Rendering.Assets.Animations;
+namespace PokeEngine.Rendering.Animations;
 
 public sealed class AnimationPack
 {

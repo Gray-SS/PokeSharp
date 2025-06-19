@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\PokeLab.Domain\PokeLab.Domain.csproj" />
+
+    <ProjectReference Include="..\..\Tools\PokeTools.Assets\PokeTools.Assets.csproj" />
     <ProjectReference Include="..\..\Core\PokeCore.Hosting.Abstractions\PokeCore.Hosting.Abstractions.csproj" />
     <ProjectReference Include="..\..\Engine\PokeEngine.Assets\PokeEngine.Assets.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PokeLab.Domain\PokeLab.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

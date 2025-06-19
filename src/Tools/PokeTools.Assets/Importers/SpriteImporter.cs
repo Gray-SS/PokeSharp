@@ -1,16 +1,16 @@
 using Microsoft.Xna.Framework.Graphics;
-using PokeCore.Logging;
-using PokeEngine.Assets;
-using PokeEngine.Assets.Exceptions;
+using PokeCore.Common;
 using PokeCore.IO;
-using PokeEngine.Rendering.Assets.Raw;
+using PokeCore.Logging;
+using PokeTools.Assets.Raw;
 
-namespace PokeEngine.Rendering.Assets;
+namespace PokeTools.Assets.Importers;
 
 public sealed class SpriteImporter : AssetImporter<RawSprite>
 {
-    public override Type ProcessorType => typeof(SpriteProcessor);
-    public override string SupportedExtensions => ".png,.jpeg,.jpg";
+    public override Type ProcessorType => throw new NotImplementedException();
+
+    public override string SupportedExtensions => throw new NotImplementedException();
 
     private readonly Logger _logger;
     private readonly GraphicsDevice _graphicsDevice;
@@ -21,18 +21,19 @@ public sealed class SpriteImporter : AssetImporter<RawSprite>
         _graphicsDevice = graphicsDevice;
     }
 
-    public override RawSprite Import(IVirtualFile file)
+    public override Result<RawSprite, string> Import(IVirtualFile file)
     {
         using Stream stream = file.OpenRead();
         if (!stream.CanRead)
-            throw new AssetImporterException("File stream is not readable.");
+            return Result.Failed("File stream is not readable.");
 
         _logger.Trace($"Creating texture from file stream '{file.Path}'");
         Texture2D texture = Texture2D.FromStream(_graphicsDevice, stream);
         ResetGraphicsDeviceState(_graphicsDevice);
         _logger.Trace($"Texture created: {texture.Width}x{texture.Height}");
 
-        return new RawSprite(texture, null);
+        var sprite = new RawSprite(texture, null);
+        return Result.Success(sprite);
     }
 
     public static void ResetGraphicsDeviceState(GraphicsDevice device)

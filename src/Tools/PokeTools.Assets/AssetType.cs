@@ -1,7 +1,8 @@
-namespace PokeLab.Domain;
+namespace PokeTools.Assets;
 
 public enum AssetType
 {
+    None,
     Texture2D,
     Sprite,
     SpriteSheet,

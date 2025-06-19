@@ -1,6 +1,7 @@
 using PokeCore.IO;
+using PokeLab.Domain.Assets;
 
-namespace PokeEngine.Assets.Services;
+namespace PokeLab.Application.Assets;
 
 public interface IAssetMetadataStore
 {

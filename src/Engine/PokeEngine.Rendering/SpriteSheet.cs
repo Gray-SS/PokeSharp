@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace PokeEngine.Rendering.Assets;
+namespace PokeEngine.Rendering;
 
 public sealed class SpriteSheet
 {

@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\PokeCore.IO\PokeCore.IO.csproj" />
+    <ProjectReference Include="..\..\Tools\PokeTools.Assets\PokeTools.Assets.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,14 +1,18 @@
 using System.Collections;
 using System.Reflection;
 using System.Text.Json;
+using PokeCore.Common;
 using PokeCore.Logging;
-using PokeEngine.Assets;
 using PokeEngine.Entities;
+using PokeEngine.Scenes;
+using PokeTools.Assets.Raw;
 
-namespace PokeEngine.Scenes;
+namespace PokeTools.Assets.Processors;
 
-public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
+public sealed class SceneProcessor : AssetProcessor<RawScene, Scene>
 {
+    public override AssetType AssetType => AssetType.Scene;
+
     private readonly Logger _logger;
 
     public SceneProcessor(Logger<SceneProcessor> logger)
@@ -16,11 +20,11 @@ public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
         _logger = logger;
     }
 
-    public override Scene Process(SceneData rawAsset)
+    public override Result<Scene, string> Process(RawScene rawScene)
     {
-        var scene = new Scene(rawAsset.Name);
+        var scene = new Scene(rawScene.Name);
 
-        foreach (var entityData in rawAsset.Entities)
+        foreach (var entityData in rawScene.Entities)
         {
             Type? type = Type.GetType(entityData.TypeName);
             if (type == null)
@@ -47,14 +51,14 @@ public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
         return scene;
     }
 
-    private Entity? InstantiateEntity(EntityData data, Type type)
+    private Entity? InstantiateEntity(RawEntity rawEntity, Type type)
     {
         try
         {
             if (Activator.CreateInstance(type) is not Entity entity)
             {
                 _logger.Warn(
-                    $"Resolved type '{type.FullName}' from entity '{data.Id}' " +
+                    $"Resolved type '{type.FullName}' from entity '{rawEntity.Id}' " +
                     "does not inherit from Entity. Make sure custom types derive from the Entity base class.");
                 return null;
             }
@@ -64,7 +68,7 @@ public sealed class SceneProcessor : AssetProcessor<SceneData, Scene>
         catch (Exception ex)
         {
             _logger.Warn(
-                $"Failed to instantiate entity '{data.Id}' of type '{type.FullName}': {ex.Message}");
+                $"Failed to instantiate entity '{rawEntity.Id}' of type '{type.FullName}': {ex.Message}");
             return null;
         }
     }

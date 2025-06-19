@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace PokeEngine.Rendering.Assets;
+namespace PokeEngine.Rendering;
 
 public class Sprite
 {
