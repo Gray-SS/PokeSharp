@@ -1,4 +1,4 @@
-namespace PokeEngine.ROM.Platforms.Gba;
+namespace PokeTools.ROM.Platforms.Gba;
 
 public sealed class GbaConfig
 {

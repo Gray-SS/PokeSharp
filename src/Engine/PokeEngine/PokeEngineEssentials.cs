@@ -4,7 +4,6 @@ using PokeEngine.Assets;
 using PokeEngine.Entities;
 using PokeEngine.Inputs;
 using PokeEngine.Rendering;
-using PokeEngine.ROM;
 using PokeEngine.Scenes;
 using PokeEngine.Core.Modules;
 using PokeEngine.Core.Modules.Extensions;
@@ -28,7 +27,6 @@ public sealed class PokeEngineEssentials<TEngine> : EngineModule
         services.AddPokeModule<PokeEngineEntitiesModule>();
         services.AddPokeModule<PokeEngineInputsModule>();
         services.AddPokeModule<PokeEngineRenderingModule>();
-        services.AddPokeModule<PokeEngineRomModule>();
         services.AddPokeModule<PokeEngineScenesModule>();
     }
 }

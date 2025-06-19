@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public class RomReader<TPointer> where TPointer : unmanaged
 {

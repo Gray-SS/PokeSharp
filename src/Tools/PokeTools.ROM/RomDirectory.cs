@@ -1,7 +1,7 @@
 using System.Collections;
 using PokeCore.IO;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public sealed class RomDirectory : RomEntry, IEnumerable<RomEntry>
 {

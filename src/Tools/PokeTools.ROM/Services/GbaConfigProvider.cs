@@ -1,8 +1,7 @@
+using PokeTools.ROM.Platforms.Gba;
 using System.Diagnostics.CodeAnalysis;
-using PokeEngine.Core.Exceptions;
-using PokeEngine.ROM.Platforms.Gba;
 
-namespace PokeEngine.ROM.Services;
+namespace PokeTools.ROM.Services;
 
 public sealed class GbaConfigProvider : IGbaConfigProvider
 {
@@ -23,7 +22,7 @@ public sealed class GbaConfigProvider : IGbaConfigProvider
     {
         if (!TryGetConfig(gameCode, out GbaConfig? config))
         {
-            throw new EngineException($"""
+            throw new Exception($"""
                 No configuration with '{gameCode}' was found.
                 Make sure the game is supported or use the '{nameof(TryGetConfig)}' method instead.
             """);

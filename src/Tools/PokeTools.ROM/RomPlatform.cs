@@ -1,6 +1,6 @@
 using PokeEngine.Core.Exceptions;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public sealed class RomPlatform
 {

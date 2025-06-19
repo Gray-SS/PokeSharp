@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Drawing;
 
-namespace PokeEngine.ROM.Graphics;
+namespace PokeTools.ROM.Graphics;
 
 public sealed class Rom4bppPalette : IRomPalette
 {

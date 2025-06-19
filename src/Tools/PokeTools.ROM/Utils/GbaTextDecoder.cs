@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace PokeEngine.ROM.Utils;
+namespace PokeTools.ROM.Utils;
 
 public static class GbaTextDecoder
 {

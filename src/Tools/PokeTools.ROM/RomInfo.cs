@@ -1,4 +1,4 @@
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public sealed class RomInfo
 {

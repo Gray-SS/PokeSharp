@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace PokeEngine.ROM.Graphics;
+namespace PokeTools.ROM.Graphics;
 
 public sealed class Rom4bppTexture : IRomTexture
 {

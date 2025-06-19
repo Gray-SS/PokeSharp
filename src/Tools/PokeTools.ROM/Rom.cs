@@ -1,6 +1,6 @@
-using PokeEngine.ROM.Platforms.Gba;
+using PokeTools.ROM.Platforms.Gba;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public sealed class Rom
 {

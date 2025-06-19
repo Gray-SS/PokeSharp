@@ -2,9 +2,9 @@ using PokeCore.Logging;
 using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
 using PokeCore.IO.Services;
-using PokeEngine.ROM.Services;
+using PokeTools.ROM.Services;
 
-namespace PokeEngine.ROM.Platforms.Gba;
+namespace PokeTools.ROM.Platforms.Gba;
 
 public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
 {
@@ -56,7 +56,7 @@ public sealed class GbaRomProcessor : AssetProcessor<RomInfo, Rom>
         }
 
         var rom = new Rom(romInfo, config);
-        var vfsBuilder = new GbaVfsBuilder(rom);
+        var vfsBuilder = new GbaFileSystemBuilder(rom);
         var volume = new RomVolume("ROM", scheme, config.Name, vfsBuilder);
 
         _volumeManager.MountVolume(volume);

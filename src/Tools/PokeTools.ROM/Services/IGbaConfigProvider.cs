@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using PokeEngine.ROM.Platforms.Gba;
+using PokeTools.ROM.Platforms.Gba;
 
-namespace PokeEngine.ROM.Services;
+namespace PokeTools.ROM.Services;
 
 public interface IGbaConfigProvider
 {

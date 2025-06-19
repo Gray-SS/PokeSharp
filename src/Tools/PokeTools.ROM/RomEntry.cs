@@ -1,6 +1,6 @@
 using PokeCore.IO;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public abstract class RomEntry
 {

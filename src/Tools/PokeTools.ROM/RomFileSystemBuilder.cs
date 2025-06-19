@@ -1,10 +1,10 @@
-namespace PokeEngine.ROM.Services;
+namespace PokeTools.ROM;
 
-public abstract class RomVfsBuilder
+public abstract class RomFileSystemBuilder
 {
     public Rom Rom { get; }
 
-    public RomVfsBuilder(Rom rom)
+    public RomFileSystemBuilder(Rom rom)
     {
         Rom = rom;
     }

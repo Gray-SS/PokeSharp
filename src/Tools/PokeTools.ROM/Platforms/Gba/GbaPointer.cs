@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace PokeEngine.ROM.Platforms.Gba;
+namespace PokeTools.ROM.Platforms.Gba;
 
 /// <summary>
 /// Represents a Game Boy Advance memory pointer.

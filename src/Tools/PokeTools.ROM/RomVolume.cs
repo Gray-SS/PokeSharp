@@ -1,9 +1,9 @@
 using PokeCore.Logging;
 using PokeCore.IO;
 using PokeCore.IO.Volumes;
-using PokeEngine.ROM.Services;
+using PokeTools.ROM.Services;
 
-namespace PokeEngine.ROM;
+namespace PokeTools.ROM;
 
 public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
 {
@@ -12,7 +12,7 @@ public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
     private readonly Dictionary<VirtualPath, RomFile> _files;
     private readonly Dictionary<VirtualPath, RomDirectory> _directories;
 
-    public RomVolume(string id, string scheme, string displayName, RomVfsBuilder vfsBuilder) : base(id, scheme, displayName)
+    public RomVolume(string id, string scheme, string displayName, RomFileSystemBuilder vfsBuilder) : base(id, scheme, displayName)
     {
         ArgumentNullException.ThrowIfNull(vfsBuilder);
 
@@ -23,7 +23,7 @@ public sealed class RomVolume : BaseVirtualVolume, IReadableVolume
         BuildVirtualFileSystem(vfsBuilder);
     }
 
-    private void BuildVirtualFileSystem(RomVfsBuilder builder)
+    private void BuildVirtualFileSystem(RomFileSystemBuilder builder)
     {
         var root = new RomDirectory(RootPath);
         builder.Build(root);

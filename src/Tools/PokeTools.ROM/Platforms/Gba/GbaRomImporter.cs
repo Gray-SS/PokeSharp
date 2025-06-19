@@ -3,7 +3,7 @@ using PokeEngine.Assets;
 using PokeEngine.Assets.Exceptions;
 using PokeCore.IO;
 
-namespace PokeEngine.ROM.Platforms.Gba;
+namespace PokeTools.ROM.Platforms.Gba;
 
 public sealed class GbaRomImporter : AssetImporter<RomInfo>
 {

@@ -1,4 +1,4 @@
-namespace PokeEngine.ROM.Graphics;
+namespace PokeTools.ROM.Graphics;
 
 public interface IIndexedResource
 {

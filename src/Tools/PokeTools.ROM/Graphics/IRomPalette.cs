@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace PokeEngine.ROM.Graphics;
+namespace PokeTools.ROM.Graphics;
 
 public interface IRomPalette : IIndexedResource
 {

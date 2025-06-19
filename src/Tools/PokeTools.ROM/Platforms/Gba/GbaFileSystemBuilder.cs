@@ -1,19 +1,18 @@
 using System.Text;
 using PokeCore.Logging;
-using PokeEngine.ROM.Services;
-using PokeEngine.ROM.Utils;
+using PokeTools.ROM.Utils;
 
-namespace PokeEngine.ROM.Platforms.Gba;
+namespace PokeTools.ROM.Platforms.Gba;
 
-public sealed class GbaVfsBuilder : RomVfsBuilder
+public sealed class GbaFileSystemBuilder : RomFileSystemBuilder
 {
     public RomReader<GbaPointer> Reader { get; }
 
     private readonly Logger _logger;
 
-    public GbaVfsBuilder(Rom rom) : base(rom)
+    public GbaFileSystemBuilder(Rom rom) : base(rom)
     {
-        _logger = LoggerFactory.GetLogger<GbaVfsBuilder>();
+        _logger = LoggerFactory.GetLogger<GbaFileSystemBuilder>();
 
         Reader = new RomReader<GbaPointer>(rom.RawData);
     }
