@@ -1,15 +1,16 @@
 using PokeCore.IO;
 
-namespace PokeEngine.Assets;
+namespace PokeTools.Assets;
 
 public abstract class AssetImporter<T> : IAssetImporter
+    where T : class
 {
     public abstract Type ProcessorType { get; }
     public abstract string SupportedExtensions { get; }
 
-    public abstract T Import(IVirtualFile file);
+    public abstract Result<T, string> Import(IVirtualFile file);
 
-    object? IAssetImporter.Import(IVirtualFile file)
+    Result<object, string> IAssetImporter.Import(IVirtualFile file)
     {
         return Import(file);
     }

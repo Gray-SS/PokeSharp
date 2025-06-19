@@ -1,4 +1,4 @@
-namespace PokeEngine.Assets;
+namespace PokeTools.Assets;
 
 public interface IAssetProcessor
 {

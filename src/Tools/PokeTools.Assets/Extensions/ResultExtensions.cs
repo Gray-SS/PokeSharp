@@ -1,0 +1,2 @@
+namespace PokeTools.Assets.Extensions;
+

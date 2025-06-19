@@ -1,6 +1,6 @@
 using PokeCore.IO;
 
-namespace PokeEngine.Assets;
+namespace PokeTools.Assets;
 
 public interface IAssetImporter
 {
@@ -8,5 +8,5 @@ public interface IAssetImporter
 
     Type ProcessorType { get; }
 
-    object? Import(IVirtualFile file);
+    Result<object, string> Import(IVirtualFile file);
 }

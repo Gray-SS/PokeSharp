@@ -1,7 +1,6 @@
 using PokeCore.Diagnostics;
 using PokeCore.Logging;
 using PokeCore.IO.Events;
-using PokeEngine.Core.Threadings;
 
 namespace PokeCore.IO.Volumes;
 
@@ -68,43 +67,40 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     private void HandleOnFileChanged(object sender, FileSystemEventArgs e)
     {
-        ThreadHelper.RunOnMainThread(() =>
+        var changeType = e.ChangeType switch
         {
-            var changeType = e.ChangeType switch
-            {
-                WatcherChangeTypes.Created => FileSystemChangeType.Created,
-                WatcherChangeTypes.Changed => FileSystemChangeType.Modified,
-                WatcherChangeTypes.Renamed => FileSystemChangeType.Renamed,
-                WatcherChangeTypes.Deleted => FileSystemChangeType.Deleted,
-                _ => throw new NotImplementedException($"The change type '{e.ChangeType}' was not handled.")
-            };
+            WatcherChangeTypes.Created => FileSystemChangeType.Created,
+            WatcherChangeTypes.Changed => FileSystemChangeType.Modified,
+            WatcherChangeTypes.Renamed => FileSystemChangeType.Renamed,
+            WatcherChangeTypes.Deleted => FileSystemChangeType.Deleted,
+            _ => throw new NotImplementedException($"The change type '{e.ChangeType}' was not handled.")
+        };
 
-            string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
-            string relativePath = Path.GetRelativePath(PhysicalPath, fullPath);
+        string fullPath = e is RenamedEventArgs renamed ? renamed.FullPath : e.FullPath;
+        string relativePath = Path.GetRelativePath(PhysicalPath, fullPath);
 
-            bool isDirectory;
-            if (e.ChangeType == WatcherChangeTypes.Deleted)
+        bool isDirectory;
+        if (e.ChangeType == WatcherChangeTypes.Deleted)
+        {
+            if (!_pathIsDirectory.TryGetValue(fullPath, out isDirectory))
             {
-                if (!_pathIsDirectory.TryGetValue(fullPath, out isDirectory))
-                {
-                    _logger.Warn($"Unknown type for deleted path {fullPath}, assuming file.");
-                    isDirectory = false;
-                }
-
-                _pathIsDirectory.Remove(fullPath);
-            }
-            else
-            {
-                isDirectory = Directory.Exists(fullPath);
-                _pathIsDirectory[fullPath] = isDirectory;
+                _logger.Warn($"Unknown type for deleted path {fullPath}, assuming file.");
+                isDirectory = false;
             }
 
-            string localPath = relativePath + (isDirectory ? "/" : "");
-            VirtualPath virtualPath = RootPath.Combine(localPath);
+            _pathIsDirectory.Remove(fullPath);
+        }
+        else
+        {
+            isDirectory = Directory.Exists(fullPath);
+            _pathIsDirectory[fullPath] = isDirectory;
+        }
 
-            ThrowHelper.Assert(!(isDirectory && !virtualPath.IsDirectory), $"Path was cached as a directory but the virtual path represents a file: '{virtualPath}'.");
-            OnFileSystemChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
-        });
+        string localPath = relativePath + (isDirectory ? "/" : "");
+        VirtualPath virtualPath = RootPath.Combine(localPath);
+
+        ThrowHelper.Assert(!(isDirectory && !virtualPath.IsDirectory), $"Path was cached as a directory but the virtual path represents a file: '{virtualPath}'.");
+        OnFileSystemChanged?.Invoke(this, new FileSystemChangedArgs(changeType, virtualPath));
     }
 
     private string GetPhysicalPath(VirtualPath virtualPath)

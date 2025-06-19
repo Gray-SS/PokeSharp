@@ -12,5 +12,6 @@
     "explorer.compactFolders": false,
     "commentTranslate.targetLanguage": "en",
     "commentTranslate.source": "intellsmi.deepl-translate-deepl",
-    "commentTranslate.hover.enabled": false
+    "commentTranslate.hover.enabled": false,
+    "makefile.configureOnOpen": false
 }

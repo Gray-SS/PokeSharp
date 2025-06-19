@@ -1,5 +1,4 @@
-
-namespace PokeEngine.Assets;
+namespace PokeTools.Assets;
 
 public abstract class AssetWriter<T> : IAssetWriter
     where T : class
