@@ -3,88 +3,107 @@ using PokeCore.Diagnostics;
 
 namespace PokeCore.Common;
 
-public sealed record Unit;
+public record Error(string Message);
 
-public static class Result
+public abstract record Result
 {
-    public static Result<TSuccess, Unit> Success<TSuccess>(TSuccess value)
-    {
-        return Result<TSuccess, Unit>.Succeeded(value);
-    }
+    public bool IsSuccess => this is SuccessResult;
+    public bool IsFailure => this is FailureResult;
 
-    public static Result<Unit, TError> Failed<TError>(TError error)
-    {
-        return Result<Unit, TError>.Failed(error);
-    }
-}
+    public sealed record SuccessResult : Result;
+    public sealed record FailureResult(Error Error) : Result;
 
-public abstract record Result<TSuccess, TError>
-{
-    public bool IsSuccess => this is Success;
-    public bool IsFailure => this is Failure;
-
-    public sealed record Success(TSuccess Value) : Result<TSuccess, TError>;
-    public sealed record Failure(TError Value) : Result<TSuccess, TError>;
-
-    public Result<TResult, TError> Bind<TResult>(Func<TSuccess, TResult> next)
-    {
-        return next switch
-        {
-            Success success => new Result<TResult, TError>.Success(next.Invoke(success.Value)),
-            Failure failure => new Result<TResult, TError>.Failure(failure.Value),
-            _ => throw new NotImplementedException()
-        };
-    }
-
-    public TSuccess GetValue()
-    {
-        ThrowHelper.Assert(IsSuccess, "This result represents a failure and therefore cannot get success value.");
-        return ((Success)this).Value;
-    }
-
-    public TError GetError()
+    public Error GetError()
     {
         ThrowHelper.Assert(IsFailure, "This result represents a failure and therefore cannot get success value.");
-        return ((Failure)this).Value;
+        return ((FailureResult)this).Error;
     }
 
-    public bool TryGetValue([NotNullWhen(true)] out TSuccess? value)
+    public bool TryGetError([NotNullWhen(true)] out Error? error)
+    {
+        error = default;
+
+        if (this is not FailureResult failure)
+            return false;
+
+        error = failure.Error!;
+        return true;
+    }
+
+    public static Result Success()
+        => new SuccessResult();
+
+    public static Task<Result> SuccessAsync()
+        => Task.FromResult(Success());
+
+    public static Result Failure(Error error)
+        => new FailureResult(error);
+
+    public static Task<Result> FailureAsync(Error error)
+        => Task.FromResult(Failure(error));
+
+    public static implicit operator Result(Error error)
+        => new FailureResult(error);
+}
+
+public abstract record Result<T>
+{
+    public bool IsSuccess => this is SuccessResult;
+    public bool IsFailure => this is FailureResult;
+
+    public sealed record SuccessResult(T Value) : Result<T>;
+    public sealed record FailureResult(Error Error) : Result<T>;
+
+    public T GetValue()
+    {
+        ThrowHelper.Assert(IsSuccess, "This result represents a failure and therefore cannot get success value.");
+        return ((SuccessResult)this).Value;
+    }
+
+    public Error GetError()
+    {
+        ThrowHelper.Assert(IsFailure, "This result represents a failure and therefore cannot get success value.");
+        return ((FailureResult)this).Error;
+    }
+
+    public bool TryGetValue([NotNullWhen(true)] out T? value)
     {
         value = default;
 
-        if (this is not Success success)
+        if (this is not SuccessResult success)
             return false;
 
         value = success.Value!;
         return true;
     }
 
-    public bool TryGetError([NotNullWhen(true)] out TError? error)
+    public bool TryGetError([NotNullWhen(true)] out Error? error)
     {
         error = default;
 
-        if (this is not Failure failure)
+        if (this is not FailureResult failure)
             return false;
 
-        error = failure.Value!;
+        error = failure.Error!;
         return true;
     }
 
-    public static Success Succeeded(TSuccess Value)
-        => new(Value);
 
-    public static Failure Failed(TError Value)
-        => new(Value);
+    public static Result<T> Success(T value)
+        => new SuccessResult(value);
 
-    public static implicit operator Result<TSuccess, TError>(TSuccess result)
-        => new Success(result);
+    public static Task<Result<T>> SuccessAsync(T value)
+        => Task.FromResult(Success(value));
 
-    public static implicit operator Result<TSuccess, TError>(TError result)
-        => new Failure(result);
+    public static Result<T> Failure(Error error)
+        => new FailureResult(error);
 
-    public static implicit operator Result<TSuccess, TError>(Result<TSuccess, Unit> result)
-        => new Success(result.GetValue());
+    public static Task<Result<T>> FailureAsync(Error error)
+        => Task.FromResult(Failure(error));
 
-    public static implicit operator Result<TSuccess, TError>(Result<Unit, TError> result)
-        => new Failure(result.GetError());
+    public static implicit operator Result<T>(T result)
+        => new SuccessResult(result);
+
+    public static implicit operator Result<T>(Error error)
+        => new FailureResult(error);
 }
