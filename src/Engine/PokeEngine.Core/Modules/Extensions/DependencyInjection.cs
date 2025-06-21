@@ -16,7 +16,7 @@ public static class DependencyInjection
         module.ConfigureServices(services);
 
         services.AddSingleton(module);
-        services.AddSingleton<IEngineModule>(sp => sp.GetRequiredService<TModule>());
+        services.AddSingleton<IEngineModule>(x => x.GetRequiredService<TModule>());
 
         return services;
     }

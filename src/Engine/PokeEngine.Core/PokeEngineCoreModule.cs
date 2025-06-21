@@ -26,15 +26,15 @@ public class PokeEngineCoreModule<TEngine> : EngineModule
     public override void ConfigureServices(IServiceCollections services)
     {
         services.AddSingleton<TEngine>();
-        services.AddSingleton<Game>(sp => sp.GetRequiredService<TEngine>());
-        services.AddSingleton<BaseEngine>(sp => sp.GetRequiredService<TEngine>());
-        services.AddSingleton<IGameLoop>(sp => sp.GetRequiredService<TEngine>());
+        services.AddSingleton<Game>(x => x.GetRequiredService<TEngine>());
+        services.AddSingleton<BaseEngine>(x => x.GetRequiredService<TEngine>());
+        services.AddSingleton<IGameLoop>(x => x.GetRequiredService<TEngine>());
 
         // Define services for MonoGame
-        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Window);
-        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Graphics);
-        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().GraphicsDevice);
-        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Content);
+        services.AddSingleton(x => x.GetRequiredService<TEngine>().Window);
+        services.AddSingleton(x => x.GetRequiredService<TEngine>().Graphics);
+        services.AddSingleton(x => x.GetRequiredService<TEngine>().GraphicsDevice);
+        services.AddSingleton(x => x.GetRequiredService<TEngine>().Content);
 
         services.AddSingleton<ICoroutineManager, CoroutineManager>();
         services.AddSingleton<IResolutionManager, ResolutionManager>();
