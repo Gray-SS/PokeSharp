@@ -9,9 +9,9 @@ public abstract class AssetProcessor<TIn, TOut> : IAssetProcessor
 
     public abstract AssetType AssetType { get; }
 
-    public abstract Result<TOut, string> Process(TIn rawAsset);
+    public abstract Result<TOut> Process(TIn rawAsset);
 
-    Result<object, string> IAssetProcessor.Process(object rawAsset)
+    Result<object> IAssetProcessor.Process(object rawAsset)
     {
         return Process((TIn)rawAsset);
     }

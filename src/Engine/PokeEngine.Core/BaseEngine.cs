@@ -4,6 +4,7 @@ using PokeCore.Hosting.Abstractions;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeEngine.Core.Windowing;
 using PokeEngine.Core.Threadings;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeEngine.Core;
 
@@ -13,7 +14,7 @@ public abstract class BaseEngine : Game, IGameLoop
 
     public IApp App { get; }
     public Logger Logger { get; }
-    public new IServiceContainer Services { get; }
+    public new IServiceResolver Services { get; }
 
     public event EventHandler? Initialized;
     public event EventHandler<DrawContext>? Rendered;
@@ -121,7 +122,7 @@ public abstract class BaseEngine : Game, IGameLoop
 
     private void ConfigureWindowTitle()
     {
-        IWindowManager windowManager = Services.GetService<IWindowManager>();
+        IWindowManager windowManager = Services.GetRequiredService<IWindowManager>();
         windowManager.Title = $"{App.AppName} - {App.AppVersion}";
     }
 }

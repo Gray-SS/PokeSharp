@@ -8,9 +8,8 @@ public sealed class SpriteProcessor : AssetProcessor<RawSprite, Sprite>
 {
     public override AssetType AssetType => AssetType.Sprite;
 
-    public override Result<Sprite, string> Process(RawSprite rawAsset)
+    public override Result<Sprite> Process(RawSprite rawAsset)
     {
-        var sprite = new Sprite(rawAsset.Texture, rawAsset.SourceRect);
-        return Result.Success(sprite);
+        return new Sprite(rawAsset.Texture, rawAsset.SourceRect);
     }
 }

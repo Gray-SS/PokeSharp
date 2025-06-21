@@ -4,7 +4,6 @@ using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.Logging.Extensions;
 using PokeCore.Common.Extensions;
 using PokeEngine.Extensions;
-using PokeEngine.Core.Modules.Extensions;
 
 namespace PokeRuntime.Desktop;
 
@@ -13,9 +12,9 @@ public sealed class PokesharpApp : App
     public override string AppName => "PokéSharp Runtime";
     public override Version AppVersion => new(1, 0, 0);
 
-    protected override void Configure(IServiceContainer services)
+    protected override void Configure(IServiceResolver services)
     {
-        services.UsePokeModules();
+        services.UsePokeEngineEssentials();
     }
 
     protected override void ConfigureServices(IServiceCollections services)

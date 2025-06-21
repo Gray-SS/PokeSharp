@@ -8,11 +8,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PokeEngine.Core\PokeEngine.Core.csproj" />
-    <ProjectReference Include="..\PokeEngine.Assets\PokeEngine.Assets.csproj" />
     <ProjectReference Include="..\PokeEngine.Entities\PokeEngine.Entities.csproj" />
     <ProjectReference Include="..\PokeEngine.Inputs\PokeEngine.Inputs.csproj" />
     <ProjectReference Include="..\PokeEngine.Rendering\PokeEngine.Rendering.csproj" />
-    <ProjectReference Include="..\PokeTools.ROM\PokeTools.ROM.csproj" />
     <ProjectReference Include="..\PokeEngine.Scenes\PokeEngine.Scenes.csproj" />
 
     <ProjectReference Include="..\..\Core\PokeCore.Common\PokeCore.Common.csproj" />

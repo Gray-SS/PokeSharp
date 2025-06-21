@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace PokeCore.Logging;
 
 /// <summary>
@@ -23,8 +25,9 @@ public sealed class ConsoleLogSink : ILogSink
 
     private readonly Dictionary<LogLevel, ConsoleColor> _colors = new()
     {
-        { LogLevel.Debug, ConsoleColor.DarkGray },
-        { LogLevel.Info, ConsoleColor.Gray },
+        { LogLevel.Trace, ConsoleColor.DarkGray },
+        { LogLevel.Debug, ConsoleColor.Gray },
+        { LogLevel.Info, ConsoleColor.White },
         { LogLevel.Warn, ConsoleColor.DarkYellow },
         { LogLevel.Error, ConsoleColor.Red },
         { LogLevel.Fatal, ConsoleColor.DarkRed },
@@ -32,8 +35,7 @@ public sealed class ConsoleLogSink : ILogSink
 
     public void Log(LogEntry entry)
     {
-        if (!_colors.TryGetValue(entry.Level, out ConsoleColor color))
-            color = ConsoleColor.Magenta;
+        Debug.Assert(_colors.TryGetValue(entry.Level, out ConsoleColor color), $"The color for log level '{entry.Level}' is not defined.");
 
         TextWriter standardOutput = entry.Level >= LogLevel.Error ? Console.Error : Console.Out;
 

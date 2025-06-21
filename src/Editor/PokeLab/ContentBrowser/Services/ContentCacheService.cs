@@ -3,9 +3,9 @@ using PokeCore.IO;
 using PokeCore.IO.Events;
 using PokeCore.IO.Services;
 using PokeCore.IO.Volumes;
-using PokeCore.Hosting.Logging;
 using PokeLab.ContentBrowser.Events;
 using PokeEngine.Core;
+using PokeCore.Logging;
 
 namespace PokeLab.ContentBrowser.Services;
 

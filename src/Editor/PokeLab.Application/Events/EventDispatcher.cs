@@ -1,9 +1,10 @@
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Application.Events;
 
 public sealed class EventDispatcher(
-    IServiceContainer services
+    IServiceResolver services
 ) : IEventDispatcher
 {
     public async Task PublishAsync<TEvent>(TEvent @event)

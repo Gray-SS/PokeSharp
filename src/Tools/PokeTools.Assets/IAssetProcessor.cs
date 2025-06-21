@@ -8,5 +8,5 @@ public interface IAssetProcessor
     Type ProcessedType { get; }
     AssetType AssetType { get; }
 
-    Result<object, string> Process(object rawAsset);
+    Result<object> Process(object rawAsset);
 }

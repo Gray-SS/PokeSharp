@@ -3,10 +3,11 @@ using PokeLab.Infrastructure.ContentBrowser;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeLab.Application.ProjectManagement;
 using PokeLab.Infrastructure.ProjectManagement;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Infrastructure.Extensions;
 
-public static class DIExtensions
+public static class DependencyInjection
 {
     public static IServiceCollections AddPokeLabInfrastructure(this IServiceCollections services)
     {

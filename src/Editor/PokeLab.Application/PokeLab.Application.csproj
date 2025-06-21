@@ -5,7 +5,6 @@
 
     <ProjectReference Include="..\..\Tools\PokeTools.Assets\PokeTools.Assets.csproj" />
     <ProjectReference Include="..\..\Core\PokeCore.Hosting.Abstractions\PokeCore.Hosting.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Engine\PokeEngine.Assets\PokeEngine.Assets.csproj" />
   </ItemGroup>
 
   <ItemGroup>

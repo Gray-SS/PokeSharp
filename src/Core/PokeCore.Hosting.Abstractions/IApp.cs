@@ -8,7 +8,7 @@ public interface IApp
     Version AppVersion { get; }
 
     bool IsRunning { get; }
-    IServiceContainer Services { get; }
+    IServiceResolver Services { get; }
 
     Task<bool> StartAsync();
     Task StopAsync();

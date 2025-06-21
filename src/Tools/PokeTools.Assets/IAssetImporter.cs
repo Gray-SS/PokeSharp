@@ -9,5 +9,5 @@ public interface IAssetImporter
 
     Type ProcessorType { get; }
 
-    Result<object, string> Import(IVirtualFile file);
+    Result<object> Import(IVirtualFile file);
 }

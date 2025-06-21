@@ -1,13 +1,14 @@
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Application.Commands;
 
 public sealed class CommandDispatcher : ICommandDispatcher
 {
-    private readonly IServiceContainer _services;
+    private readonly IServiceResolver _services;
     private readonly IReadOnlyCollection<ICommandMiddleware> _middlewares;
 
-    public CommandDispatcher(IServiceContainer services, IEnumerable<ICommandMiddleware> middlewares)
+    public CommandDispatcher(IServiceResolver services, IEnumerable<ICommandMiddleware> middlewares)
     {
         _services = services;
         _middlewares = middlewares.ToList();
@@ -16,7 +17,7 @@ public sealed class CommandDispatcher : ICommandDispatcher
     public async Task SendAsync<TCommand>(TCommand command)
         where TCommand : ICommand
     {
-        ICommandHandler<TCommand> handler = _services.GetService<ICommandHandler<TCommand>>();
+        ICommandHandler<TCommand> handler = _services.GetRequiredService<ICommandHandler<TCommand>>();
         Task handlerFunc() => handler.HandleAsync(command);
 
         Func<Task> pipeline = _middlewares

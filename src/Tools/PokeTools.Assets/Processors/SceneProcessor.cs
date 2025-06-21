@@ -20,7 +20,7 @@ public sealed class SceneProcessor : AssetProcessor<RawScene, Scene>
         _logger = logger;
     }
 
-    public override Result<Scene, string> Process(RawScene rawScene)
+    public override Result<Scene> Process(RawScene rawScene)
     {
         var scene = new Scene(rawScene.Name);
 
@@ -151,5 +151,4 @@ public sealed class SceneProcessor : AssetProcessor<RawScene, Scene>
         _logger.Trace($"Deserializing intermediate json to: {targetType.FullName}");
         return JsonSerializer.Deserialize(json, targetType);
     }
-
 }

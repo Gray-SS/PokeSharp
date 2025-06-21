@@ -1,9 +1,9 @@
-using PokeCore.Common;
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeEngine.Core.Modules.Extensions;
 
-public static class DIExtensions
+public static class DependencyInjection
 {
     public static IServiceCollections AddPokeModule<TModule>(this IServiceCollections services) where TModule : EngineModule, new()
     {
@@ -16,12 +16,12 @@ public static class DIExtensions
         module.ConfigureServices(services);
 
         services.AddSingleton(module);
-        services.AddSingleton<IEngineModule>(sp => sp.GetService<TModule>());
+        services.AddSingleton<IEngineModule>(sp => sp.GetRequiredService<TModule>());
 
         return services;
     }
 
-    public static IServiceContainer UsePokeModules(this IServiceContainer services)
+    public static IServiceResolver UsePokeModules(this IServiceResolver services)
     {
         IEnumerable<IEngineModule> modules = services.GetServices<IEngineModule>();
 

@@ -6,6 +6,8 @@ using PokeEngine.Core.Modules;
 using PokeCore.Hosting.Abstractions.Extensions;
 using Microsoft.Xna.Framework;
 using PokeEngine.Core.Timing;
+using PokeEngine.Core.Modules.Extensions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeEngine.Core;
 
@@ -16,22 +18,23 @@ public class PokeEngineCoreModule<TEngine> : EngineModule
 
     public override Version Version => new(1, 0, 0);
 
-    public override void Configure(IServiceContainer services)
+    public override void Configure(IServiceResolver services)
     {
+        services.UsePokeModules();
     }
 
     public override void ConfigureServices(IServiceCollections services)
     {
         services.AddSingleton<TEngine>();
-        services.AddSingleton<Game>(sp => sp.GetService<TEngine>());
-        services.AddSingleton<BaseEngine>(sp => sp.GetService<TEngine>());
-        services.AddSingleton<IGameLoop>(sp => sp.GetService<TEngine>());
+        services.AddSingleton<Game>(sp => sp.GetRequiredService<TEngine>());
+        services.AddSingleton<BaseEngine>(sp => sp.GetRequiredService<TEngine>());
+        services.AddSingleton<IGameLoop>(sp => sp.GetRequiredService<TEngine>());
 
         // Define services for MonoGame
-        services.AddSingleton(sp => sp.GetService<TEngine>().Window);
-        services.AddSingleton(sp => sp.GetService<TEngine>().Graphics);
-        services.AddSingleton(sp => sp.GetService<TEngine>().GraphicsDevice);
-        services.AddSingleton(sp => sp.GetService<TEngine>().Content);
+        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Window);
+        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Graphics);
+        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().GraphicsDevice);
+        services.AddSingleton(sp => sp.GetRequiredService<TEngine>().Content);
 
         services.AddSingleton<ICoroutineManager, CoroutineManager>();
         services.AddSingleton<IResolutionManager, ResolutionManager>();

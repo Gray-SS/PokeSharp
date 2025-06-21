@@ -6,6 +6,6 @@ public interface IEngineModule
 {
     string Name { get; }
 
-    void Configure(IServiceContainer services);
+    void Configure(IServiceResolver services);
     void ConfigureServices(IServiceCollections services);
 }

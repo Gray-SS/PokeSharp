@@ -197,6 +197,7 @@ public sealed class ProjectService(
             TODO: Create a ProjectState to handle invalid states
             NOTE: If we arrive here it means the root path is not corresponding to the saved root path.
                   - The project root directory may have been moved or renamed
+                  - Other things I didn't thought about
         */
         string? projectRootPath = Path.GetDirectoryName(projectFilePath);
         return project.RootPath != projectRootPath;

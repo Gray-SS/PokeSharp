@@ -18,7 +18,7 @@ public static class LoggerFactory
     /// <returns>A new <see cref="Logger"/> instance with contextual awareness.</returns>
     public static Logger GetLogger(Type type)
     {
-        LoggerSettings settings = ServiceLocator.GetService<LoggerSettings>();
+        LoggerSettings settings = ServiceLocator.GetRequiredService<LoggerSettings>();
         return new ContextLogger(settings, type.Name);
     }
 
@@ -29,7 +29,7 @@ public static class LoggerFactory
     /// <returns>A new <see cref="Logger"/> instance with contextual awareness.</returns>
     public static Logger GetLogger<T>() where T : class
     {
-        LoggerSettings settings = ServiceLocator.GetService<LoggerSettings>();
+        LoggerSettings settings = ServiceLocator.GetRequiredService<LoggerSettings>();
         return new ContextLogger(settings, typeof(T).Name);
     }
 }

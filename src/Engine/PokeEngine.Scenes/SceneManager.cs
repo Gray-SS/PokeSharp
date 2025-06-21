@@ -14,6 +14,7 @@ public sealed class SceneManager : ISceneManager
 
     public SceneManager()
     {
+        _ = SceneChanged;
         _scenes = new Stack<IScene>();
     }
 

@@ -1,5 +1,3 @@
-using PokeEngine.Core.Exceptions;
-
 namespace PokeTools.ROM;
 
 public sealed class RomPlatform
@@ -37,9 +35,7 @@ public sealed class RomPlatform
     public static RomPlatform GetPlatformById(int id)
     {
         if (!_platforms.TryGetValue(id, out RomPlatform? platform))
-        {
-            throw new EngineException($"Unknown ROM platform ID: '{id}'. Ensure the id is correct.");
-        }
+            throw new KeyNotFoundException($"Unknown ROM platform ID: '{id}'. Ensure the id is correct.");
 
         return platform;
     }

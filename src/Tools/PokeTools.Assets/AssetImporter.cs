@@ -9,9 +9,9 @@ public abstract class AssetImporter<T> : IAssetImporter
     public abstract Type ProcessorType { get; }
     public abstract string SupportedExtensions { get; }
 
-    public abstract Result<T, string> Import(IVirtualFile file);
+    public abstract Result<T> Import(IVirtualFile file);
 
-    Result<object, string> IAssetImporter.Import(IVirtualFile file)
+    Result<object> IAssetImporter.Import(IVirtualFile file)
     {
         return Import(file);
     }

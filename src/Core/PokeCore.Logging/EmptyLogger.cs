@@ -23,3 +23,10 @@ public sealed class EmptyLogger : Logger
     {
     }
 }
+
+public sealed class EmptyLogger<T> : Logger<T>
+{
+    public override void Log(LogLevel level, string message, Exception? exception, [CallerFilePath] string? callerFilePath = null, [CallerMemberName] string? callerMemberName = null)
+    {
+    }
+}

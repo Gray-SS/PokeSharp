@@ -1,5 +1,5 @@
-using PokeEngine.Assets;
 using PokeCore.IO;
+using PokeLab.Domain.Assets;
 
 namespace PokeLab.Presentation.ContentBrowser;
 

@@ -7,10 +7,11 @@ using PokeLab.Presentation.ImGui.MainMenu;
 using PokeLab.Presentation.ImGui.ContentBrowser;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeEngine.Core;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Presentation.ImGui.Extensions;
 
-public static class DIExtensions
+public static class DependencyInjection
 {
     public static IServiceCollections AddPokeLabPresentationImGui(this IServiceCollections services)
     {
@@ -22,7 +23,7 @@ public static class DIExtensions
         services.AddSingleton<IWindowService, ImGuiWindowService>();
 
         // Custom services
-        services.AddSingleton(sc => new ImGuiRenderer(sc.GetService<BaseEngine>()));
+        services.AddSingleton(sc => new ImGuiRenderer(sc.GetRequiredService<BaseEngine>()));
         services.AddSingleton<IGuiResourceManager, GuiResourceManager>();
         services.AddPokeEngineEssentials<PokeLabEngine>();
 

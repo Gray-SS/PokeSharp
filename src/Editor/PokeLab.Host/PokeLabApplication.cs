@@ -14,7 +14,7 @@ public sealed class PokeLabApplication : App
     public override string AppName => "PokéSharp Editor";
     public override Version AppVersion => new(1, 0, 0);
 
-    protected override void Configure(IServiceContainer services)
+    protected override void Configure(IServiceResolver services)
     {
     }
 

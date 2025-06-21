@@ -4,7 +4,6 @@ using PokeCore.IO.Services;
 using PokeCore.IO.Volumes;
 using PokeCore.Common;
 using PokeCore.Logging;
-using PokeEngine.Assets.Exceptions;
 
 namespace PokeLab.Application.Assets;
 
@@ -219,158 +218,158 @@ public sealed class AssetDatabase
         // }
     }
 
-    public bool TryMove(VirtualPath srcPath, VirtualPath destPath)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(srcPath);
+    // public bool TryMove(VirtualPath srcPath, VirtualPath destPath)
+    // {
+    //     try
+    //     {
+    //         ArgumentNullException.ThrowIfNull(srcPath);
 
-            _logger.Debug($"Trying to move '{srcPath}' to '{destPath}'");
+    //         _logger.Debug($"Trying to move '{srcPath}' to '{destPath}'");
 
-            IVirtualEntry entry = _vfs.GetEntry(srcPath);
-            if (!entry.Exists)
-                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+    //         IVirtualEntry entry = _vfs.GetEntry(srcPath);
+    //         if (!entry.Exists)
+    //             throw new AssetPipelineException($"Entry not found: '{srcPath}'");
 
-            entry.Move(destPath);
-            ReimportAll();
+    //         entry.Move(destPath);
+    //         ReimportAll();
 
-            _logger.Debug($"Moved '{srcPath}' to '{destPath}' successfully");
-            return true;
-        }
-        catch (AssetPipelineException ex)
-        {
-            _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: {ex.Message}");
-        }
-        catch (ArgumentNullException ex)
-        {
-            _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: The parameter '{ex.ParamName}' was null");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while moving '{srcPath}' to '{destPath}': {ex.GetType().Name} - {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
+    //         _logger.Debug($"Moved '{srcPath}' to '{destPath}' successfully");
+    //         return true;
+    //     }
+    //     catch (AssetPipelineException ex)
+    //     {
+    //         _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: {ex.Message}");
+    //     }
+    //     catch (ArgumentNullException ex)
+    //     {
+    //         _logger.Error($"Moving '{srcPath}' to '{destPath}' failed: The parameter '{ex.ParamName}' was null");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Unexpected error while moving '{srcPath}' to '{destPath}': {ex.GetType().Name} - {ex.Message}");
+    //         _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    public bool TryDelete(VirtualPath srcPath)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(srcPath);
+    // public bool TryDelete(VirtualPath srcPath)
+    // {
+    //     try
+    //     {
+    //         ArgumentNullException.ThrowIfNull(srcPath);
 
-            _logger.Debug($"Trying to delete '{srcPath}'");
+    //         _logger.Debug($"Trying to delete '{srcPath}'");
 
-            IVirtualEntry entry = _vfs.GetEntry(srcPath);
-            if (!entry.Exists)
-                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+    //         IVirtualEntry entry = _vfs.GetEntry(srcPath);
+    //         if (!entry.Exists)
+    //             throw new AssetPipelineException($"Entry not found: '{srcPath}'");
 
-            entry.Delete();
-            ReimportAll();
+    //         entry.Delete();
+    //         ReimportAll();
 
-            _logger.Debug($"Deleted '{srcPath}' successfully");
-            return true;
-        }
-        catch (AssetPipelineException ex)
-        {
-            _logger.Error($"Moving '{srcPath}' failed: {ex.Message}");
-        }
-        catch (ArgumentNullException ex)
-        {
-            _logger.Error($"Moving '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while deleting '{srcPath}': {ex.GetType().Name} - {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
+    //         _logger.Debug($"Deleted '{srcPath}' successfully");
+    //         return true;
+    //     }
+    //     catch (AssetPipelineException ex)
+    //     {
+    //         _logger.Error($"Moving '{srcPath}' failed: {ex.Message}");
+    //     }
+    //     catch (ArgumentNullException ex)
+    //     {
+    //         _logger.Error($"Moving '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Unexpected error while deleting '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+    //         _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    public bool TryDuplicate(VirtualPath srcPath)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(srcPath);
+    // public bool TryDuplicate(VirtualPath srcPath)
+    // {
+    //     try
+    //     {
+    //         ArgumentNullException.ThrowIfNull(srcPath);
 
-            _logger.Debug($"Trying to duplicate '{srcPath}'");
+    //         _logger.Debug($"Trying to duplicate '{srcPath}'");
 
-            IVirtualEntry entry = _vfs.GetEntry(srcPath);
-            if (!entry.Exists)
-                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+    //         IVirtualEntry entry = _vfs.GetEntry(srcPath);
+    //         if (!entry.Exists)
+    //             throw new AssetPipelineException($"Entry not found: '{srcPath}'");
 
-            entry.Duplicate();
-            ReimportAll();
+    //         entry.Duplicate();
+    //         ReimportAll();
 
-            _logger.Debug($"Duplicated '{srcPath}' successfully");
-            return true;
-        }
-        catch (AssetPipelineException ex)
-        {
-            _logger.Error($"Duplicated '{srcPath}' failed: {ex.Message}");
-        }
-        catch (ArgumentNullException ex)
-        {
-            _logger.Error($"Duplicated '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while duplicating '{srcPath}': {ex.GetType().Name} - {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
+    //         _logger.Debug($"Duplicated '{srcPath}' successfully");
+    //         return true;
+    //     }
+    //     catch (AssetPipelineException ex)
+    //     {
+    //         _logger.Error($"Duplicated '{srcPath}' failed: {ex.Message}");
+    //     }
+    //     catch (ArgumentNullException ex)
+    //     {
+    //         _logger.Error($"Duplicated '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Unexpected error while duplicating '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+    //         _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    public bool TryRename(VirtualPath srcPath, string name)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(srcPath);
+    // public bool TryRename(VirtualPath srcPath, string name)
+    // {
+    //     try
+    //     {
+    //         ArgumentNullException.ThrowIfNull(srcPath);
 
-            _logger.Debug($"Trying to rename '{srcPath}' to '{name}'");
+    //         _logger.Debug($"Trying to rename '{srcPath}' to '{name}'");
 
-            IVirtualEntry entry = _vfs.GetEntry(srcPath);
-            if (!entry.Exists)
-                throw new AssetPipelineException($"Entry not found: '{srcPath}'");
+    //         IVirtualEntry entry = _vfs.GetEntry(srcPath);
+    //         if (!entry.Exists)
+    //             throw new AssetPipelineException($"Entry not found: '{srcPath}'");
 
-            entry.Rename(name);
-            ReimportAll();
+    //         entry.Rename(name);
+    //         ReimportAll();
 
-            _logger.Debug($"Renaming '{srcPath}' successfully");
-            return true;
-        }
-        catch (AssetPipelineException ex)
-        {
-            _logger.Error($"Renaming '{srcPath}' failed: {ex.Message}");
-        }
-        catch (ArgumentNullException ex)
-        {
-            _logger.Error($"Renaming '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error while renaming '{srcPath}': {ex.GetType().Name} - {ex.Message}");
-            _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
-        }
+    //         _logger.Debug($"Renaming '{srcPath}' successfully");
+    //         return true;
+    //     }
+    //     catch (AssetPipelineException ex)
+    //     {
+    //         _logger.Error($"Renaming '{srcPath}' failed: {ex.Message}");
+    //     }
+    //     catch (ArgumentNullException ex)
+    //     {
+    //         _logger.Error($"Renaming '{srcPath}' failed: The parameter '{ex.ParamName}' was null");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Unexpected error while renaming '{srcPath}': {ex.GetType().Name} - {ex.Message}");
+    //         _logger.Debug($"{ex.StackTrace ?? "No stack trace available"}");
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    private IAssetWriter GetAssetWriterFromAsset(object asset)
-    {
-        Type assetType = asset.GetType();
-        _logger.Trace($"Finding writer for asset: '{assetType.Name}'");
+    // private IAssetWriter GetAssetWriterFromAsset(object asset)
+    // {
+    //     Type assetType = asset.GetType();
+    //     _logger.Trace($"Finding writer for asset: '{assetType.Name}'");
 
-        var writer = _writers.FirstOrDefault(x => x.AssetType == assetType);
-        if (writer is null)
-        {
-            throw new AssetPipelineException($"No writer found for asset of type '{assetType.Name}' - asset type may not be supported");
-        }
+    //     var writer = _writers.FirstOrDefault(x => x.AssetType == assetType);
+    //     if (writer is null)
+    //     {
+    //         throw new AssetPipelineException($"No writer found for asset of type '{assetType.Name}' - asset type may not be supported");
+    //     }
 
-        _logger.Trace($"Using writer: {writer.GetType().Name}");
-        return writer;
-    }
+    //     _logger.Trace($"Using writer: {writer.GetType().Name}");
+    //     return writer;
+    // }
 }

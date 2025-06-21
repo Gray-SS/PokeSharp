@@ -3,10 +3,11 @@ using PokeCore.DependencyInjection.Abstractions;
 using PokeLab.Application.Events.Extensions;
 using PokeLab.Presentation.ContentBrowser;
 using PokeLab.Presentation.MainMenu;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Presentation.Extensions;
 
-public static class DIExtensions
+public static class DependencyInjection
 {
     public static IServiceCollections AddPokeLabPresentation(this IServiceCollections services)
     {
@@ -16,7 +17,7 @@ public static class DIExtensions
         services.AddViewModel<MainMenuViewModel>();
         services.AddViewModel<ContentBrowserViewModel>();
 
-        services.AddEventHandlers(typeof(DIExtensions).Assembly);
+        services.AddEventHandlers(typeof(DependencyInjection).Assembly);
 
         return services;
     }
@@ -25,7 +26,7 @@ public static class DIExtensions
         where TView : class, IView
     {
         services.AddSingleton<TView>();
-        services.AddSingleton<IView>(sc => sc.GetService<TView>());
+        services.AddSingleton<IView>(sc => sc.GetRequiredService<TView>());
 
         return services;
     }

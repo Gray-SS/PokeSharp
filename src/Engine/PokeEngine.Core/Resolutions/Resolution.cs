@@ -13,7 +13,7 @@ public static class Resolution
 
     static Resolution()
     {
-        _resManager = ServiceLocator.GetService<IResolutionManager>();
+        _resManager = ServiceLocator.GetRequiredService<IResolutionManager>();
         _resManager.ResolutionChanged += OnResolutionChanged;
         _resManager.VirtualResolutionChanged += OnVirtualResolutionChanged;
     }

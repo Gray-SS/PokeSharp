@@ -1,8 +1,10 @@
+using PokeCore.DependencyInjection.Abstractions.Extensions;
+
 namespace PokeCore.DependencyInjection.Abstractions;
 
 public static class ServiceLocator
 {
-    public static IServiceContainer Services
+    public static IServiceResolver Services
     {
         get
         {
@@ -13,9 +15,9 @@ public static class ServiceLocator
 
     public static bool IsInitialized => _services != null;
 
-    private static IServiceContainer? _services;
+    private static IServiceResolver? _services;
 
-    public static void Initialize(IServiceContainer services)
+    public static void Initialize(IServiceResolver services)
     {
         if (IsInitialized)
             throw new InvalidOperationException("ServiceLocator is already initialized. Cannot initialize the ServiceLocator twice.");
@@ -28,16 +30,28 @@ public static class ServiceLocator
         _services = null;
     }
 
-    public static object GetService(Type type)
+    public static object? GetService(Type serviceType)
     {
         EnsureInitialized();
-        return _services!.GetService(type);
+        return _services!.GetService(serviceType);
     }
 
-    public static T GetService<T>() where T : class
+    public static object GetRequiredService(Type serviceType)
+    {
+        EnsureInitialized();
+        return _services!.GetRequiredService(serviceType);
+    }
+
+    public static T? GetService<T>() where T : class
     {
         EnsureInitialized();
         return _services!.GetService<T>();
+    }
+
+    public static T GetRequiredService<T>() where T : class
+    {
+        EnsureInitialized();
+        return _services!.GetRequiredService<T>();
     }
 
     public static IEnumerable<T> GetServices<T>() where T : class
@@ -61,8 +75,6 @@ public static class ServiceLocator
     private static void EnsureInitialized()
     {
         if (_services == null)
-        {
             throw new InvalidOperationException("ServiceLocator is not initialized. Make sure to call App.Run() first.");
-        }
     }
 }

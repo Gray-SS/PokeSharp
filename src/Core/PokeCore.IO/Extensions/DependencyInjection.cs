@@ -1,4 +1,5 @@
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 using PokeCore.IO.Services;
 
 namespace PokeCore.IO.Extensions;

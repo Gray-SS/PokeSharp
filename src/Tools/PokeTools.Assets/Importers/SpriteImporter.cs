@@ -1,8 +1,8 @@
-using Microsoft.Xna.Framework.Graphics;
-using PokeCore.Common;
 using PokeCore.IO;
+using PokeCore.Common;
 using PokeCore.Logging;
 using PokeTools.Assets.Raw;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace PokeTools.Assets.Importers;
 
@@ -21,19 +21,20 @@ public sealed class SpriteImporter : AssetImporter<RawSprite>
         _graphicsDevice = graphicsDevice;
     }
 
-    public override Result<RawSprite, string> Import(IVirtualFile file)
+    public override Result<RawSprite> Import(IVirtualFile file)
     {
         using Stream stream = file.OpenRead();
         if (!stream.CanRead)
-            return Result.Failed("File stream is not readable.");
+            return new Error("File stream is not readable.");
 
         _logger.Trace($"Creating texture from file stream '{file.Path}'");
+
         Texture2D texture = Texture2D.FromStream(_graphicsDevice, stream);
         ResetGraphicsDeviceState(_graphicsDevice);
+
         _logger.Trace($"Texture created: {texture.Width}x{texture.Height}");
 
-        var sprite = new RawSprite(texture, null);
-        return Result.Success(sprite);
+        return new RawSprite(texture, null);
     }
 
     public static void ResetGraphicsDeviceState(GraphicsDevice device)

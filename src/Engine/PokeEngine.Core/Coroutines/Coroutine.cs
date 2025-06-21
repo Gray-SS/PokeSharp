@@ -51,5 +51,5 @@ public sealed class Coroutine
 
     // Helper function to start a coroutine easily with a static method
     public static void Start(IEnumerator routine)
-        => ServiceLocator.GetService<ICoroutineManager>().StartCoroutine(routine);
+        => ServiceLocator.GetRequiredService<ICoroutineManager>().StartCoroutine(routine);
 }

@@ -1,5 +1,6 @@
 using System.Reflection;
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Application.Commands.Extensions;
 

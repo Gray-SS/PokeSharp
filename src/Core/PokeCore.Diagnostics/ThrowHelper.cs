@@ -18,7 +18,6 @@ public static class ThrowHelper
     /// Asserts that a reference is not null during debug builds,
     /// and throws an <see cref="ArgumentNullException"/> in release builds if it is null.
     /// </summary>
-    /// <typeparam name="T">The type of the value to check. Must be a reference type.</typeparam>
     /// <param name="value">The value to validate against null.</param>
     /// <param name="message">Optional custom message. If null, a default message will be used.</param>
     /// <param name="paramName">
@@ -32,13 +31,12 @@ public static class ThrowHelper
     /// </param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <c>null</c>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AssertNotNull<T>(
-                T value,
+    public static void AssertNotNull(
+                object? value,
                 string? message = null,
                 [CallerArgumentExpression(nameof(value))] string? paramName = null,
                 [CallerMemberName] string? callerName = null,
                 [CallerFilePath] string? callerFilePath = null)
-                where T : class
     {
         Debug.Assert(value != null, $"""
             [Null Assertion Failed]

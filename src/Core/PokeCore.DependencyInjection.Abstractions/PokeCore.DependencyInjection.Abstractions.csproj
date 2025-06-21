@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PokeCore.Diagnostics\PokeCore.Diagnostics.csproj" />
+  </ItemGroup>
+
 </Project>

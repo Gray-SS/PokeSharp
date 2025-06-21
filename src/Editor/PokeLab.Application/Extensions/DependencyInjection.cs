@@ -4,10 +4,11 @@ using PokeLab.Application.Commands.Extensions;
 using PokeLab.Application.Commands.Middlewares;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeLab.Application.Events.Extensions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeLab.Application.Extensions;
 
-public static class DIExtensions
+public static class DependencyInjection
 {
     public static IServiceCollections AddPokeLabApplication(this IServiceCollections services)
     {
@@ -15,10 +16,10 @@ public static class DIExtensions
         services.AddSingleton<IContentBrowserService, ContentBrowserService>();
 
         services.AddEvent();
-        services.AddEventHandlers(typeof(DIExtensions).Assembly);
+        services.AddEventHandlers(typeof(DependencyInjection).Assembly);
 
         services.AddCommand();
-        services.AddCommandHandlers(typeof(DIExtensions).Assembly);
+        services.AddCommandHandlers(typeof(DependencyInjection).Assembly);
 
 #if DEBUG
         // This middleware adds fake latency useful when working with the UI

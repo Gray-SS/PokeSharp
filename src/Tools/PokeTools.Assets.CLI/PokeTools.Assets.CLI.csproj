@@ -9,6 +9,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PokeTools.Assets\PokeTools.Assets.csproj" />
+    <ProjectReference Include="..\..\Core\PokeCore.DependencyInjection.Ninject\PokeCore.DependencyInjection.Ninject.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.50.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
   </ItemGroup>
 
 </Project>

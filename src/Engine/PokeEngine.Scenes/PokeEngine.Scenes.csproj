@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\PokeEngine.Core\PokeEngine.Core.csproj" />
     <ProjectReference Include="..\PokeEngine.Entities\PokeEngine.Entities.csproj" />
-    <ProjectReference Include="..\PokeEngine.Assets\PokeEngine.Assets.csproj" />
   </ItemGroup>
 
   <ItemGroup>

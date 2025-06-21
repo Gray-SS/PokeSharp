@@ -23,7 +23,6 @@ public sealed class ContextLogger : Logger
         _settings = settings;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override void Log(LogLevel level,
                              string message,
                              Exception? exception = null,

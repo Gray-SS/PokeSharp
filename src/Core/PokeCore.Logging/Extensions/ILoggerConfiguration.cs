@@ -1,9 +1,15 @@
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeCore.Logging.Extensions;
 
 public interface ILoggerConfiguration
 {
+    LoggerSettings Settings { get; }
+
+    ILoggerConfiguration AddOutput(ILogSink output);
+    ILoggerConfiguration AddOutput<TOutput>() where TOutput : ILogSink, new();
+
     ILoggerConfiguration AddConsoleLog();
     ILoggerConfiguration AddFileLog(string logDirectory);
     ILoggerConfiguration AddMemoryLog();
@@ -15,38 +21,52 @@ public interface ILoggerConfiguration
 
 public sealed class LoggerConfiguration : ILoggerConfiguration
 {
-    private readonly LoggerSettings _loggerSettings;
+    public LoggerSettings Settings => _settings;
+
+    private readonly LoggerSettings _settings;
     private readonly IServiceCollections _services;
 
     public LoggerConfiguration(IServiceCollections services)
     {
         _services = services;
 
-        _loggerSettings = new LoggerSettings();
-        _services.AddSingleton(sc => _loggerSettings);
+        _settings = new LoggerSettings();
+        _services.AddSingleton(sc => _settings);
+    }
+
+    public ILoggerConfiguration AddOutput<TOutput>() where TOutput : ILogSink, new()
+    {
+        _settings.AddOutput(new TOutput());
+        return this;
+    }
+
+    public ILoggerConfiguration AddOutput(ILogSink output)
+    {
+        _settings.AddOutput(output);
+        return this;
     }
 
     public ILoggerConfiguration AddConsoleLog()
     {
-        _loggerSettings.AddOutput(new ConsoleLogSink());
+        _settings.AddOutput(new ConsoleLogSink());
         return this;
     }
 
     public ILoggerConfiguration AddFileLog(string logDirectory)
     {
-        _loggerSettings.AddOutput(new FileLogSink(logDirectory));
+        _settings.AddOutput(new FileLogSink(logDirectory));
         return this;
     }
 
     public ILoggerConfiguration AddMemoryLog()
     {
-        _loggerSettings.AddOutput(new MemoryLogSink());
+        _settings.AddOutput(new MemoryLogSink());
         return this;
     }
 
     public ILoggerConfiguration UseLogLevel(LogLevel logLevel)
     {
-        _loggerSettings.SetLogLevel(logLevel);
+        _settings.SetLogLevel(logLevel);
         return this;
     }
 
@@ -56,7 +76,7 @@ public sealed class LoggerConfiguration : ILoggerConfiguration
 
         _services.AddTransient<Logger>(sc =>
         {
-            var settings = sc.GetService<LoggerSettings>();
+            var settings = sc.GetRequiredService<LoggerSettings>();
             return new ContextLogger(settings, "Default");
         });
 
@@ -65,6 +85,7 @@ public sealed class LoggerConfiguration : ILoggerConfiguration
 
     public ILoggerConfiguration UseEmptyLogger()
     {
+        _services.AddTransient(typeof(Logger<>), typeof(EmptyLogger<>));
         _services.AddTransient<Logger>(sc => new EmptyLogger());
         return this;
     }

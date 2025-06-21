@@ -1,6 +1,7 @@
 using PokeCore.Logging;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.Hosting.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeCore.Hosting;
 
@@ -11,13 +12,13 @@ public abstract class App : IApp, IDisposable
 
     public bool IsDisposed { get; private set; }
     public bool IsRunning => _isRunning;
-    public IServiceContainer Services => _services;
+    public IServiceResolver Services => _services;
 
     private Logger _logger = null!;
     private static readonly Lock _lock = new();
 
     private bool _isRunning;
-    private IServiceContainer _services = null!;
+    private IServiceResolver _services = null!;
     private IEnumerable<IHostedService> _hostedServices = null!;
 
     private readonly CancellationTokenSource _cts;
@@ -49,13 +50,13 @@ public abstract class App : IApp, IDisposable
 
             IServiceCollections serviceCollections = builder.Build();
             serviceCollections.AddSingleton<IApp>(this);
-            serviceCollections.AddSingleton<IServiceContainer>(sc => sc);
+            serviceCollections.AddSingleton<IServiceResolver>(sc => sc);
             ConfigureServices(serviceCollections);
 
-            IServiceContainer services = serviceCollections.Build();
+            IServiceResolver services = serviceCollections.Build();
             ServiceLocator.Initialize(services);
 
-            _logger = services.GetService<Logger<App>>();
+            _logger = services.GetRequiredService<Logger<App>>();
             _logger.Info($"Starting {AppName} v{AppVersion}...");
             _logger.Info($"Configuring application...");
             Configure(services);
@@ -146,7 +147,7 @@ public abstract class App : IApp, IDisposable
         }
     }
 
-    protected abstract void Configure(IServiceContainer services);
+    protected abstract void Configure(IServiceResolver services);
     protected abstract void ConfigureServices(IServiceCollections services);
 
     protected virtual void ConfigureApplication(IAppBuilder builder)

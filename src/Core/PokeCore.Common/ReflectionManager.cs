@@ -2,17 +2,18 @@ using System.Reflection;
 using PokeCore.Common.Annotations;
 using PokeCore.Common.Extensions;
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 using PokeCore.Logging;
 
 namespace PokeCore.Common;
 
 public sealed class ReflectionManager : IReflectionManager
 {
-    private readonly IServiceContainer _services;
+    private readonly IServiceResolver _services;
     private readonly Logger<ReflectionManager> _logger;
     private readonly HashSet<Assembly> _assemblies;
 
-    public ReflectionManager(IServiceContainer services, Logger<ReflectionManager> logger)
+    public ReflectionManager(IServiceResolver services, Logger<ReflectionManager> logger)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -106,12 +107,12 @@ public sealed class ReflectionManager : IReflectionManager
         T instance;
         if (bindableInterface != null)
         {
-            instance = (T)_services.GetService(bindableInterface);
+            instance = (T)_services.GetRequiredService(bindableInterface);
             _logger.Trace($"Resolved '{concreteType.Name}' via interface '{bindableInterface.Name}'");
         }
         else
         {
-            instance = (T)_services.GetService(concreteType);
+            instance = (T)_services.GetRequiredService(concreteType);
             _logger.Trace($"Resolved '{concreteType.Name}' via direct binding (fallback)");
         }
 

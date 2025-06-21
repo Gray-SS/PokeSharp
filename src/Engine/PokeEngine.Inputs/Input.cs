@@ -6,7 +6,7 @@ namespace PokeEngine.Inputs;
 
 public static class Input
 {
-    private static readonly IInputManager _inputManager = ServiceLocator.GetService<IInputManager>();
+    private static readonly IInputManager _inputManager = ServiceLocator.GetRequiredService<IInputManager>();
 
     public static Vector2 GetMousePos()
     {

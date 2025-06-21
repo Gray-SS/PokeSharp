@@ -37,4 +37,9 @@ public enum LogLevel
     /// Critical errors indicating the application is likely to crash or be in an unstable state.
     /// </summary>
     Fatal,
+
+    /// <summary>
+    /// Filters every logs.
+    /// </summary>
+    Silent,
 }

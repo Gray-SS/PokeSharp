@@ -1,16 +1,17 @@
 using PokeCore.Logging;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.Common.Extensions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeCore.Common;
 
 public sealed class DynamicTypeResolver : IDynamicTypeResolver
 {
-    private readonly IServiceContainer _services;
+    private readonly IServiceResolver _services;
     private readonly Logger<DynamicTypeResolver> _logger;
     private readonly Dictionary<string, Type> _resolvedTypesCache;
 
-    public DynamicTypeResolver(IServiceContainer services, Logger<DynamicTypeResolver> logger)
+    public DynamicTypeResolver(IServiceResolver services, Logger<DynamicTypeResolver> logger)
     {
         _logger = logger;
         _services = services;
@@ -44,9 +45,9 @@ public sealed class DynamicTypeResolver : IDynamicTypeResolver
         Type? boundInterface = _services.GetUnderlyingServiceType(resolvedType);
 
         if (boundInterface != null)
-            return _services.GetService(boundInterface);
+            return _services.GetRequiredService(boundInterface);
 
-        return _services.GetService(resolvedType);
+        return _services.GetRequiredService(resolvedType);
     }
 
     public T InstantiateFromTypeName<T>(string assemblyQualifiedTypeName)
