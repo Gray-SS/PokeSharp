@@ -19,12 +19,23 @@ public sealed class CliConsole : ICliConsole
     public void WriteError(string message)
         => AnsiConsole.MarkupLine($"[bold red]✖ {message}[/]");
 
-    public bool Confirm(string prompt)
+    public bool ConfirmPrompt(string prompt)
     {
         return AnsiConsole.Prompt(
             new ConfirmationPrompt(prompt)
                 .ChoicesStyle("bold dim")
                 .HideDefaultValue()
+        );
+    }
+
+    public string SelectionPrompt(string title, string helperText, string[] choices)
+    {
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title(title)
+                .PageSize(10)
+                .MoreChoicesText(helperText)
+                .AddChoices(choices)
         );
     }
 
@@ -42,11 +53,11 @@ public sealed class CliConsole : ICliConsole
         progress.Start(action);
     }
 
-    public void StatusText(Action<StatusContext> action)
+    public void StatusText(string initialStatus, Action<StatusContext> action)
     {
         var status = AnsiConsole.Status();
         status.Spinner = Spinner.Known.Arc;
 
-        status.Start("My status", action);
+        status.Start(initialStatus, action);
     }
 }

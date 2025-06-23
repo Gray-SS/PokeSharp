@@ -10,7 +10,8 @@ public interface ICliConsole
     void WriteSuccess(string message);
     void WriteError(string message);
 
-    bool Confirm(string prompt);
+    bool ConfirmPrompt(string prompt);
+    string SelectionPrompt(string title, string helperText, string[] choices);
     void Progress(Action<ProgressContext> action);
-    void StatusText(Action<StatusContext> action);
+    void  StatusText(string initialStatus, Action<StatusContext> action);
 }
