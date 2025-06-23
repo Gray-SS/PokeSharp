@@ -16,12 +16,13 @@ public sealed class NinjectServiceCollections : IServiceCollections
 
     public IServiceCollections Add(ServiceDescriptor descriptor)
     {
-        IBindingInSyntax<object> binding;
-
-        if (descriptor.ImplementationType != null) binding = _kernel.Bind(descriptor.ServiceType).To(descriptor.ImplementationType);
-        else if (descriptor.ImplementationFactory != null) binding = _kernel.Bind(descriptor.ServiceType).ToMethod(BuildProvider(descriptor.ImplementationFactory));
-        else if (descriptor.ImplementationInstance != null) binding = _kernel.Bind(descriptor.ServiceType).ToConstant(descriptor.ImplementationInstance);
-        else throw new NotImplementedException($"Couldn't bind service '{descriptor.ServiceType.Name}' using Ninject.");
+        IBindingInSyntax<object> binding = descriptor switch
+        {
+            ServiceDescriptor.TypeServiceDescriptor type => _kernel.Bind(descriptor.ServiceType).To(type.ImplementationType),
+            ServiceDescriptor.FactoryServiceDescriptor factory => _kernel.Bind(descriptor.ServiceType).ToMethod(BuildProvider(factory.ImplementationFactory)),
+            ServiceDescriptor.InstanceServiceDescriptor instance => _kernel.Bind(descriptor.ServiceType).ToConstant(instance.ImplementationInstance),
+            _ => throw new NotImplementedException($"Binding service '{descriptor.ServiceType.Name}' failed. Service descriptor of type '{descriptor.GetType().Name}' aren't supported.")
+        };
 
         switch (descriptor.Lifetime)
         {
@@ -32,15 +33,15 @@ public sealed class NinjectServiceCollections : IServiceCollections
                 binding.InTransientScope();
                 break;
             default:
-                throw new NotImplementedException($"Couldn't bind service '{descriptor.ServiceType.Name}'. The lifetime '{descriptor.Lifetime}' isn't implemented in the Ninject IoC provider.");
+                throw new NotImplementedException($"Binding service '{descriptor.ServiceType.Name}' failed. Lifetime of value '{descriptor.Lifetime}' aren't supported.");
         }
 
         return this;
     }
 
-    private Func<IContext, TService> BuildProvider<TService>(Func<IServiceResolver, TService> provider) where TService : class
+    private static Func<IContext, TService> BuildProvider<TService>(Func<IServiceResolver, TService> provider) where TService : class
     {
-        return (context) => provider.Invoke(new NinjectServiceResolver(_kernel));
+        return (context) => provider.Invoke(new NinjectServiceResolver(context.Kernel));
     }
 
     public IServiceResolver Build()
