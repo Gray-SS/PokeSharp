@@ -4,25 +4,25 @@ public static class ServiceCollectionsExtensions
 {
     public static IServiceCollections AddService(this IServiceCollections services, Type serviceType, Type implType, ServiceLifetime lifetime)
     {
-        services.Add(new ServiceDescriptor(serviceType, implType, lifetime));
+        services.Add(ServiceDescriptor.FromType(serviceType, implType, lifetime));
         return services;
     }
 
     public static IServiceCollections AddService(this IServiceCollections services, Type serviceType, ServiceLifetime lifetime)
     {
-        services.Add(new ServiceDescriptor(serviceType, serviceType, lifetime));
+        services.Add(ServiceDescriptor.FromType(serviceType, serviceType, lifetime));
         return services;
     }
 
     public static IServiceCollections AddService(this IServiceCollections services, Type serviceType, object instance, ServiceLifetime lifetime)
     {
-        services.Add(new ServiceDescriptor(serviceType, instance, lifetime));
+        services.Add(ServiceDescriptor.FromInstance(serviceType, instance, lifetime));
         return services;
     }
 
     public static IServiceCollections AddService(this IServiceCollections services, Type serviceType, Func<IServiceResolver, object> provider, ServiceLifetime lifetime)
     {
-        services.Add(new ServiceDescriptor(serviceType, provider, lifetime));
+        services.Add(ServiceDescriptor.FromFactory(serviceType, provider, lifetime));
         return services;
     }
 
@@ -30,28 +30,28 @@ public static class ServiceCollectionsExtensions
         where TService : class
         where TImpl : TService
     {
-        services.Add(new ServiceDescriptor(typeof(TService), typeof(TImpl), lifetime));
+        services.Add(ServiceDescriptor.FromType(typeof(TService), typeof(TImpl), lifetime));
         return services;
     }
 
     public static IServiceCollections AddService<TService>(this IServiceCollections services, ServiceLifetime lifetime)
         where TService : class
     {
-        services.Add(new ServiceDescriptor(typeof(TService), typeof(TService), lifetime));
+        services.Add(ServiceDescriptor.FromType(typeof(TService), typeof(TService), lifetime));
         return services;
     }
 
     public static IServiceCollections AddService<TService>(this IServiceCollections services, TService instance, ServiceLifetime lifetime)
         where TService : class
     {
-        services.Add(new ServiceDescriptor(typeof(TService), instance, lifetime));
+        services.Add(ServiceDescriptor.FromInstance(typeof(TService), instance, lifetime));
         return services;
     }
 
     public static IServiceCollections AddService<TService>(this IServiceCollections services, Func<IServiceResolver, TService> provider, ServiceLifetime lifetime)
         where TService : class
     {
-        services.Add(new ServiceDescriptor(typeof(TService), provider, lifetime));
+        services.Add(ServiceDescriptor.FromFactory(typeof(TService), provider, lifetime));
         return services;
     }
 
