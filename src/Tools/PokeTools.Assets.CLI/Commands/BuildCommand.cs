@@ -32,10 +32,7 @@ public sealed class BuildCommand(
     {
         console.WriteInfo($"Début du build à la source [bold cyan]'{settings.SourceDirectory}'[/]...");
 
-        var status = AnsiConsole.Status();
-        status.Spinner = Spinner.Known.Arc;
-
-        status.Start("En cours de configuration", (ctx) =>
+        console.StatusText("En cours de configuration", (ctx) =>
         {
             Thread.Sleep(2000);
             ctx.Status = "En cours de préparation";
