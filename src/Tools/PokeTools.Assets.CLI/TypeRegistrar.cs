@@ -1,5 +1,6 @@
 using Spectre.Console.Cli;
 using PokeCore.DependencyInjection.Abstractions;
+using PokeCore.DependencyInjection.Abstractions.Extensions;
 
 namespace PokeTools.Assets.CLI;
 
@@ -19,24 +20,28 @@ public sealed class TypeRegistrar : ITypeRegistrar
 
     public void Register(Type service, Type implementation)
     {
+        _services.AddSingleton(service, implementation);
     }
 
     public void RegisterInstance(Type service, object implementation)
     {
+        _services.AddSingleton(service, implementation);
     }
 
     public void RegisterLazy(Type service, Func<object> factory)
     {
+        _services.AddSingleton(service, x => factory.Invoke());
     }
 }
 
-public sealed class TypeResolver : ITypeResolver
+public sealed class TypeResolver : ITypeResolver, IDisposable
 {
-    private readonly IServiceResolver _container;
+    private readonly IServiceResolver _services;
 
-    public TypeResolver(IServiceResolver container)
+    public TypeResolver(IServiceResolver services)
     {
-        _container = container;
+        _services = services;
+        ServiceLocator.Initialize(services);
     }
 
     public object? Resolve(Type? type)
@@ -44,6 +49,14 @@ public sealed class TypeResolver : ITypeResolver
         if (type == null)
             return null;
 
-        return _container.GetService(type);
+        return _services.GetService(type);
+    }
+
+    public void Dispose()
+    {
+        if (_services is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
     }
 }
