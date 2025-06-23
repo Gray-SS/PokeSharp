@@ -1,4 +1,4 @@
-namespace PokeTools.Assets.Raw;
+namespace PokeTools.Assets.Objects.Raw;
 
 public sealed record RawEntity(
     string Id,
