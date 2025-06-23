@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using PokeCore.Logging;
 using PokeCore.IO.Events;
 using PokeCore.IO.Volumes;
+using System.Runtime.InteropServices;
 
 namespace PokeCore.IO.Services;
 
@@ -20,6 +21,17 @@ public sealed class VirtualVolumeManager : IVirtualVolumeManager
     {
         _logger = logger;
         _mountedVolumes = new Dictionary<string, IVirtualVolume>();
+
+        InitializeStandardVolumes();
+    }
+
+    private void InitializeStandardVolumes()
+    {
+        string cwdDirectory = Directory.GetCurrentDirectory();
+        MountVolume(new PhysicalVolume("cwd", "cwd", "Working Directory", cwdDirectory, enableWatcher: false));
+
+        string rootDirectory = PathHelper.GetHomePath();
+        MountVolume(new PhysicalVolume("home", "home", "Home", rootDirectory, enableWatcher: false));
     }
 
     public void MountVolume(IVirtualVolume volume)
