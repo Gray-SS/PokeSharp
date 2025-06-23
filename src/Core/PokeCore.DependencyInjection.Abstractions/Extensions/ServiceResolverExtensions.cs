@@ -10,7 +10,7 @@ public static class ServiceResolverExtensions
         object? service = services.GetService(serviceType);
         ThrowHelper.AssertNotNull(service, $"Service of type '{serviceType.Name}' is not registered. Use '{nameof(TryGetService)}' if this is an expected behaviour.");
 
-        return services;
+        return service!;
     }
 
     public static T GetRequiredService<T>(this IServiceResolver services)
@@ -26,14 +26,14 @@ public static class ServiceResolverExtensions
         return null;
     }
 
+    public static IEnumerable<object> GetService(this IServiceResolver services, Type serviceType)
+    {
+        return services.GetServices(serviceType);
+    }
+
     public static IEnumerable<T> GetServices<T>(this IServiceResolver services)
     {
-        object? service = services.GetService(typeof(T));
-
-        if (service != null && service is IEnumerable<T> enumerable)
-            return enumerable;
-
-        return [];
+        return services.GetServices(typeof(T)).Cast<T>();
     }
 
     public static bool HasService(this IServiceResolver services, Type serviceType)
