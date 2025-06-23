@@ -17,7 +17,7 @@ public sealed class NinjectServiceResolver : IServiceResolver, IDisposable
     public object? GetService(Type serviceType)
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        return _kernel.GetService(serviceType);
+        return _kernel.Get(serviceType);
     }
 
     public IEnumerable<object> GetServices(Type serviceType)
