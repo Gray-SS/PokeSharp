@@ -10,14 +10,14 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
 
     public event EventHandler<FileSystemChangedArgs>? OnFileSystemChanged;
 
-    private readonly Logger _logger;
-    private readonly FileSystemWatcher _watcher;
+    private readonly Logger _logger = null!;
+    private readonly FileSystemWatcher _watcher = null!;
 
     /// Used because the file system watcher can't provide informations about
     /// whether a deleted path was a file or a directory. This sucks.
-    private readonly Dictionary<string, bool> _pathIsDirectory = new();
+    private readonly Dictionary<string, bool> _pathIsDirectory = null!;
 
-    public PhysicalVolume(string id, string scheme, string displayName, string physicalPath) : base(id, scheme, displayName)
+    public PhysicalVolume(string id, string scheme, string displayName, string physicalPath, bool enableWatcher = true) : base(id, scheme, displayName)
     {
         if (!Directory.Exists(physicalPath))
             throw new ArgumentException($"Unable to create physical volume - Physical path '{physicalPath}' doesn't exists or is not a directory");
@@ -25,23 +25,26 @@ public sealed class PhysicalVolume : BaseVirtualVolume, IReadableVolume, IWritab
         PhysicalPath = Path.GetFullPath(physicalPath);
 
         _logger = LoggerFactory.GetLogger<PhysicalVolume>();
-
         _logger.Trace($"Volume '{displayName}' is watching at path '{physicalPath}'");
-        _watcher = new FileSystemWatcher(PhysicalPath)
+
+        if (enableWatcher)
         {
-            IncludeSubdirectories = true,
-            EnableRaisingEvents = true,
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-        };
+            _watcher = new FileSystemWatcher(PhysicalPath)
+            {
+                IncludeSubdirectories = true,
+                EnableRaisingEvents = true,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+            };
 
-        _pathIsDirectory = new Dictionary<string, bool>();
-        PopulateIsDirectoryCache(PhysicalPath);
+            _pathIsDirectory = new Dictionary<string, bool>();
+            PopulateIsDirectoryCache(PhysicalPath);
 
-        _watcher.Changed += HandleOnFileChanged;
-        _watcher.Created += HandleOnFileChanged;
-        _watcher.Deleted += HandleOnFileChanged;
-        _watcher.Renamed += HandleOnFileChanged;
-        _watcher.Error += HandleFileSystemWatcherError;
+            _watcher.Changed += HandleOnFileChanged;
+            _watcher.Created += HandleOnFileChanged;
+            _watcher.Deleted += HandleOnFileChanged;
+            _watcher.Renamed += HandleOnFileChanged;
+            _watcher.Error += HandleFileSystemWatcherError;
+        }
     }
 
     private void PopulateIsDirectoryCache(string directory)
