@@ -51,6 +51,7 @@ public abstract class App : IApp, IDisposable
             IServiceCollections serviceCollections = builder.Build();
             serviceCollections.AddSingleton<IApp>(this);
             serviceCollections.AddSingleton<IServiceResolver>(sc => sc);
+            serviceCollections.AddSingleton<IServiceProvider>(sc => sc);
             ConfigureServices(serviceCollections);
 
             IServiceResolver services = serviceCollections.Build();
