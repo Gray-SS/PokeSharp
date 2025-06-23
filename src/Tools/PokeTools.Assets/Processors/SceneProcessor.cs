@@ -5,14 +5,12 @@ using PokeCore.Common;
 using PokeCore.Logging;
 using PokeEngine.Entities;
 using PokeEngine.Scenes;
-using PokeTools.Assets.Raw;
+using PokeTools.Assets.Objects.Raw;
 
 namespace PokeTools.Assets.Processors;
 
 public sealed class SceneProcessor : AssetProcessor<RawScene, Scene>
 {
-    public override AssetType AssetType => AssetType.Scene;
-
     private readonly Logger _logger;
 
     public SceneProcessor(Logger<SceneProcessor> logger)
