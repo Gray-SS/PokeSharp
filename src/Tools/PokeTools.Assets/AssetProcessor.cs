@@ -2,17 +2,15 @@ using PokeCore.Common;
 
 namespace PokeTools.Assets;
 
-public abstract class AssetProcessor<TIn, TOut> : IAssetProcessor
+public abstract class AssetProcessor<TRaw, TProcessed> : IAssetProcessor
 {
-    public Type RawType => typeof(TIn);
-    public Type ProcessedType => typeof(TOut);
+    public Type RawType => typeof(TRaw);
+    public Type ProcessedType => typeof(TProcessed);
 
-    public abstract AssetType AssetType { get; }
-
-    public abstract Result<TOut> Process(TIn rawAsset);
+    public abstract Result<TProcessed> Process(TRaw rawAsset);
 
     Result<object> IAssetProcessor.Process(object rawAsset)
     {
-        return Process((TIn)rawAsset);
+        return Process((TRaw)rawAsset);
     }
 }
