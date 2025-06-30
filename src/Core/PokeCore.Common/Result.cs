@@ -32,40 +32,40 @@ public abstract record Result
         return true;
     }
 
-    // /// <summary>
-    // /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
-    // /// </summary>
-    // /// <param name="action">The action to be executed</param>
-    // /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
-    // public static Result Catch(Action action)
-    // {
-    //     try
-    //     {
-    //         action.Invoke();
-    //         return Success();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return new Error(ex.Message);
-    //     }
-    // }
+    /// <summary>
+    /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
+    /// </summary>
+    /// <param name="action">The action to be executed</param>
+    /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
+    public static Result Catch(Action action)
+    {
+        try
+        {
+            action.Invoke();
+            return Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error(ex.Message));
+        }
+    }
 
-    // /// <summary>
-    // /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
-    // /// </summary>
-    // /// <param name="action">The action to be executed</param>
-    // /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
-    // public static Result<T> Catch<T>(Func<T> action)
-    // {
-    //     try
-    //     {
-    //         return action.Invoke();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return new Error(ex.Message);
-    //     }
-    // }
+    /// <summary>
+    /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
+    /// </summary>
+    /// <param name="action">The action to be executed</param>
+    /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
+    public static Result<T> Catch<T>(Func<T> action)
+    {
+        try
+        {
+            return Result<T>.Success(action.Invoke());
+        }
+        catch (Exception ex)
+        {
+            return Result<T>.Failure(new Error(ex.Message));
+        }
+    }
 
     public static Result Success()
         => new SuccessResult();
