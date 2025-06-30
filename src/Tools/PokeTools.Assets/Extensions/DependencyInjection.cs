@@ -1,7 +1,5 @@
-using PokeTools.Assets.External;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.DependencyInjection.Abstractions.Extensions;
-using PokeTools.Assets.Authored;
 
 namespace PokeTools.Assets.Extensions;
 
@@ -31,16 +29,6 @@ public static class DependencyInjection
             {
                 services.AddTransient(type);
                 services.AddTransient(typeof(IAssetCompiler), x => x.GetRequiredService(type));
-            }
-            else if (type.IsAssignableTo(typeof(IAssetLoader)))
-            {
-                services.AddTransient(type);
-                services.AddTransient(typeof(IAssetLoader), x => x.GetRequiredService(type));
-            }
-            else if (type.IsAssignableTo(typeof(IAssetBuilder)))
-            {
-                services.AddTransient(type);
-                services.AddTransient(typeof(IAssetBuilder), x=> x.GetRequiredService(type));
             }
         }
 

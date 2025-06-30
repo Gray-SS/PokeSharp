@@ -31,7 +31,7 @@ app.Configure(x =>
     x.SetApplicationName("poketools");
     x.SetApplicationVersion("PokéTools v0.0.1");
 
-    x.AddCommand<NewCommand>("new");
+    // x.AddCommand<NewCommand>("new");
     x.AddCommand<BuildCommand>("build");
 });
 

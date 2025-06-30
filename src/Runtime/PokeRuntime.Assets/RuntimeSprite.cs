@@ -3,7 +3,7 @@ using PokeCore.Assets;
 
 namespace PokeRuntime.Assets;
 
-public sealed class RuntimeSprite : Sprite, IRuntimeAsset
+public sealed class RuntimeSprite : SpriteAsset, IRuntimeAsset
 {
     public RuntimeTexture? Texture { get; }
 

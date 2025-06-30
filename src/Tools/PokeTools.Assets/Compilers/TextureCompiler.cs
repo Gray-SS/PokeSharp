@@ -5,9 +5,9 @@ using PokeTools.Assets.Annotations;
 namespace PokeTools.Assets.Compilers;
 
 [AssetCompiler(AssetType.Texture, "Texture Compiler")]
-public sealed class TextureCompiler : AssetCompiler<Texture>
+public sealed class TextureCompiler : AssetCompiler<TextureAsset>
 {
-    public override Result Compile(Texture texture, BinaryWriter writer)
+    public override Result Compile(TextureAsset texture, BinaryWriter writer)
     {
         if (texture.Width <= 0 || texture.Height <= 0)
             return Result.Failure(new Error("Processed texture dimension must be bigger than 0."));

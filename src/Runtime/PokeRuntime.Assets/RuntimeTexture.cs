@@ -2,7 +2,7 @@ using PokeCore.Assets;
 
 namespace PokeRuntime.Assets;
 
-public sealed class RuntimeTexture : Texture, IRuntimeAsset
+public sealed class RuntimeTexture : TextureAsset, IRuntimeAsset
 {
     public MGGraphics.Texture2D GraphicsTexture { get; }
 

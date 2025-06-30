@@ -6,9 +6,9 @@ using PokeTools.Assets.Annotations;
 namespace PokeTools.Assets.Compilers;
 
 [AssetCompiler(AssetType.Sprite, "Sprite Compiler")]
-public sealed class SpriteCompiler : AssetCompiler<Sprite>
+public sealed class SpriteCompiler : AssetCompiler<SpriteAsset>
 {
-    public override Result Compile(Sprite asset, BinaryWriter writer)
+    public override Result Compile(SpriteAsset asset, BinaryWriter writer)
     {
         writer.Write(asset.TextureId.HasValue);
         if (asset.TextureId.HasValue)
