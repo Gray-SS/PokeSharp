@@ -1,6 +1,6 @@
 namespace PokeCore.Assets;
 
-public class Texture : IAsset
+public class TextureAsset : IAsset
 {
     public Guid Id { get; }
     public AssetType AssetType => AssetType.Texture;
@@ -9,7 +9,7 @@ public class Texture : IAsset
     public int Height { get; }
     public byte[] Data { get; }
 
-    public Texture(Guid id, int width, int height, byte[] data)
+    public TextureAsset(Guid id, int width, int height, byte[] data)
     {
         Id = id;
         Width = width;
