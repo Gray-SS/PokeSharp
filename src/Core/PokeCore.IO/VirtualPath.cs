@@ -259,6 +259,26 @@ public sealed class VirtualPath : IEquatable<VirtualPath>
         return new VirtualPath(Scheme, LocalPath + extension);
     }
 
+    public VirtualPath ChangeExtension(string extension)
+    {
+        Debug.Assert(IsFile, "Current path must represent a file to change it's extension.");
+        Debug.Assert(extension.StartsWith('.'), "The extension must start with a dot (e.g. '.png', '.mp3')");
+
+        if (string.IsNullOrEmpty(extension) || string.Equals(extension, Extension, StringComparison.Ordinal))
+            return this;
+
+        int lastSlash = LocalPath.LastIndexOf('/');
+        int lastDot = LocalPath.LastIndexOf('.');
+
+        string newPath;
+        if (lastDot > lastSlash)
+            newPath = LocalPath[..lastDot] + extension;
+        else
+            newPath = LocalPath + extension;
+
+        return new VirtualPath(Scheme, newPath);
+    }
+
     /// <summary>
     /// Creates a new root virtual path for the given scheme.
     /// </summary>
