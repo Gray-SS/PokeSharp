@@ -12,7 +12,7 @@ namespace PokeTools.Assets.CLI.Commands;
 public sealed class BuildCommand(
     ICliConsole console,
     IVirtualFileSystem vfs,
-    IAssetPipeline assetPipeline
+    IAssetBuildServices buildServices
 ) : AsyncCommand<BuildCommand.Settings>
 {
     public sealed class Settings : CommandSettings
@@ -52,7 +52,7 @@ public sealed class BuildCommand(
         {
             var outputPath = VirtualPathHelper.ResolvePhysicalPath(settings.OutputPath);
 
-            Result buildResult = await assetPipeline.BuildAsync(inputPath, outputPath);
+            Result buildResult = await buildServices.BuildAsync(inputPath, outputPath);
             if (buildResult.IsFailure)
             {
                 console.WriteError(buildResult.GetError().Message);

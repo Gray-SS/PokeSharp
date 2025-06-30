@@ -10,6 +10,7 @@ public static class DependencyInjection
     {
         services.AddTransient<IAssetManager, RuntimeAssetManager>();
         services.AddTransient<IRuntimeAssetLoader<RuntimeTexture>, RuntimeTextureLoader>();
+        services.AddTransient<IRuntimeAssetLoader<RuntimeSprite>, RuntimeSpriteLoader>();
 
         return services;
     }

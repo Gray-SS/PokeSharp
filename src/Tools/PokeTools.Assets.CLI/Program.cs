@@ -24,8 +24,8 @@ var app = new CommandApp(new TypeRegistrar(services));
 app.Configure(x =>
 {
 #if DEBUG
-    // x.PropagateExceptions();
-    // x.ValidateExamples();
+    x.PropagateExceptions();
+    x.ValidateExamples();
 #endif
 
     x.SetApplicationName("poketools");
@@ -33,6 +33,7 @@ app.Configure(x =>
 
     // x.AddCommand<NewCommand>("new");
     x.AddCommand<BuildCommand>("build");
+    x.AddCommand<BuildManifestCommand>("build-manifest");
 });
 
 Environment.ExitCode = await app.RunAsync(args);

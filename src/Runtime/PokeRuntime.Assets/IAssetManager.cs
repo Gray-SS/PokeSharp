@@ -1,8 +1,11 @@
 using PokeCore.Assets;
+using PokeCore.Common;
 
 namespace PokeRuntime.Assets;
 
 public interface IAssetManager
 {
-    T Load<T>(string assetPath) where T : IRuntimeAsset;
+    Result LoadBundle(string bundlePath);
+
+    T Load<T>(Guid assetId) where T : IRuntimeAsset;
 }

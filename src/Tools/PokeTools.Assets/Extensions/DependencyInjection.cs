@@ -7,7 +7,8 @@ public static class DependencyInjection
 {
     public static IServiceCollections AddPokeToolsAssets(this IServiceCollections services)
     {
-        services.AddTransient<IAssetPipeline, AssetPipeline>();
+        services.AddTransient<IAssetBuildServices, AssetBuildServices>();
+        services.AddTransient<IAssetPipelineProvider, AssetPipelineProvider>();
 
         var assembly = typeof(DependencyInjection).Assembly;
         foreach (Type type in assembly.GetTypes())

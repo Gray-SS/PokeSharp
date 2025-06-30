@@ -10,6 +10,8 @@ public sealed class SpriteProcessor : AssetProcessor<RawSprite, SpriteAsset>
 {
     public override Result<SpriteAsset> Process(Guid assetId, RawSprite descriptor)
     {
+        
+
         return Result<SpriteAsset>.Success(new SpriteAsset(
             assetId,
             descriptor.TextureId,
