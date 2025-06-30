@@ -1,9 +1,13 @@
+using PokeCore.Diagnostics;
+
 namespace PokeCore.IO;
 
 public static class VirtualPathHelper
 {
     public static VirtualPath ResolvePhysicalPath(string path)
     {
+        ThrowHelper.AssertNotNullOrWhitespace(path, "Path must be not null or empty");
+
         if (path.StartsWith("./"))
             return new VirtualPath("cwd", path.Substring(startIndex: 2));
 

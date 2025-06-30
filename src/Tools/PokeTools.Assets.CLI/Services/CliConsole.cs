@@ -28,6 +28,11 @@ public sealed class CliConsole : ICliConsole
         );
     }
 
+    public T TextPrompt<T>(string prompt)
+    {
+        return AnsiConsole.Prompt(new TextPrompt<T>(prompt, StringComparer.OrdinalIgnoreCase));
+    }
+
     public string SelectionPrompt(string title, string helperText, string[] choices)
     {
         return AnsiConsole.Prompt(
@@ -59,5 +64,13 @@ public sealed class CliConsole : ICliConsole
         status.Spinner = Spinner.Known.Arc;
 
         status.Start(initialStatus, action);
+    }
+
+    public Task StatusTextAsync(string initialStatus, Func<StatusContext, Task> action)
+    {
+        var status = AnsiConsole.Status();
+        status.Spinner = Spinner.Known.Arc;
+
+        return status.StartAsync(initialStatus, action);
     }
 }

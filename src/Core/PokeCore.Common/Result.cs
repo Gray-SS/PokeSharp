@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using PokeCore.Diagnostics;
+using PokeCore.IO.Volumes;
 
 namespace PokeCore.Common;
 
@@ -30,40 +32,40 @@ public abstract record Result
         return true;
     }
 
-    /// <summary>
-    /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
-    /// </summary>
-    /// <param name="action">The action to be executed</param>
-    /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
-    public static Result Catch(Action action)
-    {
-        try
-        {
-            action.Invoke();
-            return Success();
-        }
-        catch (Exception ex)
-        {
-            return new Error(ex.Message);
-        }
-    }
+    // /// <summary>
+    // /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
+    // /// </summary>
+    // /// <param name="action">The action to be executed</param>
+    // /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
+    // public static Result Catch(Action action)
+    // {
+    //     try
+    //     {
+    //         action.Invoke();
+    //         return Success();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return new Error(ex.Message);
+    //     }
+    // }
 
-    /// <summary>
-    /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
-    /// </summary>
-    /// <param name="action">The action to be executed</param>
-    /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
-    public static Result<T> Catch<T>(Func<T> action)
-    {
-        try
-        {
-            return action.Invoke();
-        }
-        catch (Exception ex)
-        {
-            return new Error(ex.Message);
-        }
-    }
+    // /// <summary>
+    // /// Protect the execution of the specified <paramref name="action"/> by catching exceptions.
+    // /// </summary>
+    // /// <param name="action">The action to be executed</param>
+    // /// <returns><see cref="Result.SuccessResult"/> if execution went fine; <see cref="Result.FailureResult"/> if execution thrown an exception with exception message bound to the error result.</returns>
+    // public static Result<T> Catch<T>(Func<T> action)
+    // {
+    //     try
+    //     {
+    //         return action.Invoke();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return new Error(ex.Message);
+    //     }
+    // }
 
     public static Result Success()
         => new SuccessResult();
@@ -77,8 +79,8 @@ public abstract record Result
     public static Task<Result> FailureAsync(Error error)
         => Task.FromResult(Failure(error));
 
-    public static implicit operator Result(Error error)
-        => new FailureResult(error);
+    // public static implicit operator Result(Error error)
+    //     => new FailureResult(error);
 }
 
 public abstract record Result<T>
@@ -88,6 +90,39 @@ public abstract record Result<T>
 
     public sealed record SuccessResult(T Value) : Result<T>;
     public sealed record FailureResult(Error Error) : Result<T>;
+
+    public void Match(Action<T> onSuccess, Action<Error> onFailure)
+    {
+        switch (this)
+        {
+            case SuccessResult success:
+                onSuccess.Invoke(success.Value);
+                break;
+            case FailureResult failure:
+                onFailure.Invoke(failure.Error);
+                break;
+        }
+    }
+
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        return this switch
+        {
+            SuccessResult success => onSuccess.Invoke(success.Value),
+            FailureResult failure => onFailure.Invoke(failure.Error),
+            _ => throw new InvalidOperationException($"Results of type '{GetType().FullName}' aren't handled.")
+        };
+    }
+
+    public Result<TResult> Map<TResult>(Func<T, TResult> map)
+    {
+        return this switch
+        {
+            SuccessResult success => Result<TResult>.Success(map.Invoke(success.Value)),
+            FailureResult failure => Result<TResult>.Failure(failure.Error),
+            _ => throw new InvalidOperationException($"Results of type '{GetType().FullName}' aren't handled.")
+        };
+    }
 
     public T GetValue()
     {
@@ -123,7 +158,6 @@ public abstract record Result<T>
         return true;
     }
 
-
     public static Result<T> Success(T value)
         => new SuccessResult(value);
 
@@ -136,9 +170,9 @@ public abstract record Result<T>
     public static Task<Result<T>> FailureAsync(Error error)
         => Task.FromResult(Failure(error));
 
-    public static implicit operator Result<T>(T result)
-        => new SuccessResult(result);
+    // public static implicit operator Result<T>(T result)
+    //     => new SuccessResult(result);
 
-    public static implicit operator Result<T>(Error error)
-        => new FailureResult(error);
+    // public static implicit operator Result<T>(Error error)
+    //     => new FailureResult(error);
 }

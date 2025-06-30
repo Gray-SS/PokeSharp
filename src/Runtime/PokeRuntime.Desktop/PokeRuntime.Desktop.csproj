@@ -21,6 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\PokeCore.Hosting\PokeCore.Hosting.csproj" />
     <ProjectReference Include="..\..\Engine\PokeEngine\PokeEngine.csproj" />
+
+    <ProjectReference Include="..\PokeRuntime.Assets\PokeRuntime.Assets.csproj" />
   </ItemGroup>
 
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">

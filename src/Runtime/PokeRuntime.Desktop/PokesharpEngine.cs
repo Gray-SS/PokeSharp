@@ -1,22 +1,33 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PokeEngine.Core;
 using PokeEngine.Core.Resolutions;
 using PokeEngine.Inputs;
+using PokeRuntime.Assets;
 
 namespace PokeRuntime.Desktop;
 
 public class PokesharpEngine : BaseEngine
 {
-    public PokesharpEngine(EngineConfiguration config) : base(config)
+    private SpriteBatch _spriteBatch;
+    private RuntimeTexture _texture;
+
+    private readonly IAssetManager _assetManager;
+
+    public PokesharpEngine(EngineConfiguration config, IAssetManager assetManager) : base(config)
     {
+        _assetManager = assetManager;
     }
 
     protected override void OnInitialize()
     {
         base.OnInitialize();
 
-        Resolution.SetResolution(ResolutionSize.R1280x720);
+        Resolution.SetResolution(new ResolutionSize(1208, 151));
+
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _texture = _assetManager.Load<RuntimeTexture>("../../Tools/PokeTools.Assets.CLI/assets/milkshake.png.asset");
     }
 
     protected override void OnUpdate(GameTime gameTime)
@@ -37,6 +48,10 @@ public class PokesharpEngine : BaseEngine
     protected override void OnDraw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        _spriteBatch.Begin();
+        _spriteBatch.Draw(_texture.GraphicsTexture, new Rectangle(100, 100, 500, 500), Color.White);
+        _spriteBatch.End();
 
         base.OnDraw(gameTime);
     }

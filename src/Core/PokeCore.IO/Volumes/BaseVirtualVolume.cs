@@ -47,12 +47,46 @@ public abstract class BaseVirtualVolume : IVirtualVolume, IFetchableVolume
     public abstract IEnumerable<IVirtualDirectory> GetDirectories(VirtualPath virtualPath);
     public abstract IVirtualDirectory GetDirectory(VirtualPath virtualPath);
 
+    public virtual IEnumerable<IVirtualFile> GetFilesRecursive(VirtualPath virtualPath)
+    {
+        foreach (IVirtualDirectory directory in GetDirectories(virtualPath))
+        {
+            IEnumerable<IVirtualFile> files = GetFilesRecursive(directory.Path);
+            foreach (IVirtualFile file in files)
+                yield return file;
+        }
+
+        foreach (IVirtualFile file in GetFiles(virtualPath))
+            yield return file;
+    }
+
+    public virtual IEnumerable<IVirtualEntry> GetEntries(VirtualPath virtualPath, bool isRecursive)
+    {
+        foreach (IVirtualDirectory directory in GetDirectories(virtualPath))
+        {
+            yield return directory;
+
+            if (isRecursive)
+            {
+                IEnumerable<IVirtualEntry> entries = GetEntries(directory.Path, isRecursive: true);
+                foreach (IVirtualEntry entry in entries)
+                    yield return entry;
+            }
+        }
+
+        foreach (IVirtualFile file in GetFiles(virtualPath))
+        {
+            yield return file;
+        }
+    }
+
     public virtual IVirtualEntry GetEntry(VirtualPath virtualPath)
     {
         if (virtualPath.IsFile) return GetFile(virtualPath);
 
         return GetDirectory(virtualPath);
     }
+
 
     public abstract IVirtualFile GetFile(VirtualPath virtualPath);
     public abstract IEnumerable<IVirtualFile> GetFiles(VirtualPath virtualPath);

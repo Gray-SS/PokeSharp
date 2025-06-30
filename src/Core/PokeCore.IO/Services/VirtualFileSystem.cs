@@ -66,6 +66,18 @@ public sealed class VirtualFileSystem : IVirtualFileSystem, IDisposable
         return volume.GetEntry(virtualPath);
     }
 
+    public IEnumerable<IVirtualEntry> GetEntries(VirtualPath virtualPath, bool recursive = false)
+    {
+        IFetchableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsFetchable();
+        return volume.GetEntries(virtualPath, recursive);
+    }
+
+    public IEnumerable<IVirtualFile> GetFilesRecursive(VirtualPath virtualPath)
+    {
+        IFetchableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsFetchable();
+        return volume.GetFilesRecursive(virtualPath);
+    }
+
     public IVirtualFile GetFile(VirtualPath virtualPath)
     {
         IFetchableVolume volume = _volumeManager.GetVolumeForPath(virtualPath).AsFetchable();

@@ -1,11 +1,25 @@
+using System.Reflection;
+using PokeCore.Assets;
+using PokeCore.Common;
+using PokeTools.Assets.Annotations;
+
 namespace PokeTools.Assets;
 
-public abstract class AssetCompiler<TProcessed> : IAssetCompiler
-    where TProcessed : class
+public abstract class AssetCompiler<TAsset> : IAssetCompiler
+    where TAsset : class, IAsset
 {
-    public abstract void Write(TProcessed asset, string path);
+    public AssetCompilerAttribute Metadata { get; }
 
-    void IAssetCompiler.Compile(object asset, string path)
+    public AssetCompiler()
     {
+        Metadata = GetType().GetCustomAttribute<AssetCompilerAttribute>() ??
+            throw new InvalidOperationException($"The asset compiler '{GetType().Name}' is not annotated with '{nameof(AssetCompilerAttribute)}'");
+    }
+
+    public abstract Result Compile(TAsset asset, BinaryWriter writer);
+
+    Result IAssetCompiler.Compile(IAsset asset, BinaryWriter writer)
+    {
+        return Compile((TAsset)asset, writer);
     }
 }
