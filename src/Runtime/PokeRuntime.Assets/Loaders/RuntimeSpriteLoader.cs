@@ -1,16 +1,21 @@
 using System.Drawing;
+using PokeCore.Assets;
 
 namespace PokeRuntime.Assets.Loaders;
 
 public sealed class RuntimeSpriteLoader(
     IAssetManager assetManager
-) : IRuntimeAssetLoader<RuntimeSprite>
+) : RuntimeAssetLoader<RuntimeSprite>
 {
-    public RuntimeSprite Load(Guid assetId, BinaryReader reader)
+    public override AssetType AssetType => AssetType.Sprite;
+
+    public override RuntimeSprite Load(Guid assetId, BinaryReader reader)
     {
-        RuntimeTexture? texture = reader.ReadBoolean() ?
-                                  assetManager.Load<RuntimeTexture>(Guid.Parse(reader.ReadString())) :
+        bool hasTexture = reader.ReadBoolean();
+        RuntimeTexture? texture = hasTexture ?
+                                  (RuntimeTexture)assetManager.Load(Guid.Parse(reader.ReadString())) :
                                   null;
+
         Rectangle? textureRegion = reader.ReadBoolean() ?
                                    new Rectangle
                                    {

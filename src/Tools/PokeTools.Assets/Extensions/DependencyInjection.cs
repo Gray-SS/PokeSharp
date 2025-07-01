@@ -26,10 +26,10 @@ public static class DependencyInjection
                 services.AddTransient(type);
                 services.AddTransient(typeof(IAssetProcessor), x => x.GetRequiredService(type));
             }
-            else if (type.IsAssignableTo(typeof(IAssetCompiler)))
+            else if (type.IsAssignableTo(typeof(IAssetSerializer)))
             {
                 services.AddTransient(type);
-                services.AddTransient(typeof(IAssetCompiler), x => x.GetRequiredService(type));
+                services.AddTransient(typeof(IAssetSerializer), x => x.GetRequiredService(type));
             }
         }
 

@@ -15,7 +15,7 @@ public sealed class AssetDatabase
 
     private readonly IAssetImporter[] _importers;
     private readonly IAssetProcessor[] _processors;
-    private readonly IAssetCompiler[] _writers;
+    private readonly IAssetSerializer[] _writers;
 
     private readonly Logger _logger;
     private readonly IVirtualFileSystem _vfs;
@@ -92,10 +92,10 @@ public sealed class AssetDatabase
         return _reflectionManager.InstantiateClassesOfType<IAssetProcessor>();
     }
 
-    private IAssetCompiler[] LoadWriters()
+    private IAssetSerializer[] LoadWriters()
     {
         // TODO: Find IAssetWriter registered as services instead of reflection
-        return _reflectionManager.InstantiateClassesOfType<IAssetCompiler>();
+        return _reflectionManager.InstantiateClassesOfType<IAssetSerializer>();
     }
 
     public void Import(VirtualPath assetPath)

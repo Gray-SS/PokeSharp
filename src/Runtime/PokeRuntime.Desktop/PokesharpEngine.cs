@@ -30,9 +30,8 @@ public class PokesharpEngine : BaseEngine
 
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // _textureAsset = _assetManager.Load<RuntimeTexture>("../../Tools/PokeTools.Assets.CLI/assets/milkshake.png.asset");
         _assetManager.LoadBundle("Content/mygame.bundle");
-        _textureAsset = _assetManager.Load<RuntimeTexture>(Guid.Parse("cb6be4c2-06be-47ea-bdff-28a7e1b3aae0"));
+        _sprite = (RuntimeSprite)_assetManager.Load(Guid.Parse("89b3a43c-d2f5-4d46-ac21-142614c9450a"));
     }
 
     protected override void OnUpdate(GameTime gameTime)
@@ -54,10 +53,16 @@ public class PokesharpEngine : BaseEngine
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        if (_textureAsset != null)
+        if (_sprite != null && _sprite.Texture != null)
         {
+            Rectangle? rect = _sprite.TextureRegion switch
+            {
+                System.Drawing.Rectangle region => new Rectangle(region.X, region.Y, region.Width, region.Height),
+                null => null
+            };
+
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
-            _spriteBatch.Draw(_textureAsset.GraphicsTexture, new Rectangle(100, 100, 500, 500), Color.White);
+            _spriteBatch.Draw(_sprite.Texture.GraphicsTexture, new Rectangle(100, 100, 320 / 2, 480 / 2), rect, Color.White);
             _spriteBatch.End();
         }
 

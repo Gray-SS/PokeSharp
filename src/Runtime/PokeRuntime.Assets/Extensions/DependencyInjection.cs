@@ -8,9 +8,9 @@ public static class DependencyInjection
 {
     public static IServiceCollections AddPokeRuntimeAssets(this IServiceCollections services)
     {
-        services.AddTransient<IAssetManager, RuntimeAssetManager>();
-        services.AddTransient<IRuntimeAssetLoader<RuntimeTexture>, RuntimeTextureLoader>();
-        services.AddTransient<IRuntimeAssetLoader<RuntimeSprite>, RuntimeSpriteLoader>();
+        services.AddSingleton<IAssetManager, RuntimeAssetManager>();
+        services.AddTransient<IRuntimeAssetLoader, RuntimeTextureLoader>();
+        services.AddTransient<IRuntimeAssetLoader, RuntimeSpriteLoader>();
 
         return services;
     }

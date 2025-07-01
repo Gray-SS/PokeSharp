@@ -8,22 +8,24 @@ public sealed class AssetPipeline : IAssetPipeline
     public AssetType AssetType => Importer.Metadata.AssetType;
     public IAssetImporter Importer { get; }
     public IAssetProcessor Processor { get; }
-    public IAssetCompiler Compiler { get; }
+    public IAssetSerializer Serializer { get; }
 
-    public AssetPipeline(IAssetImporter importer, IAssetProcessor processor, IAssetCompiler compiler)
+    public AssetPipeline(IAssetImporter importer, IAssetProcessor processor, IAssetSerializer serializer)
     {
         Importer = importer;
         Processor = processor;
-        Compiler = compiler;
+        Serializer = serializer;
     }
 
     public async Task<Result> BuildAsync(AssetMetadata metadata, Stream inputStream, Stream outputStream)
     {
-        Result<object> importResult = Importer.Import(inputStream);
+        Result<IRawAsset> importResult = Importer.Import(inputStream);
         if (importResult.TryGetError(out Error? error))
             return Result.Failure(error);
 
-        object rawAsset = importResult.GetValue();
+        IRawAsset rawAsset = importResult.GetValue();
+        IEnumerable<Guid> dependencies = rawAsset.GetDependencies();
+
         Result<IAsset> processResult = Processor.Process(metadata.Id, rawAsset);
         if (processResult.TryGetError(out error))
             return Result.Failure(error);
@@ -34,8 +36,12 @@ public sealed class AssetPipeline : IAssetPipeline
         writer.Write(asset.Id.ToString());
         writer.Write((byte)asset.AssetType);
 
-        Result compileResult = Compiler.Compile(asset, writer);
-        if (compileResult.TryGetError(out error))
+        writer.Write(dependencies.Count());
+        foreach (Guid id in dependencies)
+            writer.Write(id.ToString());
+
+        Result serializeResult = Serializer.Serialize(asset, writer);
+        if (serializeResult.TryGetError(out error))
             return Result.Failure(error);
 
         writer.Flush();

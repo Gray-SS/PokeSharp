@@ -8,14 +8,12 @@ namespace PokeTools.Assets.Processors;
 [AssetProcessor(AssetType.Sprite, "Sprite Processor")]
 public sealed class SpriteProcessor : AssetProcessor<RawSprite, SpriteAsset>
 {
-    public override Result<SpriteAsset> Process(Guid assetId, RawSprite descriptor)
+    public override Result<SpriteAsset> Process(Guid assetId, RawSprite rawSprite)
     {
-        
-
         return Result<SpriteAsset>.Success(new SpriteAsset(
             assetId,
-            descriptor.TextureId,
-            descriptor.TextureRegion
+            rawSprite.TextureId,
+            rawSprite.TextureRegion
         ));
     }
 }

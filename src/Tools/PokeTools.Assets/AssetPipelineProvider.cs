@@ -17,10 +17,10 @@ public sealed class AssetPipelineProvider(
         IAssetProcessor? processor = GetProcessor(assetType);
         if (processor == null) return null;
 
-        IAssetCompiler? compiler = GetCompiler(assetType);
-        if (compiler == null) return null;
+        IAssetSerializer? serializer = GetSerializer(assetType);
+        if (serializer == null) return null;
 
-        return new AssetPipeline(importer, processor, compiler);
+        return new AssetPipeline(importer, processor, serializer);
     }
 
     public IAssetPipeline? GetPipeline(string extension)
@@ -32,10 +32,10 @@ public sealed class AssetPipelineProvider(
         IAssetProcessor? processor = GetProcessor(assetType);
         if (processor == null) return null;
 
-        IAssetCompiler? compiler = GetCompiler(assetType);
-        if (compiler == null) return null;
+        IAssetSerializer? serializer = GetSerializer(assetType);
+        if (serializer == null) return null;
 
-        return new AssetPipeline(importer, processor, compiler);
+        return new AssetPipeline(importer, processor, serializer);
     }
 
     public IAssetImporter? GetImporter(string extension)
@@ -56,9 +56,9 @@ public sealed class AssetPipelineProvider(
                        .FirstOrDefault(x => x.Metadata.AssetType == assetType);
     }
 
-    public IAssetCompiler? GetCompiler(AssetType assetType)
+    public IAssetSerializer? GetSerializer(AssetType assetType)
     {
-        return services.GetServices<IAssetCompiler>()
+        return services.GetServices<IAssetSerializer>()
                        .FirstOrDefault(x => x.Metadata.AssetType == assetType);
     }
 }

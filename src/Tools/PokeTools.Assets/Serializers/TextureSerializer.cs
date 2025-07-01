@@ -2,12 +2,12 @@ using PokeCore.Assets;
 using PokeCore.Common;
 using PokeTools.Assets.Annotations;
 
-namespace PokeTools.Assets.Compilers;
+namespace PokeTools.Assets.Serializers;
 
-[AssetCompiler(AssetType.Texture, "Texture Compiler")]
-public sealed class TextureCompiler : AssetCompiler<TextureAsset>
+[AssetSerializer(AssetType.Texture, "Texture Serializer")]
+public sealed class TextureSerializer : AssetSerializer<TextureAsset>
 {
-    public override Result Compile(TextureAsset texture, BinaryWriter writer)
+    public override Result Serialize(TextureAsset texture, BinaryWriter writer)
     {
         if (texture.Width <= 0 || texture.Height <= 0)
             return Result.Failure(new Error("Processed texture dimension must be bigger than 0."));

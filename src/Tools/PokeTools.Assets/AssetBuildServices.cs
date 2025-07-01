@@ -20,7 +20,7 @@ public sealed class AssetBuildServices(
 
         IAssetPipeline? pipeline = pipelineProvider.GetPipeline(inputPath.Extension);
         if (pipeline == null)
-            return Result.Failure(new($"No importer, processor or compiler found for '{inputPath.Extension}' files."));
+            return Result.Failure(new($"No importer, processor or serializer found for '{inputPath.Extension}' files."));
 
         AssetMetadata metadata;
         VirtualPath metadataPath = inputPath.AddExtension(".meta");
@@ -72,13 +72,21 @@ public sealed class AssetBuildServices(
             Guid assetId = Guid.Parse(reader.ReadString());
             AssetType assetType = (AssetType)reader.ReadByte();
 
+            int dependenciesCount = reader.ReadInt32();
+            var dependencies = new List<Guid>(dependenciesCount);
+            for (int i = 0; i < dependenciesCount; i++)
+            {
+                Guid depsId = Guid.Parse(reader.ReadString());
+                dependencies.Add(depsId);
+            }
+
             uint remainingLength = (uint)(stream.Length - stream.Position);
             byte[] buffer = reader.ReadBytes((int)remainingLength);
 
             uint offset = (uint)dataStream.Position;
             dataStream.Write(buffer, 0, buffer.Length);
 
-            manifest.Register(file.NameWithoutExtension, assetId, assetType, offset, remainingLength);
+            manifest.Register(file.NameWithoutExtension, assetId, assetType, offset, remainingLength, dependencies);
         }
 
         using var manifestStream = new MemoryStream();

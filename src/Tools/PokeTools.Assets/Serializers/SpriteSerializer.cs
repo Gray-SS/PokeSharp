@@ -3,12 +3,12 @@ using PokeCore.Assets;
 using PokeCore.Common;
 using PokeTools.Assets.Annotations;
 
-namespace PokeTools.Assets.Compilers;
+namespace PokeTools.Assets.Serializers;
 
-[AssetCompiler(AssetType.Sprite, "Sprite Compiler")]
-public sealed class SpriteCompiler : AssetCompiler<SpriteAsset>
+[AssetSerializer(AssetType.Sprite, "Sprite Serializer")]
+public sealed class SpriteSerializer : AssetSerializer<SpriteAsset>
 {
-    public override Result Compile(SpriteAsset asset, BinaryWriter writer)
+    public override Result Serialize(SpriteAsset asset, BinaryWriter writer)
     {
         writer.Write(asset.TextureId.HasValue);
         if (asset.TextureId.HasValue)

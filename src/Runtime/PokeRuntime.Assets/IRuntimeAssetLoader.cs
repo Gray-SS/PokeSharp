@@ -1,6 +1,10 @@
+using PokeCore.Assets;
+
 namespace PokeRuntime.Assets;
 
-public interface IRuntimeAssetLoader<TAsset> where TAsset : IRuntimeAsset
+public interface IRuntimeAssetLoader
 {
-    TAsset Load(Guid assetId, BinaryReader reader);
+    AssetType AssetType { get; }
+
+    IRuntimeAsset Load(Guid assetId, BinaryReader reader);
 }

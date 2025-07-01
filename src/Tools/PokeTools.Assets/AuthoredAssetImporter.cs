@@ -4,7 +4,7 @@ using YamlDotNet.Serialization;
 namespace PokeTools.Assets;
 
 public abstract class AuthoredAssetImporter<TRaw> : AssetImporter<TRaw>
-    where TRaw : class
+    where TRaw : class, IRawAsset
 {
     public override Result<TRaw> Import(Stream stream)
     {

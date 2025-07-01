@@ -5,7 +5,7 @@ using PokeTools.Assets.Annotations;
 namespace PokeTools.Assets;
 
 public abstract class AssetImporter<TRaw> : IAssetImporter
-    where TRaw : class
+    where TRaw : class, IRawAsset
 {
     public AssetImporterAttribute Metadata { get; }
     public ImportParameter[] Parameters { get; }
@@ -39,8 +39,8 @@ public abstract class AssetImporter<TRaw> : IAssetImporter
 
     public abstract Result<TRaw> Import(Stream stream);
 
-    Result<object> IAssetImporter.Import(Stream stream)
+    Result<IRawAsset> IAssetImporter.Import(Stream stream)
     {
-        return Import(stream).Map<object>(x => x);
+        return Import(stream).Map<IRawAsset>(x => x);
     }
 }

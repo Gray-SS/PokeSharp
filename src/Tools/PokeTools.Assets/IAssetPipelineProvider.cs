@@ -7,7 +7,7 @@ public interface IAssetPipelineProvider
     IAssetImporter? GetImporter(string extension);
     IAssetImporter? GetImporter(AssetType assetType);
     IAssetProcessor? GetProcessor(AssetType assetType);
-    IAssetCompiler? GetCompiler(AssetType assetType);
+    IAssetSerializer? GetSerializer(AssetType assetType);
 
     IAssetPipeline? GetPipeline(string extension);
     IAssetPipeline? GetPipeline(AssetType assetType);
