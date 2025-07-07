@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using PokeCore.Common;
+using PokeCore.Common.Results;
 using PokeCore.IO;
 using PokeCore.IO.Services;
 using PokeTools.Assets.CLI.Services;
+using PokeTools.Assets.Services.Abstractions;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -13,7 +15,7 @@ namespace PokeTools.Assets.CLI.Commands;
 public sealed class BuildManifestCommand(
     ICliConsole console,
     IVirtualFileSystem vfs,
-    IAssetBuildServices buildServices
+    IAssetPipelineService buildServices
 ) : AsyncCommand<BuildManifestCommand.Settings>
 {
     public sealed class Settings : CommandSettings
@@ -42,10 +44,10 @@ public sealed class BuildManifestCommand(
     public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         var inputPath = VirtualPathHelper.ResolvePhysicalPath(settings.InputPath);
-        Result result = buildServices.BuildManifest(inputPath);
-        if (result.TryGetError(out Error? error))
+        Result<Unit> result = buildServices.BuildBundle(inputPath);
+        if (result.IsFailure)
         {
-            console.WriteError(error.Message);
+            console.WriteError(result.Error.Message);
             return Task.FromResult(1);
         }
 

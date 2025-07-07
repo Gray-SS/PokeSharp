@@ -1,5 +1,8 @@
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.DependencyInjection.Abstractions.Extensions;
+using PokeTools.Assets.Services;
+using PokeTools.Assets.Services.Abstractions;
+using PokeTools.Assets.Pipeline.Abstractions;
 
 namespace PokeTools.Assets.Extensions;
 
@@ -7,7 +10,10 @@ public static class DependencyInjection
 {
     public static IServiceCollections AddPokeToolsAssets(this IServiceCollections services)
     {
-        services.AddTransient<IAssetBuildServices, AssetBuildServices>();
+        services.AddSingleton<IAssetMetadataStore, DefaultMetadataStore>();
+        services.AddTransient<IAssetTypeResolver, AssetTypeResolver>();
+        services.AddTransient<IAssetPipelineExecutor, AssetPipelineExecutor>();
+        services.AddTransient<IAssetPipelineService, AssetPipelineService>();
         services.AddTransient<IAssetPipelineProvider, AssetPipelineProvider>();
 
         var assembly = typeof(DependencyInjection).Assembly;

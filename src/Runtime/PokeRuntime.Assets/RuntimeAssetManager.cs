@@ -1,7 +1,5 @@
-using System.Diagnostics;
 using PokeCore.Assets;
 using PokeCore.Assets.Bundles;
-using PokeCore.Common;
 using PokeCore.DependencyInjection.Abstractions;
 using PokeCore.DependencyInjection.Abstractions.Extensions;
 
@@ -12,12 +10,12 @@ public sealed class RuntimeAssetManager(
 ) : IAssetManager
 {
     private AssetBundle _bundle = null!;
-    private readonly Dictionary<Guid, IRuntimeAsset> _loadedAssets = new();
+    private readonly Dictionary<Guid, object> _loadedAssets = new();
 
-    public Result LoadBundle(string bundlePath)
+    public void LoadBundle(string bundlePath)
     {
         if (!File.Exists(bundlePath))
-            return Result.Failure(new($"No file at path '{bundlePath}' exists."));
+            throw new FileNotFoundException($"No file at path '{bundlePath}' exists.");
 
         var stream = File.Open(bundlePath, FileMode.Open);
         var reader = new BinaryReader(stream);
@@ -29,12 +27,11 @@ public sealed class RuntimeAssetManager(
         stream.Position = header.DataOffset;
 
         _bundle = new AssetBundle(header, manifest, dataStream: stream);
-        return Result.Success();
     }
 
-    public IRuntimeAsset Load(Guid assetId)
+    public object Load(Guid assetId)
     {
-        if (_loadedAssets.TryGetValue(assetId, out IRuntimeAsset? asset))
+        if (_loadedAssets.TryGetValue(assetId, out object? asset))
             return asset;
 
         AssetBundleEntry? entry = _bundle.Manifest.GetEntry(assetId)
@@ -49,7 +46,11 @@ public sealed class RuntimeAssetManager(
         BinaryReader reader = new(stream);
 
         IRuntimeAssetLoader loader = GetLoader(entry.AssetType);
-        asset = loader.Load(assetId, reader);
+        var result = loader.Load(assetId, reader);
+        if (result.IsFailure)
+            throw new InvalidOperationException(result.Error.Message);
+
+        asset = result.GetValue();
 
         _loadedAssets[entry.AssetId] = asset;
         return asset;

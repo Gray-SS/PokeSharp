@@ -1,15 +1,16 @@
 using Microsoft.Xna.Framework.Graphics;
 using PokeCore.Assets;
+using PokeCore.Common.Results;
 
 namespace PokeRuntime.Assets.Loaders;
 
 public sealed class RuntimeTextureLoader(
     GraphicsDevice graphicsDevice
-) : RuntimeAssetLoader<RuntimeTexture>
+) : RuntimeAssetLoader<Texture2D>
 {
     public override AssetType AssetType => AssetType.Texture;
 
-    public override RuntimeTexture Load(Guid id, BinaryReader reader)
+    public override Result<Texture2D> Load(Guid id, BinaryReader reader)
     {
         int width = reader.ReadInt32();
         int height = reader.ReadInt32();
@@ -17,6 +18,9 @@ public sealed class RuntimeTextureLoader(
         int length = reader.ReadInt32();
         byte[] data = reader.ReadBytes(length);
 
-        return new RuntimeTexture(graphicsDevice, id, width, height, data);
+        var texture = new Texture2D(graphicsDevice, width, height);
+        texture.SetData(data);
+
+        return texture;
     }
 }

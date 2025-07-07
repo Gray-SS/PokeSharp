@@ -12,8 +12,8 @@ namespace PokeRuntime.Desktop;
 public class PokesharpEngine : BaseEngine
 {
     private SpriteBatch _spriteBatch;
-    private RuntimeTexture _textureAsset;
-    private RuntimeSprite _sprite;
+    private Sprite _sprite;
+    private Texture2D _texture;
 
     private readonly IAssetManager _assetManager;
 
@@ -31,7 +31,7 @@ public class PokesharpEngine : BaseEngine
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _assetManager.LoadBundle("Content/mygame.bundle");
-        _sprite = (RuntimeSprite)_assetManager.Load(Guid.Parse("89b3a43c-d2f5-4d46-ac21-142614c9450a"));
+        _sprite = (Sprite)_assetManager.Load(Guid.Parse("89b3a43c-d2f5-4d46-ac21-142614c9450a"));
     }
 
     protected override void OnUpdate(GameTime gameTime)
@@ -62,7 +62,7 @@ public class PokesharpEngine : BaseEngine
             };
 
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
-            _spriteBatch.Draw(_sprite.Texture.GraphicsTexture, new Rectangle(100, 100, 320 / 2, 480 / 2), rect, Color.White);
+            _spriteBatch.Draw(_sprite.Texture, new Rectangle(100, 100, 320 / 2, 480 / 2), rect, Color.White);
             _spriteBatch.End();
         }
 

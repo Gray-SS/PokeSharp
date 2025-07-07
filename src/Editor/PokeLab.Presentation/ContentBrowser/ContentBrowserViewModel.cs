@@ -6,6 +6,7 @@ using PokeLab.Application.Commands;
 using PokeLab.Application.ContentBrowser;
 using PokeLab.Application.ProjectManagement.Messages;
 using PokeLab.Presentation.Common;
+using PokeTools.Assets;
 
 namespace PokeLab.Presentation.ContentBrowser;
 
@@ -26,6 +27,7 @@ public sealed partial class ContentBrowserViewModel
     private readonly ITickSource _tickSource;
     private readonly IWindowService _windowService;
     private readonly ICommandDispatcher _commandDispatcher;
+    private readonly IAssetPipelineService _assetPipelineService;
     private readonly IContentBrowserService _contentBrowserService;
 
     public ContentBrowserViewModel(
@@ -33,6 +35,7 @@ public sealed partial class ContentBrowserViewModel
         ITickSource tickSource,
         IWindowService windowService,
         ICommandDispatcher commandDispatcher,
+        IAssetPipelineService assetPipelineService,
         IContentBrowserService contentBrowserService
     )
     {
@@ -40,6 +43,7 @@ public sealed partial class ContentBrowserViewModel
         _tickSource = tickSource;
         _windowService = windowService;
         _commandDispatcher = commandDispatcher;
+        _assetPipelineService = assetPipelineService;
         _contentBrowserService = contentBrowserService;
 
         SubscribeEvents();
@@ -59,6 +63,8 @@ public sealed partial class ContentBrowserViewModel
 
         if (path == null)
             return;
+
+        _assetPipelineService.
     }
 
     private bool CanPerformNavbarOperations()

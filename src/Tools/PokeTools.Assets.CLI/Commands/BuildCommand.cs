@@ -1,8 +1,11 @@
 using System.ComponentModel;
 using PokeCore.Common;
+using PokeCore.Common.Results;
 using PokeCore.IO;
 using PokeCore.IO.Services;
 using PokeTools.Assets.CLI.Services;
+using PokeTools.Assets.Services;
+using PokeTools.Assets.Services.Abstractions;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -12,7 +15,7 @@ namespace PokeTools.Assets.CLI.Commands;
 public sealed class BuildCommand(
     ICliConsole console,
     IVirtualFileSystem vfs,
-    IAssetBuildServices buildServices
+    IAssetPipelineService pipelineServices
 ) : AsyncCommand<BuildCommand.Settings>
 {
     public sealed class Settings : CommandSettings
@@ -52,10 +55,10 @@ public sealed class BuildCommand(
         {
             var outputPath = VirtualPathHelper.ResolvePhysicalPath(settings.OutputPath);
 
-            Result buildResult = await buildServices.BuildAsync(inputPath, outputPath);
+            Result<Unit> buildResult = await pipelineServices.BuildAsync(inputPath, outputPath);
             if (buildResult.IsFailure)
             {
-                console.WriteError(buildResult.GetError().Message);
+                console.WriteError(buildResult.Error.Message);
                 return 1;
             }
 
