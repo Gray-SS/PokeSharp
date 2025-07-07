@@ -50,7 +50,7 @@ public sealed class RuntimeAssetManager(
         if (result.IsFailure)
             throw new InvalidOperationException(result.Error.Message);
 
-        asset = result.GetValue();
+        asset = result.Data;
 
         _loadedAssets[entry.AssetId] = asset;
         return asset;

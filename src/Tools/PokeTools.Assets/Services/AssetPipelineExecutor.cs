@@ -26,14 +26,14 @@ public sealed class AssetPipelineExecutor : IAssetPipelineExecutor
         if (importResult.IsFailure)
             return Result.Failure(importResult.Error);
 
-        IRawAsset rawAsset = importResult.GetValue();
+        IRawAsset rawAsset = importResult.Data;
         IEnumerable<Guid> dependencies = rawAsset.GetDependencies();
 
         Result<IAsset> processResult = processor.Process(metadata.Id, rawAsset);
         if (processResult.IsFailure)
             return Result.Failure(processResult.Error);
 
-        IAsset asset = processResult.GetValue();
+        IAsset asset = processResult.Data;
 
         using BinaryWriter writer = new(outputStream);
         writer.Write(asset.Id.ToString());

@@ -25,7 +25,7 @@ public sealed class BuildCommand(
         public string InputPath { get; set; } = null!;
 
         [CommandOption("-o|--output")]
-        [Description("The path of the builded asset")]
+        [Description("The path of the compiled asset")]
         public string OutputPath { get; set; } = null!;
     }
 

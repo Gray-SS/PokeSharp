@@ -2,7 +2,7 @@ using PokeCore.DependencyInjection.Abstractions;
 
 namespace PokeCore.Logging.Extensions;
 
-// TODO: Find a better way of handling logging configuration
+// TODO: Find a better way to handle logging configuration
 public static class DependencyInjection
 {
     public static IServiceCollections ConfigureLogging(this IServiceCollections services, Action<ILoggerConfiguration> configure)

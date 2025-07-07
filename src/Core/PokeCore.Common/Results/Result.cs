@@ -8,7 +8,7 @@ public interface IResult<T>
     bool IsSuccess { get; }
     bool IsFailure { get; }
 
-    T GetValue();
+    T GetData();
     string GetError();
 }
 
@@ -75,10 +75,13 @@ public abstract record Result<T> : IResult<T>
     public bool IsSuccess => this is Success<T>;
     public bool IsFailure => this is Failure<T>;
 
-    public Failure<T> Error => this is Failure<T> error ? error :
-                                    throw new InvalidOperationException("Couldn't get result error. Operation suceeded.");
+    public T Data => this is Success<T>(T value) ? value :
+                     throw new InvalidOperationException("Couldn't get result data because operation failed.");
 
-    public T GetValue()
+    public Failure<T> Error => this is Failure<T> error ? error :
+                                    throw new InvalidOperationException("Couldn't get result error because operation suceeded.");
+
+    public T GetData()
         => this is Success<T> success ?
            success.Value :
            throw new InvalidOperationException("Couldn't get result value. Operation failed.");

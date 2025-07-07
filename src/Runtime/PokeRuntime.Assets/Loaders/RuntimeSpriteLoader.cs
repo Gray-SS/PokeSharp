@@ -2,6 +2,7 @@ using System.Drawing;
 using Microsoft.Xna.Framework.Graphics;
 using PokeCore.Assets;
 using PokeCore.Common.Results;
+using PokeRuntime.Assets.Extensions;
 
 namespace PokeRuntime.Assets.Loaders;
 
@@ -13,20 +14,24 @@ public sealed class RuntimeSpriteLoader(
 
     public override Result<Sprite> Load(Guid assetId, BinaryReader reader)
     {
-        bool hasTexture = reader.ReadBoolean();
-        Texture2D? texture = hasTexture ?
-            (Texture2D)assetManager.Load(Guid.Parse(reader.ReadString())) :
-            null;
+        Texture2D? texture = null;
+        if (reader.ReadBoolean())
+        {
+            Guid textureId = Guid.Parse(reader.ReadString());
+            texture = assetManager.Load<Texture2D>(textureId);
+        }
 
-        Rectangle? textureRegion = reader.ReadBoolean() ?
-            new Rectangle
+        Rectangle? textureRegion = null;
+        if (reader.ReadBoolean())
+        {
+            textureRegion = new Rectangle
             {
                 X = reader.ReadInt32(),
                 Y = reader.ReadInt32(),
                 Width = reader.ReadInt32(),
                 Height = reader.ReadInt32()
-            } :
-            null;
+            };
+        }
 
         return new Sprite(texture, textureRegion);
     }

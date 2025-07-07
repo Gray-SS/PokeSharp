@@ -2,13 +2,11 @@ using PokeCore.IO;
 using PokeCore.IO.Services;
 using PokeCore.Assets;
 using PokeCore.Assets.Bundles;
-using PokeCore.Common;
 using PokeCore.Diagnostics;
 using PokeTools.Assets.Services.Abstractions;
 using PokeTools.Assets.Models;
 using PokeTools.Assets.Core;
 using PokeCore.Common.Results;
-using PokeCore.Common.Results.Extensions;
 
 namespace PokeTools.Assets.Services;
 
@@ -28,7 +26,7 @@ public sealed class AssetPipelineService(
         if (getMetadataResult.IsFailure)
             return Result.Failure(getMetadataResult.Error);
 
-        AssetMetadata metadata = getMetadataResult.GetValue();
+        AssetMetadata metadata = getMetadataResult.Data;
         using Stream inputStream = vfs.OpenRead(inputPath);
 
         IVirtualFile outputFile = vfs.CreateFile(outputPath, overwrite: true);
@@ -38,7 +36,7 @@ public sealed class AssetPipelineService(
         if (getPipelineResult == null)
             return Result.Failure(new($"No pipeline found for assets of type '{metadata.AssetType}'"));
 
-        AssetPipelineDefinition pipelineDefinition = getPipelineResult.GetValue();
+        AssetPipelineDefinition pipelineDefinition = getPipelineResult.Data;
 
         var executionResult = await pipelineExecutor.ExecuteAsync(pipelineDefinition, metadata, inputStream, outputStream);
         return executionResult.ToUnit();
